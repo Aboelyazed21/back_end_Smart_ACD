@@ -1,0 +1,2646 @@
+openapi: 3.1.0
+info:
+  title: Smart Academic Advisor API
+  version: 1.0.0
+  description: |
+    Advisory academic-planning API for the AIDM programs at Badr University in
+    Assiut. The Node API is the only public service; the Python rule engine is
+    internal and is never called by the browser.
+
+    **Advisory only.** Generated plans are always `DRAFT`. The API has no
+    registration endpoint and cannot override eligibility.
+
+    ## Conventions
+    - Success: `{ "data": ... }`; lists add `pagination`.
+    - Errors: `{ "error": { "code", "message", "details?", "correlationId" } }`.
+    - Send `Authorization: Bearer <accessToken>` on protected routes.
+    - Call `GET /api/auth/csrf` first, then send `x-csrf-token` on every
+      state-changing request except login and refresh.
+    - Terms are canonical `YYYY-YYYY-season` (e.g. `2026-2027-fall`); the parser
+      also accepts `fall 2026-2027`.
+  contact:
+    name: AIDM Smart Academic Advisor
+  license:
+    name: Internal university project
+servers:
+  - url: http://localhost:4000
+    description: Local development
+  - url: https://advisor.aidm.bua.edu.eg
+    description: Production (example host)
+tags:
+  - name: Health
+  - name: Auth
+  - name: Student
+  - name: Advisor
+  - name: Admin
+  - name: Chat
+security:
+  - bearerAuth: []
+paths:
+  /health/live:
+    get:
+      tags: [Health]
+      security: []
+      summary: Process liveness
+      responses:
+        '200':
+          description: Process is running.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status: { type: string, const: ok }
+                  uptimeSeconds: { type: integer }
+                  version: { type: string }
+  /health/ready:
+    get:
+      tags: [Health]
+      security: []
+      summary: Database and rule-engine readiness
+      responses:
+        '200':
+          description: All dependencies are ready.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status: { type: string }
+                  checks:
+                    type: object
+                    additionalProperties:
+                      type: object
+                      properties:
+                        ok: { type: boolean }
+                        detail: { type: string }
+        '503':
+          description: A dependency is unavailable.
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+  /api/auth/csrf:
+    get:
+      tags: [Auth]
+      security: []
+      summary: Issue a CSRF token (also sets the csrf_token cookie)
+      responses:
+        '200':
+          description: Token issued.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  csrfToken: { type: string }
+  /api/auth/login:
+    post:
+      tags: [Auth]
+      security: []
+      summary: Authenticate and start a refresh-token family
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [email, password]
+              properties:
+                email: { type: string, format: email, maxLength: 254 }
+                password: { type: string, minLength: 1, maxLength: 128 }
+      responses:
+        '200':
+          description: Authenticated; sets the httpOnly refresh cookie.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/LoginResponse' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '429': { $ref: '#/components/responses/TooManyRequests' }
+  /api/auth/refresh:
+    post:
+      tags: [Auth]
+      security:
+        - refreshCookie: []
+      summary: Rotate the refresh token and issue a new access token
+      responses:
+        '200':
+          description: Rotated; the previous refresh token is now invalid.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/LoginResponse' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+  /api/auth/logout:
+    post:
+      tags: [Auth]
+      summary: Revoke the current refresh token
+      parameters: [{ $ref: '#/components/parameters/CsrfHeader' }]
+      responses:
+        '204': { description: Logged out. }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+  /api/auth/logout-all:
+    post:
+      tags: [Auth]
+      summary: Revoke every refresh session for the current user
+      parameters: [{ $ref: '#/components/parameters/CsrfHeader' }]
+      responses:
+        '204': { description: All sessions revoked. }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+  /api/auth/me:
+    get:
+      tags: [Auth]
+      summary: Current user, student profile and advisor profile
+      responses:
+        '200':
+          description: Current identity.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      user: { $ref: '#/components/schemas/SafeUser' }
+                      student: { type: [object, 'null'], additionalProperties: true }
+                      advisor: { type: [object, 'null'], additionalProperties: true }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+  /api/auth/change-password:
+    post:
+      tags: [Auth]
+      summary: Change the current password and revoke all sessions
+      parameters: [{ $ref: '#/components/parameters/CsrfHeader' }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [currentPassword, newPassword]
+              properties:
+                currentPassword: { type: string, maxLength: 128 }
+                newPassword:
+                  type: string
+                  minLength: 12
+                  maxLength: 128
+                  description: Lower + upper + digit + symbol.
+      responses:
+        '204': { description: Password changed. }
+        '400': { $ref: '#/components/responses/ValidationError' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+  /api/auth/forgot-password:
+    post:
+      tags: [Auth]
+      summary: Request a password reset link (always returns the same message)
+      parameters: [{ $ref: '#/components/parameters/CsrfHeader' }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [email]
+              properties:
+                email: { type: string, format: email }
+      responses:
+        '200':
+          description: Generic acknowledgement.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message: { type: string }
+        '429': { $ref: '#/components/responses/TooManyRequests' }
+  /api/auth/reset-password:
+    post:
+      tags: [Auth]
+      summary: Consume a reset token and set a new password
+      parameters: [{ $ref: '#/components/parameters/CsrfHeader' }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [token, newPassword]
+              properties:
+                token: { type: string, minLength: 16, maxLength: 512 }
+                newPassword: { type: string, minLength: 12, maxLength: 128 }
+      responses:
+        '204': { description: Password reset; all sessions revoked. }
+        '400': { $ref: '#/components/responses/ValidationError' }
+  /api/auth/sessions:
+    get:
+      tags: [Auth]
+      summary: List the caller's refresh sessions
+      responses:
+        '200':
+          description: Session metadata (never token hashes).
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  items:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id: { type: string, format: uuid }
+                        user_agent: { type: [string, 'null'] }
+                        ip: { type: [string, 'null'] }
+                        created_at: { type: string, format: date-time }
+                        expires_at: { type: string, format: date-time }
+                        revoked_at: { type: [string, 'null'], format: date-time }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+  /api/auth/sessions/{id}:
+    delete:
+      tags: [Auth]
+      summary: Revoke one of the caller's sessions
+      parameters:
+        - $ref: '#/components/parameters/Id'
+        - $ref: '#/components/parameters/CsrfHeader'
+      responses:
+        '204': { description: Session revoked. }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  # ---------------------------------------------------------------- Student
+  /api/student/profile:
+    get:
+      tags: [Student]
+      summary: Own student profile
+      responses:
+        '200':
+          description: Profile with department, advisor and safe user.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { $ref: '#/components/schemas/StudentProfile' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+  /api/student/dashboard:
+    get:
+      tags: [Student]
+      summary: Dashboard summary for a term
+      parameters:
+        - $ref: '#/components/parameters/Term'
+        - name: week
+          in: query
+          schema: { type: integer, minimum: 0, maximum: 30 }
+      responses:
+        '200':
+          description: Dashboard aggregate.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { type: object, additionalProperties: true }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+  /api/student/enrollments:
+    get:
+      tags: [Student]
+      summary: Completed and current enrollments
+      responses:
+        '200':
+          description: Enrollment history.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items: { type: object, additionalProperties: true }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+  /api/student/recommended-plan:
+    get:
+      tags: [Student]
+      summary: Recommended (advisory) plan for a level
+      parameters:
+        - $ref: '#/components/parameters/Term'
+        - name: level
+          in: query
+          schema: { type: integer, minimum: 1, maximum: 4 }
+      responses:
+        '200':
+          description: Recommended plan rows.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { type: object, additionalProperties: true }
+  /api/student/courses:
+    get:
+      tags: [Student]
+      summary: Program structure and course catalogue
+      responses:
+        '200':
+          description: Program information.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { type: object, additionalProperties: true }
+  /api/student/eligibility:
+    get:
+      tags: [Student]
+      summary: Bulk eligibility for the student's candidates or explicit codes
+      parameters:
+        - $ref: '#/components/parameters/Term'
+        - name: week
+          in: query
+          schema: { type: integer, minimum: 0, maximum: 30 }
+        - name: courseCodes
+          in: query
+          description: Comma-separated course codes (max 100).
+          schema: { type: string, maxLength: 800 }
+        - name: plannedCredits
+          in: query
+          schema: { type: integer, minimum: 0, maximum: 21 }
+      responses:
+        '200':
+          description: Decisions plus the load decision and any escalations.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { $ref: '#/components/schemas/EligibilityResponse' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+  /api/student/eligibility/{courseCode}:
+    get:
+      tags: [Student]
+      summary: Eligibility for one course
+      parameters:
+        - $ref: '#/components/parameters/CourseCode'
+        - $ref: '#/components/parameters/Term'
+        - name: plannedCredits
+          in: query
+          schema: { type: integer, minimum: 0, maximum: 21 }
+      responses:
+        '200':
+          description: Single decision with traceability fields.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { $ref: '#/components/schemas/Decision' }
+        '404': { $ref: '#/components/responses/NotFound' }
+  /api/student/standing:
+    get:
+      tags: [Student]
+      summary: Academic standing, warnings, probation and dismissal risk
+      parameters: [{ $ref: '#/components/parameters/Term' }]
+      responses:
+        '200':
+          description: Standing.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { $ref: '#/components/schemas/Standing' }
+  /api/student/early-warning:
+    get:
+      tags: [Student]
+      summary: Early-warning risk assessment
+      parameters: [{ $ref: '#/components/parameters/Term' }]
+      responses:
+        '200':
+          description: Risk signals.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { $ref: '#/components/schemas/EarlyWarning' }
+  /api/student/graduation-audit:
+    get:
+      tags: [Student]
+      summary: Graduation audit
+      parameters: [{ $ref: '#/components/parameters/Term' }]
+      responses:
+        '200':
+          description: Audit result.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { $ref: '#/components/schemas/GraduationAudit' }
+  /api/student/gpa/simulate:
+    post:
+      tags: [Student]
+      summary: Simulate SGPA/CGPA for planned grades
+      parameters: [{ $ref: '#/components/parameters/CsrfHeader' }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [simulated]
+              properties:
+                term: { type: string }
+                simulated:
+                  type: array
+                  minItems: 1
+                  maxItems: 30
+                  items:
+                    type: object
+                    additionalProperties: false
+                    required: [courseCode]
+                    properties:
+                      courseCode: { type: string, pattern: '^[A-Z]{3}[0-9]{4}$' }
+                      percentage: { type: [number, 'null'], minimum: 0, maximum: 100 }
+                      gradeLetter: { type: [string, 'null'], minLength: 1, maxLength: 2 }
+                futureCgpaTarget: { type: [number, 'null'], minimum: 0, maximum: 4 }
+      responses:
+        '200':
+          description: Simulated GPA.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { type: object, additionalProperties: true }
+        '400': { $ref: '#/components/responses/ValidationError' }
+  /api/student/whatif/major-switch:
+    post:
+      tags: [Student]
+      summary: Estimate transferable credits for another program
+      parameters: [{ $ref: '#/components/parameters/CsrfHeader' }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [targetProgram]
+              properties:
+                targetProgram: { type: string, enum: [CS, IT, AI, DS] }
+      responses:
+        '200':
+          description: What-if result.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { type: object, additionalProperties: true }
+  /api/student/plans:
+    get:
+      tags: [Student]
+      summary: List own study plans
+      responses:
+        '200':
+          description: Plans newest first.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items: { $ref: '#/components/schemas/Plan' }
+    post:
+      tags: [Student]
+      summary: Generate an advisory DRAFT plan
+      description: |
+        Deterministic generator. The plan is capped at the resolved maximum
+        load, is persisted as `DRAFT` and is never a registration. Every item
+        carries its own eligibility decision.
+      parameters: [{ $ref: '#/components/parameters/CsrfHeader' }]
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              properties:
+                term: { type: string }
+                week: { type: integer, minimum: 0, maximum: 30 }
+                maxCredits: { type: integer, minimum: 0, maximum: 21 }
+                planningSlot: { type: string, pattern: '^[1-4]-[12]$' }
+                preferences:
+                  type: object
+                  additionalProperties: false
+                  properties:
+                    avoid_days:
+                      type: array
+                      items: { type: string, enum: [sat, sun, mon, tue, wed, thu, fri] }
+                    compress_days: { type: boolean }
+                    prefer_morning: { type: boolean }
+      responses:
+        '201':
+          description: Draft plan created.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { $ref: '#/components/schemas/Plan' }
+        '422': { $ref: '#/components/responses/ValidationError' }
+  /api/student/plans/{id}:
+    get:
+      tags: [Student]
+      summary: Get one own plan (foreign IDs return 404)
+      parameters: [{ $ref: '#/components/parameters/Id' }]
+      responses:
+        '200':
+          description: Plan with items.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { $ref: '#/components/schemas/Plan' }
+        '404': { $ref: '#/components/responses/NotFound' }
+  /api/student/plans/{id}/submit:
+    post:
+      tags: [Student]
+      summary: Submit a DRAFT plan to the advisor
+      parameters:
+        - $ref: '#/components/parameters/Id'
+        - $ref: '#/components/parameters/CsrfHeader'
+      responses:
+        '200':
+          description: Plan is now SUBMITTED.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { $ref: '#/components/schemas/Plan' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '409': { $ref: '#/components/responses/Conflict' }
+  /api/student/plans/{id}/export:
+    get:
+      tags: [Student]
+      summary: Download the plan as a PDF with a signed QR code
+      parameters: [{ $ref: '#/components/parameters/Id' }]
+      responses:
+        '200':
+          description: PDF attachment.
+          headers:
+            Content-Disposition:
+              schema: { type: string }
+          content:
+            application/pdf:
+              schema: { type: string, format: binary }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '429': { $ref: '#/components/responses/TooManyRequests' }
+  /api/student/advisor:
+    get:
+      tags: [Student]
+      summary: Assigned advisor and office hours
+      responses:
+        '200':
+          description: Advisor profile and slots.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { type: object, additionalProperties: true }
+  /api/student/office-hours/requests:
+    get:
+      tags: [Student]
+      summary: List own office-hour requests
+      responses:
+        '200':
+          description: Requests.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items: { type: object, additionalProperties: true }
+    post:
+      tags: [Student]
+      summary: Request an office-hour slot from the assigned advisor
+      parameters: [{ $ref: '#/components/parameters/CsrfHeader' }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [slotId]
+              properties:
+                slotId: { type: string, format: uuid }
+                reason: { type: string, maxLength: 1000 }
+      responses:
+        '201':
+          description: Request created.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { type: object, additionalProperties: true }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '409': { $ref: '#/components/responses/Conflict' }
+  /api/student/notifications:
+    get:
+      tags: [Student]
+      summary: List notifications
+      parameters:
+        - name: unread
+          in: query
+          schema: { type: string, enum: ['true', 'false'] }
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/Limit'
+      responses:
+        '200':
+          description: Paginated notifications.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items: { $ref: '#/components/schemas/Notification' }
+                  pagination: { $ref: '#/components/schemas/Pagination' }
+  /api/student/notifications/{id}/read:
+    patch:
+      tags: [Student]
+      summary: Mark one notification as read
+      parameters:
+        - $ref: '#/components/parameters/Id'
+        - $ref: '#/components/parameters/CsrfHeader'
+      responses:
+        '204': { description: Marked read. }
+        '404': { $ref: '#/components/responses/NotFound' }
+  /api/student/notifications/read-all:
+    post:
+      tags: [Student]
+      summary: Mark all notifications as read
+      parameters: [{ $ref: '#/components/parameters/CsrfHeader' }]
+      responses:
+        '200':
+          description: Number of updated rows.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      updated: { type: integer }
+
+  # ---------------------------------------------------------------- Advisor
+  /api/advisor/dashboard:
+    get:
+      tags: [Advisor]
+      summary: Advisor workload and risk summary
+      responses:
+        '200':
+          description: Dashboard aggregate.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { type: object, additionalProperties: true }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+  /api/advisor/students:
+    get:
+      tags: [Advisor]
+      summary: List assigned students
+      parameters:
+        - name: search
+          in: query
+          schema: { type: string, maxLength: 100 }
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/Limit'
+      responses:
+        '200':
+          description: Paginated assigned students.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items: { $ref: '#/components/schemas/StudentProfile' }
+                  pagination: { $ref: '#/components/schemas/Pagination' }
+  /api/advisor/at-risk:
+    get:
+      tags: [Advisor]
+      summary: Assigned students at academic risk
+      responses:
+        '200':
+          description: At-risk roster.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items: { type: object, additionalProperties: true }
+  /api/advisor/students/{id}:
+    get:
+      tags: [Advisor]
+      summary: Assigned student detail
+      parameters: [{ $ref: '#/components/parameters/Id' }]
+      responses:
+        '200':
+          description: Profile, enrollments, latest standing and plans.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { type: object, additionalProperties: true }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+  /api/advisor/students/{id}/standing:
+    get:
+      tags: [Advisor]
+      summary: Assigned student's standing
+      parameters:
+        - $ref: '#/components/parameters/Id'
+        - $ref: '#/components/parameters/Term'
+      responses:
+        '200':
+          description: Standing.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { $ref: '#/components/schemas/Standing' }
+  /api/advisor/students/{id}/eligibility:
+    get:
+      tags: [Advisor]
+      summary: Assigned student's bulk eligibility
+      parameters:
+        - $ref: '#/components/parameters/Id'
+        - $ref: '#/components/parameters/Term'
+        - name: courseCodes
+          in: query
+          schema: { type: string, maxLength: 800 }
+      responses:
+        '200':
+          description: Decisions for the student.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { $ref: '#/components/schemas/EligibilityResponse' }
+  /api/advisor/students/{id}/graduation-audit:
+    get:
+      tags: [Advisor]
+      summary: Assigned student's graduation audit
+      parameters:
+        - $ref: '#/components/parameters/Id'
+        - $ref: '#/components/parameters/Term'
+      responses:
+        '200':
+          description: Audit.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { $ref: '#/components/schemas/GraduationAudit' }
+  /api/advisor/students/{id}/early-warning:
+    get:
+      tags: [Advisor]
+      summary: Assigned student's early warning
+      parameters:
+        - $ref: '#/components/parameters/Id'
+        - $ref: '#/components/parameters/Term'
+      responses:
+        '200':
+          description: Risk signals.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { $ref: '#/components/schemas/EarlyWarning' }
+  /api/advisor/students/{id}/notes:
+    get:
+      tags: [Advisor]
+      summary: Notes visible to the advisor
+      parameters: [{ $ref: '#/components/parameters/Id' }]
+      responses:
+        '200':
+          description: Notes.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items: { type: object, additionalProperties: true }
+    post:
+      tags: [Advisor]
+      summary: Add an advising note
+      parameters:
+        - $ref: '#/components/parameters/Id'
+        - $ref: '#/components/parameters/CsrfHeader'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [note]
+              properties:
+                note: { type: string, minLength: 1, maxLength: 5000 }
+                visibility: { type: string, enum: [advisor_only, student], default: advisor_only }
+      responses:
+        '201':
+          description: Note created.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { type: object, additionalProperties: true }
+  /api/advisor/plans:
+    get:
+      tags: [Advisor]
+      summary: Plans of assigned students
+      parameters:
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [DRAFT, SUBMITTED, APPROVED, MODIFIED, REJECTED]
+      responses:
+        '200':
+          description: Plans.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items: { $ref: '#/components/schemas/Plan' }
+  /api/advisor/plans/{id}/review:
+    patch:
+      tags: [Advisor]
+      summary: Review a submitted plan
+      parameters:
+        - $ref: '#/components/parameters/Id'
+        - $ref: '#/components/parameters/CsrfHeader'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [decision, feedback]
+              properties:
+                decision: { type: string, enum: [APPROVED, REJECTED, MODIFIED] }
+                feedback: { type: string, minLength: 3, maxLength: 2000 }
+      responses:
+        '200':
+          description: Reviewed plan.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { $ref: '#/components/schemas/Plan' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+  /api/advisor/office-hours:
+    get:
+      tags: [Advisor]
+      summary: Own office-hour slots
+      responses:
+        '200':
+          description: Slots.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items: { type: object, additionalProperties: true }
+    post:
+      tags: [Advisor]
+      summary: Create an office-hour slot
+      parameters: [{ $ref: '#/components/parameters/CsrfHeader' }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [weekday, startTime, endTime]
+              properties:
+                weekday: { type: integer, minimum: 0, maximum: 6 }
+                startTime: { type: string, pattern: '^([01][0-9]|2[0-3]):[0-5][0-9]$' }
+                endTime: { type: string, pattern: '^([01][0-9]|2[0-3]):[0-5][0-9]$' }
+                location: { type: string, maxLength: 200 }
+      responses:
+        '201':
+          description: Slot created.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { type: object, additionalProperties: true }
+        '400': { $ref: '#/components/responses/ValidationError' }
+  /api/advisor/office-hours/{id}:
+    patch:
+      tags: [Advisor]
+      summary: Update an own office-hour slot
+      parameters:
+        - $ref: '#/components/parameters/Id'
+        - $ref: '#/components/parameters/CsrfHeader'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              properties:
+                weekday: { type: integer, minimum: 0, maximum: 6 }
+                startTime: { type: string }
+                endTime: { type: string }
+                location: { type: string, maxLength: 200 }
+                active: { type: boolean }
+      responses:
+        '200':
+          description: Slot updated.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { type: object, additionalProperties: true }
+        '404': { $ref: '#/components/responses/NotFound' }
+    delete:
+      tags: [Advisor]
+      summary: Delete an own office-hour slot
+      parameters:
+        - $ref: '#/components/parameters/Id'
+        - $ref: '#/components/parameters/CsrfHeader'
+      responses:
+        '204': { description: Slot deleted. }
+        '404': { $ref: '#/components/responses/NotFound' }
+  /api/advisor/office-hour-requests:
+    get:
+      tags: [Advisor]
+      summary: Requests for own office hours
+      responses:
+        '200':
+          description: Requests.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items: { type: object, additionalProperties: true }
+  /api/advisor/office-hour-requests/{id}:
+    patch:
+      tags: [Advisor]
+      summary: Approve, reject or cancel a request
+      parameters:
+        - $ref: '#/components/parameters/Id'
+        - $ref: '#/components/parameters/CsrfHeader'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [status]
+              properties:
+                status: { type: string, enum: [approved, rejected, cancelled] }
+      responses:
+        '200':
+          description: Updated request.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { type: object, additionalProperties: true }
+        '404': { $ref: '#/components/responses/NotFound' }
+  /api/advisor/escalations:
+    get:
+      tags: [Advisor]
+      summary: Escalations visible to the advisor
+      parameters:
+        - name: status
+          in: query
+          schema: { type: string, enum: [open, in_review, resolved, closed] }
+      responses:
+        '200':
+          description: Escalations.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items: { $ref: '#/components/schemas/Escalation' }
+  /api/advisor/escalations/{id}:
+    patch:
+      tags: [Advisor]
+      summary: Update an escalation
+      parameters:
+        - $ref: '#/components/parameters/Id'
+        - $ref: '#/components/parameters/CsrfHeader'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              properties:
+                status: { type: string, enum: [open, in_review, resolved, closed] }
+                priority: { type: string, enum: [low, medium, high, critical] }
+                resolution: { type: string, minLength: 3, maxLength: 5000 }
+      responses:
+        '200':
+          description: Updated escalation.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { $ref: '#/components/schemas/Escalation' }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  # ------------------------------------------------------------------ Admin
+  /api/admin/users:
+    get:
+      tags: [Admin]
+      summary: List users
+      parameters:
+        - name: role
+          in: query
+          schema: { type: string, enum: [student, advisor, admin] }
+        - name: status
+          in: query
+          schema: { type: string, enum: [active, inactive, suspended] }
+        - name: search
+          in: query
+          schema: { type: string, maxLength: 100 }
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/Limit'
+      responses:
+        '200':
+          description: Paginated users (no hashes or tokens).
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items: { $ref: '#/components/schemas/SafeUser' }
+                  pagination: { $ref: '#/components/schemas/Pagination' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+    post:
+      tags: [Admin]
+      summary: Create a user
+      description: Student/advisor profiles are created in the same transaction. A temporary password is generated when none is supplied and the account must change it.
+      parameters: [{ $ref: '#/components/parameters/CsrfHeader' }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [email, fullName, role]
+              properties:
+                email: { type: string, format: email, maxLength: 254 }
+                fullName: { type: string, minLength: 2, maxLength: 200 }
+                role: { type: string, enum: [student, advisor, admin] }
+                phone: { type: string, maxLength: 30 }
+                password:
+                  type: string
+                  minLength: 12
+                  maxLength: 128
+                  description: Optional; generated when omitted.
+                isDemo: { type: boolean }
+                student:
+                  type: object
+                  additionalProperties: false
+                  required: [studentCode, program]
+                  properties:
+                    studentCode: { type: string, pattern: '^[0-9]{6,15}$' }
+                    program: { type: string, enum: [CS, IT, AI, DS] }
+                    level: { type: integer, minimum: 1, maximum: 4 }
+                    advisorId: { type: [string, 'null'], format: uuid }
+                    departmentId: { type: [string, 'null'], format: uuid }
+                    admissionTerm: { type: [string, 'null'], maxLength: 40 }
+                    cgpa: { type: number, minimum: 0, maximum: 4 }
+                    passedCredits: { type: integer, minimum: 0, maximum: 300 }
+                    transferCredits: { type: integer, minimum: 0, maximum: 54 }
+                advisor:
+                  type: object
+                  additionalProperties: false
+                  properties:
+                    departmentId: { type: [string, 'null'], format: uuid }
+                    officeLocation: { type: [string, 'null'], maxLength: 200 }
+                    maxStudents: { type: integer, minimum: 1, maximum: 500 }
+      responses:
+        '201':
+          description: User created.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { $ref: '#/components/schemas/SafeUser' }
+        '409': { $ref: '#/components/responses/Conflict' }
+        '422': { $ref: '#/components/responses/ValidationError' }
+  /api/admin/users/{id}:
+    patch:
+      tags: [Admin]
+      summary: Update a user's name, phone or status
+      parameters:
+        - $ref: '#/components/parameters/Id'
+        - $ref: '#/components/parameters/CsrfHeader'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              properties:
+                fullName: { type: string, minLength: 2, maxLength: 200 }
+                phone: { type: string, maxLength: 30 }
+                status: { type: string, enum: [active, inactive, suspended] }
+      responses:
+        '200':
+          description: Updated user.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { $ref: '#/components/schemas/SafeUser' }
+        '404': { $ref: '#/components/responses/NotFound' }
+    delete:
+      tags: [Admin]
+      summary: Soft-delete a user
+      parameters:
+        - $ref: '#/components/parameters/Id'
+        - $ref: '#/components/parameters/CsrfHeader'
+      responses:
+        '204': { description: User deleted. }
+        '404': { $ref: '#/components/responses/NotFound' }
+  /api/admin/users/{id}/reset-password:
+    post:
+      tags: [Admin]
+      summary: Issue a temporary password and force a change
+      parameters:
+        - $ref: '#/components/parameters/Id'
+        - $ref: '#/components/parameters/CsrfHeader'
+      responses:
+        '200':
+          description: Reset accepted; delivery is out of band.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { type: object, additionalProperties: true }
+        '404': { $ref: '#/components/responses/NotFound' }
+  /api/admin/advisors:
+    get:
+      tags: [Admin]
+      summary: List advisors
+      responses:
+        '200':
+          description: Advisors.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items: { $ref: '#/components/schemas/Advisor' }
+  /api/admin/advisors/{id}:
+    patch:
+      tags: [Admin]
+      summary: Update an advisor's department, office or cap
+      parameters:
+        - $ref: '#/components/parameters/Id'
+        - $ref: '#/components/parameters/CsrfHeader'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              properties:
+                departmentId: { type: [string, 'null'], format: uuid }
+                officeLocation: { type: string, maxLength: 200 }
+                maxStudents: { type: integer, minimum: 1, maximum: 500 }
+      responses:
+        '200':
+          description: Updated advisor.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { $ref: '#/components/schemas/Advisor' }
+  /api/admin/students:
+    get:
+      tags: [Admin]
+      summary: List students
+      parameters:
+        - name: program
+          in: query
+          schema: { type: string, enum: [CS, IT, AI, DS] }
+        - name: level
+          in: query
+          schema: { type: integer, minimum: 1, maximum: 4 }
+        - name: search
+          in: query
+          schema: { type: string, maxLength: 100 }
+        - name: atRisk
+          in: query
+          schema: { type: string, enum: ['true', 'false'] }
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/Limit'
+      responses:
+        '200':
+          description: Paginated students.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items: { $ref: '#/components/schemas/StudentProfile' }
+                  pagination: { $ref: '#/components/schemas/Pagination' }
+  /api/admin/students/{id}:
+    get:
+      tags: [Admin]
+      summary: Student detail
+      parameters: [{ $ref: '#/components/parameters/Id' }]
+      responses:
+        '200':
+          description: Student detail.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { type: object, additionalProperties: true }
+        '404': { $ref: '#/components/responses/NotFound' }
+    patch:
+      tags: [Admin]
+      summary: Update a student's academic record
+      parameters:
+        - $ref: '#/components/parameters/Id'
+        - $ref: '#/components/parameters/CsrfHeader'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              properties:
+                program: { type: string, enum: [CS, IT, AI, DS] }
+                level: { type: integer, minimum: 1, maximum: 4 }
+                advisorId: { type: [string, 'null'], format: uuid }
+                departmentId: { type: [string, 'null'], format: uuid }
+                admissionTerm: { type: [string, 'null'], maxLength: 40 }
+                cgpa: { type: number, minimum: 0, maximum: 4 }
+                passedCredits: { type: integer, minimum: 0, maximum: 300 }
+                transferCredits: { type: integer, minimum: 0, maximum: 54 }
+                regularSemestersCompleted: { type: integer, minimum: 0, maximum: 40 }
+      responses:
+        '200':
+          description: Updated student.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { $ref: '#/components/schemas/StudentProfile' }
+  /api/admin/departments:
+    get:
+      tags: [Admin]
+      summary: List departments
+      responses:
+        '200':
+          description: Departments.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items: { $ref: '#/components/schemas/Department' }
+    post:
+      tags: [Admin]
+      summary: Create a department
+      parameters: [{ $ref: '#/components/parameters/CsrfHeader' }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [code, nameAr, nameEn]
+              properties:
+                code: { type: string, pattern: '^[A-Z]{2,8}$' }
+                nameAr: { type: string, minLength: 2, maxLength: 200 }
+                nameEn: { type: string, minLength: 2, maxLength: 200 }
+      responses:
+        '201':
+          description: Department created.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { $ref: '#/components/schemas/Department' }
+        '409': { $ref: '#/components/responses/Conflict' }
+  /api/admin/departments/{id}:
+    patch:
+      tags: [Admin]
+      summary: Rename a department
+      parameters:
+        - $ref: '#/components/parameters/Id'
+        - $ref: '#/components/parameters/CsrfHeader'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              properties:
+                nameAr: { type: string, minLength: 2, maxLength: 200 }
+                nameEn: { type: string, minLength: 2, maxLength: 200 }
+      responses:
+        '200':
+          description: Updated department.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { $ref: '#/components/schemas/Department' }
+  /api/admin/courses:
+    get:
+      tags: [Admin]
+      summary: List courses
+      parameters:
+        - name: search
+          in: query
+          schema: { type: string, maxLength: 100 }
+        - name: program
+          in: query
+          schema: { type: string, enum: [CS, IT, AI, DS] }
+        - name: level
+          in: query
+          schema: { type: integer, minimum: 1, maximum: 4 }
+        - name: active
+          in: query
+          schema: { type: string, enum: ['true', 'false'] }
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/Limit'
+      responses:
+        '200':
+          description: Paginated courses.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items: { $ref: '#/components/schemas/Course' }
+                  pagination: { $ref: '#/components/schemas/Pagination' }
+    post:
+      tags: [Admin]
+      summary: Create a course
+      parameters: [{ $ref: '#/components/parameters/CsrfHeader' }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [code, nameAr, nameEn, credits, category, levelHint, termHint]
+              properties:
+                code: { type: string, pattern: '^[A-Z]{3}[0-9]{4}$' }
+                nameAr: { type: string, minLength: 1, maxLength: 200 }
+                nameEn: { type: string, minLength: 1, maxLength: 200 }
+                credits: { type: integer, minimum: 0, maximum: 12 }
+                category: { type: string, minLength: 2, maxLength: 50 }
+                countsInGpa: { type: boolean }
+                levelHint: { type: integer, minimum: 1, maximum: 4 }
+                termHint: { type: integer, minimum: 1, maximum: 2 }
+                anomalyIds:
+                  type: array
+                  maxItems: 20
+                  items: { type: string, pattern: '^A-[A-Z]+-[0-9]{2}$' }
+                prerequisites:
+                  type: object
+                  additionalProperties: false
+                  properties:
+                    allOf:
+                      type: array
+                      maxItems: 10
+                      items: { type: string, pattern: '^[A-Z]{3}[0-9]{4}$' }
+                    minPassedCreditHours: { type: [integer, 'null'], minimum: 0, maximum: 300 }
+                roles:
+                  type: object
+                  additionalProperties:
+                    type: string
+                    enum: [compulsory, lab, project, field_training, selected_topic, elective]
+      responses:
+        '201':
+          description: Course created.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { $ref: '#/components/schemas/Course' }
+        '409': { $ref: '#/components/responses/Conflict' }
+  /api/admin/courses/{id}:
+    get:
+      tags: [Admin]
+      summary: Course detail with prerequisites and offerings
+      parameters: [{ $ref: '#/components/parameters/Id' }]
+      responses:
+        '200':
+          description: Course.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { $ref: '#/components/schemas/Course' }
+        '404': { $ref: '#/components/responses/NotFound' }
+    patch:
+      tags: [Admin]
+      summary: Update a course
+      parameters:
+        - $ref: '#/components/parameters/Id'
+        - $ref: '#/components/parameters/CsrfHeader'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              properties:
+                nameAr: { type: string, maxLength: 200 }
+                nameEn: { type: string, maxLength: 200 }
+                credits: { type: integer, minimum: 0, maximum: 12 }
+                category: { type: string, minLength: 2, maxLength: 50 }
+                countsInGpa: { type: boolean }
+                levelHint: { type: integer, minimum: 1, maximum: 4 }
+                termHint: { type: integer, minimum: 1, maximum: 2 }
+                active: { type: boolean }
+      responses:
+        '200':
+          description: Updated course.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { $ref: '#/components/schemas/Course' }
+    delete:
+      tags: [Admin]
+      summary: Soft-delete a course
+      parameters:
+        - $ref: '#/components/parameters/Id'
+        - $ref: '#/components/parameters/CsrfHeader'
+      responses:
+        '204': { description: Course deleted. }
+        '404': { $ref: '#/components/responses/NotFound' }
+  /api/admin/courses/{id}/prerequisites:
+    post:
+      tags: [Admin]
+      summary: Add a prerequisite, corequisite or credit-hours requirement
+      parameters:
+        - $ref: '#/components/parameters/Id'
+        - $ref: '#/components/parameters/CsrfHeader'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [type]
+              properties:
+                type: { type: string, enum: [prerequisite, corequisite, hours_required] }
+                requiredCourseCode: { type: string, pattern: '^[A-Z]{3}[0-9]{4}$' }
+                minPassedCreditHours: { type: integer, minimum: 0, maximum: 300 }
+      responses:
+        '201':
+          description: Requirement created.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { type: object, additionalProperties: true }
+  /api/admin/prerequisites/{id}:
+    delete:
+      tags: [Admin]
+      summary: Delete a prerequisite requirement
+      parameters:
+        - $ref: '#/components/parameters/Id'
+        - $ref: '#/components/parameters/CsrfHeader'
+      responses:
+        '204': { description: Deleted. }
+        '404': { $ref: '#/components/responses/NotFound' }
+  /api/admin/courses/{id}/offerings:
+    post:
+      tags: [Admin]
+      summary: Create a term offering
+      parameters:
+        - $ref: '#/components/parameters/Id'
+        - $ref: '#/components/parameters/CsrfHeader'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [academicYear, season]
+              properties:
+                academicYear: { type: string, pattern: '^[0-9]{4}-[0-9]{4}$' }
+                season: { type: string, enum: [fall, spring, summer] }
+                capacity: { type: integer, minimum: 0, maximum: 1000 }
+                status: { type: string, enum: [open, closed, cancelled] }
+                meetingTimes:
+                  type: array
+                  maxItems: 10
+                  items:
+                    type: object
+                    additionalProperties: false
+                    required: [day, start, end]
+                    properties:
+                      day: { type: string, enum: [sat, sun, mon, tue, wed, thu, fri] }
+                      start: { type: string, pattern: '^([01][0-9]|2[0-3]):[0-5][0-9]$' }
+                      end: { type: string, pattern: '^([01][0-9]|2[0-3]):[0-5][0-9]$' }
+                      room: { type: string, maxLength: 64 }
+                exam:
+                  type: object
+                  additionalProperties: false
+                  required: [date, start, end]
+                  properties:
+                    date: { type: string, pattern: '^[0-9]{4}-[0-9]{2}-[0-9]{2}$' }
+                    start: { type: string }
+                    end: { type: string }
+                    room: { type: string, maxLength: 64 }
+      responses:
+        '201':
+          description: Offering created.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { type: object, additionalProperties: true }
+        '409': { $ref: '#/components/responses/Conflict' }
+  /api/admin/offerings/{id}:
+    patch:
+      tags: [Admin]
+      summary: Update capacity, enrollment or status
+      parameters:
+        - $ref: '#/components/parameters/Id'
+        - $ref: '#/components/parameters/CsrfHeader'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              properties:
+                capacity: { type: integer, minimum: 0, maximum: 1000 }
+                enrolledCount: { type: integer, minimum: 0, maximum: 1000 }
+                status: { type: string, enum: [open, closed, cancelled] }
+      responses:
+        '200':
+          description: Updated offering.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { type: object, additionalProperties: true }
+    delete:
+      tags: [Admin]
+      summary: Delete an offering
+      parameters:
+        - $ref: '#/components/parameters/Id'
+        - $ref: '#/components/parameters/CsrfHeader'
+      responses:
+        '204': { description: Deleted. }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  /api/admin/anomalies:
+    get:
+      tags: [Admin]
+      summary: List regulation anomalies
+      parameters:
+        - name: status
+          in: query
+          schema: { type: string, enum: [open, resolved] }
+        - name: severity
+          in: query
+          schema: { type: string, enum: [blocking, warning, info] }
+        - name: type
+          in: query
+          schema: { type: string, maxLength: 60 }
+        - name: course
+          in: query
+          schema: { type: string, pattern: '^[A-Z]{3}[0-9]{4}$' }
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/Limit'
+      responses:
+        '200':
+          description: Paginated anomalies.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items: { $ref: '#/components/schemas/Anomaly' }
+                  pagination: { $ref: '#/components/schemas/Pagination' }
+  /api/admin/anomalies/{id}:
+    get:
+      tags: [Admin]
+      summary: Anomaly detail
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string, pattern: '^A-[A-Z]+-[0-9]{2}$' }
+      responses:
+        '200':
+          description: Anomaly.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { $ref: '#/components/schemas/Anomaly' }
+        '404': { $ref: '#/components/responses/NotFound' }
+  /api/admin/anomalies/{id}/resolve:
+    patch:
+      tags: [Admin]
+      summary: Resolve an anomaly, re-evaluate affected decisions and audit it
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string, pattern: '^A-[A-Z]+-[0-9]{2}$' }
+        - $ref: '#/components/parameters/CsrfHeader'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [resolvedValue]
+              properties:
+                resolvedValue: { type: string, minLength: 2, maxLength: 5000 }
+                note: { type: string, maxLength: 2000 }
+      responses:
+        '200':
+          description: Resolution summary with re-evaluation counts.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      reEvaluated: { type: integer }
+                      autoResolved: { type: integer }
+                      stillReview: { type: integer }
+                      errors:
+                        type: array
+                        items: { type: string }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '409': { $ref: '#/components/responses/Conflict' }
+  /api/admin/anomalies/{id}/reopen:
+    post:
+      tags: [Admin]
+      summary: Reopen a resolved anomaly with a reason
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string, pattern: '^A-[A-Z]+-[0-9]{2}$' }
+        - $ref: '#/components/parameters/CsrfHeader'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [reason]
+              properties:
+                reason: { type: string, minLength: 3, maxLength: 2000 }
+      responses:
+        '200':
+          description: Reopened anomaly.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { $ref: '#/components/schemas/Anomaly' }
+        '404': { $ref: '#/components/responses/NotFound' }
+  /api/admin/regulation/rules:
+    get:
+      tags: [Admin]
+      summary: List regulation rules
+      parameters:
+        - name: search
+          in: query
+          schema: { type: string, maxLength: 100 }
+        - name: status
+          in: query
+          schema: { type: string, enum: [active, superseded] }
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/Limit'
+      responses:
+        '200':
+          description: Paginated rules.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items: { type: object, additionalProperties: true }
+                  pagination: { $ref: '#/components/schemas/Pagination' }
+  /api/admin/regulation/rules/{code}:
+    get:
+      tags: [Admin]
+      summary: Rule detail with article, clause and page
+      parameters:
+        - name: code
+          in: path
+          required: true
+          schema: { type: string, minLength: 3, maxLength: 40 }
+      responses:
+        '200':
+          description: Rule.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { type: object, additionalProperties: true }
+        '404': { $ref: '#/components/responses/NotFound' }
+  /api/admin/audit-logs:
+    get:
+      tags: [Admin]
+      summary: Query the append-only audit log
+      parameters:
+        - name: actorId
+          in: query
+          schema: { type: string, format: uuid }
+        - name: entityType
+          in: query
+          schema: { type: string, maxLength: 60 }
+        - name: entityId
+          in: query
+          schema: { type: string, maxLength: 100 }
+        - name: action
+          in: query
+          schema: { type: string, maxLength: 100 }
+        - name: from
+          in: query
+          schema: { type: string, format: date-time }
+        - name: to
+          in: query
+          schema: { type: string, format: date-time }
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/Limit'
+      responses:
+        '200':
+          description: Paginated audit records.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items: { type: object, additionalProperties: true }
+                  pagination: { $ref: '#/components/schemas/Pagination' }
+  /api/admin/escalations:
+    get:
+      tags: [Admin]
+      summary: List escalations
+      parameters:
+        - name: status
+          in: query
+          schema: { type: string, enum: [open, in_review, resolved, closed] }
+        - name: type
+          in: query
+          schema:
+            type: string
+            enum: [RULE_ENGINE, PLAN_REVIEW, ACADEMIC, ANOMALY, IMPORT, OTHER]
+        - name: priority
+          in: query
+          schema: { type: string, enum: [low, medium, high, critical] }
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/Limit'
+      responses:
+        '200':
+          description: Paginated escalations.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items: { $ref: '#/components/schemas/Escalation' }
+                  pagination: { $ref: '#/components/schemas/Pagination' }
+  /api/admin/escalations/{id}:
+    patch:
+      tags: [Admin]
+      summary: Update or assign an escalation
+      parameters:
+        - $ref: '#/components/parameters/Id'
+        - $ref: '#/components/parameters/CsrfHeader'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              properties:
+                status: { type: string, enum: [open, in_review, resolved, closed] }
+                priority: { type: string, enum: [low, medium, high, critical] }
+                resolution: { type: string, minLength: 3, maxLength: 5000 }
+                assignedTo: { type: [string, 'null'], format: uuid }
+      responses:
+        '200':
+          description: Updated escalation.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { $ref: '#/components/schemas/Escalation' }
+        '404': { $ref: '#/components/responses/NotFound' }
+  /api/admin/analytics/overview:
+    get:
+      tags: [Admin]
+      summary: Institution-wide totals
+      responses:
+        '200':
+          description: Overview metrics.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { type: object, additionalProperties: true }
+  /api/admin/analytics/bottlenecks:
+    get:
+      tags: [Admin]
+      summary: Courses blocking the most students
+      parameters:
+        - name: limit
+          in: query
+          schema: { type: integer, minimum: 1, maximum: 100, default: 10 }
+      responses:
+        '200':
+          description: Bottleneck ranking.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items: { type: object, additionalProperties: true }
+  /api/admin/analytics/enrollments:
+    get:
+      tags: [Admin]
+      summary: Enrollment trends
+      responses:
+        '200':
+          description: Enrollment series.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { type: object, additionalProperties: true }
+  /api/admin/analytics/escalations:
+    get:
+      tags: [Admin]
+      summary: Escalation volume by type and status
+      responses:
+        '200':
+          description: Escalation series.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { type: object, additionalProperties: true }
+  /api/admin/analytics/plans:
+    get:
+      tags: [Admin]
+      summary: Plan status distribution
+      responses:
+        '200':
+          description: Plan series.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { type: object, additionalProperties: true }
+  /api/admin/imports/students:
+    post:
+      tags: [Admin]
+      summary: Import students from CSV
+      description: |
+        Multipart upload, field `file`. Headers are validated; up to 5,000 rows;
+        per-row errors are stored without aborting the whole file. Imported
+        accounts get a random temporary password and must reset it.
+      parameters: [{ $ref: '#/components/parameters/CsrfHeader' }]
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required: [file]
+              properties:
+                file:
+                  type: string
+                  format: binary
+      responses:
+        '202':
+          description: Import accepted for processing.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { $ref: '#/components/schemas/ImportJob' }
+        '400': { $ref: '#/components/responses/ValidationError' }
+        '429': { $ref: '#/components/responses/TooManyRequests' }
+  /api/admin/imports/transcripts:
+    post:
+      tags: [Admin]
+      summary: Import transcript rows from CSV
+      parameters: [{ $ref: '#/components/parameters/CsrfHeader' }]
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required: [file]
+              properties:
+                file: { type: string, format: binary }
+      responses:
+        '202':
+          description: Import accepted; official totals are recomputed.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { $ref: '#/components/schemas/ImportJob' }
+        '400': { $ref: '#/components/responses/ValidationError' }
+        '429': { $ref: '#/components/responses/TooManyRequests' }
+  /api/admin/imports:
+    get:
+      tags: [Admin]
+      summary: List import jobs
+      parameters:
+        - name: type
+          in: query
+          schema: { type: string, enum: [students, transcripts] }
+        - name: status
+          in: query
+          schema: { type: string, enum: [pending, processing, completed, failed] }
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/Limit'
+      responses:
+        '200':
+          description: Paginated import jobs.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items: { $ref: '#/components/schemas/ImportJob' }
+                  pagination: { $ref: '#/components/schemas/Pagination' }
+  /api/admin/imports/{id}:
+    get:
+      tags: [Admin]
+      summary: Import job detail
+      parameters: [{ $ref: '#/components/parameters/Id' }]
+      responses:
+        '200':
+          description: Job.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { $ref: '#/components/schemas/ImportJob' }
+        '404': { $ref: '#/components/responses/NotFound' }
+  /api/admin/imports/{id}/errors:
+    get:
+      tags: [Admin]
+      summary: Per-row import errors
+      parameters: [{ $ref: '#/components/parameters/Id' }]
+      responses:
+        '200':
+          description: Row errors.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items: { type: object, additionalProperties: true }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  # ------------------------------------------------------------------- Chat
+  /api/chat/sessions:
+    get:
+      tags: [Chat]
+      summary: List own chat sessions
+      responses:
+        '200':
+          description: Sessions.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items: { type: object, additionalProperties: true }
+        '403': { $ref: '#/components/responses/Forbidden' }
+    post:
+      tags: [Chat]
+      summary: Create a chat session
+      parameters: [{ $ref: '#/components/parameters/CsrfHeader' }]
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              properties:
+                title: { type: string, minLength: 1, maxLength: 120 }
+      responses:
+        '201':
+          description: Session created.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { type: object, additionalProperties: true }
+  /api/chat/sessions/{id}:
+    get:
+      tags: [Chat]
+      summary: Get a session with its messages
+      parameters: [{ $ref: '#/components/parameters/Id' }]
+      responses:
+        '200':
+          description: Session.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { type: object, additionalProperties: true }
+        '404': { $ref: '#/components/responses/NotFound' }
+  /api/chat/sessions/{id}/messages:
+    post:
+      tags: [Chat]
+      summary: Ask a policy question (RAG)
+      description: |
+        Answers are extractive from stored bylaw chunks and always carry
+        citations. Low confidence or open-anomaly topics return an escalation
+        instead of an answer. Numeric questions are answered by the rule engine.
+      parameters:
+        - $ref: '#/components/parameters/Id'
+        - $ref: '#/components/parameters/CsrfHeader'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [question]
+              properties:
+                question: { type: string, minLength: 2, maxLength: 1500 }
+                language: { type: string, enum: [ar, en, auto] }
+      responses:
+        '200':
+          description: Answer with citations, or an escalation.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { $ref: '#/components/schemas/ChatAnswer' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '429': { $ref: '#/components/responses/TooManyRequests' }
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: Short-lived (<= 15 minutes) HS256 access token.
+    csrfToken:
+      type: apiKey
+      in: header
+      name: x-csrf-token
+      description: Must equal the `csrf_token` cookie set by `GET /api/auth/csrf`.
+    refreshCookie:
+      type: apiKey
+      in: cookie
+      name: refresh_token
+      description: httpOnly, SameSite=Strict rotating refresh token.
+  responses:
+    Unauthorized:
+      description: Missing, expired or invalid access token, or inactive account.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorEnvelope'
+    Forbidden:
+      description: Authenticated but not allowed (RBAC, object-level check or CSRF).
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorEnvelope'
+    NotFound:
+      description: Resource not found or not visible to the caller.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorEnvelope'
+    ValidationError:
+      description: Zod validation failure; unknown keys are rejected.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorEnvelope'
+    Conflict:
+      description: Duplicate resource or invalid state transition.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorEnvelope'
+    TooManyRequests:
+      description: Rate limit exceeded.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorEnvelope'
+    ServerError:
+      description: Unexpected error; details are never exposed.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorEnvelope'
+  parameters:
+    Page:
+      name: page
+      in: query
+      schema: { type: integer, minimum: 1, default: 1 }
+    Limit:
+      name: limit
+      in: query
+      schema: { type: integer, minimum: 1, maximum: 100, default: 20 }
+    Term:
+      name: term
+      in: query
+      description: Optional term; defaults to the current academic term.
+      schema: { type: string, example: '2026-2027-fall' }
+    Id:
+      name: id
+      in: path
+      required: true
+      schema: { type: string, format: uuid }
+    CourseCode:
+      name: courseCode
+      in: path
+      required: true
+      schema: { type: string, pattern: '^[A-Z]{3}[0-9]{4}$' }
+    CsrfHeader:
+      name: x-csrf-token
+      in: header
+      required: true
+      schema: { type: string }
+  schemas:
+    ErrorEnvelope:
+      type: object
+      required: [error]
+      properties:
+        error:
+          type: object
+          required: [code, message]
+          properties:
+            code:
+              type: string
+              example: VALIDATION_ERROR
+            message:
+              type: string
+            details:
+              type: array
+              items:
+                type: object
+                additionalProperties: true
+            correlationId:
+              type: string
+    Pagination:
+      type: object
+      required: [page, limit, total, pages]
+      properties:
+        page: { type: integer, minimum: 1 }
+        limit: { type: integer, minimum: 1, maximum: 100 }
+        total: { type: integer, minimum: 0 }
+        pages: { type: integer, minimum: 0 }
+    SafeUser:
+      type: object
+      description: User object with password hashes and tokens removed.
+      properties:
+        id: { type: string, format: uuid }
+        email: { type: string, format: email }
+        role: { type: string, enum: [student, advisor, admin] }
+        status: { type: string, enum: [active, inactive, suspended] }
+        fullName: { type: string }
+        phone: { type: [string, 'null'] }
+        mustChangePassword: { type: boolean }
+        isDemo: { type: boolean }
+        createdAt: { type: string, format: date-time }
+        updatedAt: { type: string, format: date-time }
+    Decision:
+      type: object
+      description: |
+        Deterministic rule-engine decision. `REVIEW_REQUIRED` means a blocking
+        anomaly or missing data prevented a safe decision; an escalation is
+        created automatically.
+      required: [status, rule_code, article, page, reason_ar, reason_en]
+      properties:
+        status:
+          type: string
+          enum: [ELIGIBLE, NOT_ELIGIBLE, UNKNOWN, REVIEW_REQUIRED]
+        course_code: { type: string, example: CSB2101 }
+        rule_code: { type: string, example: R-PREREQ-09.2 }
+        article: { type: string, example: '9' }
+        clause: { type: [string, 'null'] }
+        page: { type: [integer, string], example: 8 }
+        reason_ar: { type: string }
+        reason_en: { type: string }
+        anomaly_ids:
+          type: array
+          items: { type: string, example: A-CAT-09 }
+        details:
+          type: object
+          additionalProperties: true
+        advisoryOnly:
+          type: boolean
+          const: true
+    PlanItem:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        course_code: { type: string }
+        name_ar: { type: string }
+        name_en: { type: string }
+        credits: { type: integer }
+        position: { type: integer }
+        eligibility_status:
+          type: string
+          enum: [ELIGIBLE, NOT_ELIGIBLE, UNKNOWN, REVIEW_REQUIRED]
+        rule_code: { type: string }
+        article: { type: string }
+        page: { type: [integer, string] }
+        anomaly_ids:
+          type: array
+          items: { type: string }
+        meeting_times:
+          type: array
+          items:
+            type: object
+            additionalProperties: true
+    Plan:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        student_id: { type: string, format: uuid }
+        term: { type: string, example: '2026-2027-fall' }
+        status:
+          type: string
+          enum: [DRAFT, SUBMITTED, APPROVED, MODIFIED, REJECTED]
+        total_credits: { type: integer }
+        max_credits: { type: integer, description: Resolved load cap. }
+        load_decision: { $ref: '#/components/schemas/Decision' }
+        load_anomaly_ids:
+          type: array
+          items: { type: string }
+        advisory_only: { type: boolean, const: true }
+        note: { type: string }
+        items:
+          type: array
+          items: { $ref: '#/components/schemas/PlanItem' }
+        excluded:
+          type: array
+          items: { type: object, additionalProperties: true }
+        created_at: { type: string, format: date-time }
+        updated_at: { type: string, format: date-time }
+    EligibilityResponse:
+      type: object
+      properties:
+        term: { type: string }
+        decisions:
+          type: array
+          items: { $ref: '#/components/schemas/Decision' }
+        plannedCredits: { type: integer }
+        loadDecision: { $ref: '#/components/schemas/Decision' }
+        escalations:
+          type: array
+          items:
+            type: object
+            properties:
+              id: { type: string, format: uuid }
+              ticketNo: { type: string }
+              status: { type: string }
+        advisoryOnly: { type: boolean, const: true }
+    Citation:
+      type: object
+      properties:
+        chunk_id: { type: string, format: uuid }
+        article: { type: [string, 'null'] }
+        clause: { type: [string, 'null'] }
+        page: { type: integer }
+        source: { type: string, example: 'BUA-AIDM.pdf#page=8' }
+        text: { type: string }
+    ChatAnswer:
+      type: object
+      properties:
+        answer_ar: { type: string }
+        answer_en: { type: string }
+        confidence: { type: number, minimum: 0, maximum: 1 }
+        citations:
+          type: array
+          items: { $ref: '#/components/schemas/Citation' }
+        escalated: { type: boolean }
+        escalation_id: { type: [string, 'null'], format: uuid }
+        rule_code: { type: [string, 'null'] }
+        advisoryOnly: { type: boolean, const: true }
+    Standing:
+      type: object
+      properties:
+        term: { type: string }
+        sgpa: { type: number }
+        cgpa: { type: number }
+        passed_credits: { type: integer }
+        level: { type: integer }
+        warning_no: { type: integer }
+        consecutive_warnings: { type: integer }
+        total_warnings: { type: integer }
+        probation: { type: boolean }
+        dismissal_risk: { type: boolean }
+        final_chance: { type: boolean }
+        decision: { $ref: '#/components/schemas/Decision' }
+        advisoryOnly: { type: boolean, const: true }
+    GraduationAudit:
+      type: object
+      properties:
+        term: { type: string }
+        passed_credits: { type: integer }
+        required_credits: { type: integer, example: 136 }
+        cgpa: { type: number }
+        eligible_to_graduate: { type: boolean }
+        missing:
+          type: array
+          items: { type: object, additionalProperties: true }
+        elective_pools:
+          type: array
+          items: { type: object, additionalProperties: true }
+        advisoryOnly: { type: boolean, const: true }
+    EarlyWarning:
+      type: object
+      properties:
+        term: { type: string }
+        risk_level: { type: string, enum: [low, medium, high] }
+        signals:
+          type: array
+          items: { type: object, additionalProperties: true }
+        recommendations:
+          type: array
+          items: { type: string }
+        advisoryOnly: { type: boolean, const: true }
+    StudentProfile:
+      type: object
+      properties:
+        student:
+          type: object
+          additionalProperties: true
+          properties:
+            id: { type: string, format: uuid }
+            studentCode: { type: string }
+            program: { type: string, enum: [CS, IT, AI, DS] }
+            level: { type: integer, minimum: 1, maximum: 4 }
+            cgpa: { type: number }
+            passedCredits: { type: integer }
+        department:
+          type: [object, 'null']
+          additionalProperties: true
+        advisor:
+          type: [object, 'null']
+          additionalProperties: true
+        user: { $ref: '#/components/schemas/SafeUser' }
+    Course:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        code: { type: string }
+        name_ar: { type: string }
+        name_en: { type: string }
+        credits: { type: integer }
+        category: { type: string }
+        counts_in_gpa: { type: boolean }
+        level_hint: { type: integer }
+        term_hint: { type: integer }
+        active: { type: boolean }
+        anomaly_ids:
+          type: array
+          items: { type: string }
+        prerequisites:
+          type: array
+          items: { type: object, additionalProperties: true }
+    Department:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        code: { type: string }
+        name_ar: { type: string }
+        name_en: { type: string }
+    Advisor:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        userId: { type: string, format: uuid }
+        fullName: { type: string }
+        email: { type: string, format: email }
+        departmentId: { type: [string, 'null'], format: uuid }
+        officeLocation: { type: [string, 'null'] }
+        maxStudents: { type: integer }
+    Anomaly:
+      type: object
+      properties:
+        id: { type: string, example: A-REG-01 }
+        severity: { type: string, enum: [blocking, warning, info] }
+        type: { type: string }
+        title_ar: { type: string }
+        description_ar: { type: string }
+        sources:
+          type: array
+          items: { type: object, additionalProperties: true }
+        affected_courses:
+          type: array
+          items: { type: string }
+        affected_rules:
+          type: array
+          items: { type: string }
+        working_value: { type: [string, 'null'] }
+        engine_behavior: { type: string }
+        status: { type: string, enum: [open, resolved] }
+        resolved_value: { type: [string, 'null'] }
+        resolved_by: { type: [string, 'null'], format: uuid }
+        resolved_at: { type: [string, 'null'], format: date-time }
+    Escalation:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        ticket_no: { type: string }
+        type: { type: string, enum: [RULE_ENGINE, PLAN_REVIEW, ACADEMIC, ANOMALY, IMPORT, OTHER] }
+        priority: { type: string, enum: [low, medium, high, critical] }
+        status: { type: string, enum: [open, in_review, resolved, closed] }
+        subject: { type: string }
+        description: { type: string }
+        student_id: { type: [string, 'null'], format: uuid }
+        assigned_to: { type: [string, 'null'], format: uuid }
+        resolution: { type: [string, 'null'] }
+        created_at: { type: string, format: date-time }
+        updated_at: { type: string, format: date-time }
+    Notification:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        type: { type: string }
+        title: { type: string }
+        body: { type: string }
+        read_at: { type: [string, 'null'], format: date-time }
+        created_at: { type: string, format: date-time }
+    ImportJob:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        type: { type: string, enum: [students, transcripts] }
+        status: { type: string, enum: [pending, processing, completed, failed] }
+        total_rows: { type: integer }
+        success_rows: { type: integer }
+        error_rows: { type: integer }
+        created_at: { type: string, format: date-time }
+        completed_at: { type: [string, 'null'], format: date-time }
+    LoginResponse:
+      type: object
+      required: [accessToken, expiresIn, user]
+      properties:
+        accessToken: { type: string }
+        expiresIn: { type: integer, example: 900 }
+        csrfToken: { type: string }
+        user: { $ref: '#/components/schemas/SafeUser' }
+

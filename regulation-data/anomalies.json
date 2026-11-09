@@ -1,0 +1,737 @@
+{
+  "severity_semantics": {
+    "blocking": "BLOCKING: return REVIEW_REQUIRED for the affected rule/course and auto-create an escalation; never decide.",
+    "warning": "WARNING: evaluate using working_value but attach anomaly flag to the result; show in admin dashboard until confirmed.",
+    "info": "INFO: no effect on decisions; document and show in admin dashboard."
+  },
+  "anomalies": [
+    {
+      "id": "A-REG-01",
+      "severity": "blocking",
+      "type": "rule_conflict",
+      "title_ar": "تعارض الحد الأدنى للعبء الدراسي (9 مقابل 12)",
+      "description_ar": "مادة 8 تحدد الحد الأدنى 9 ساعات، بينما مادة 16.5 تقول إن الطالب المنذر أكاديمياً (CGPA أقل من 2.00) لا يسجل إلا الحد الأدنى للعبء الدراسي ويذكره 12 ساعة.",
+      "sources": [
+        {
+          "article": "8",
+          "page": 8
+        },
+        {
+          "article": "16.5",
+          "page": 14
+        }
+      ],
+      "affected_courses": [],
+      "affected_rules": [
+        "R-LOAD-MIN",
+        "R-PROB-16.5"
+      ],
+      "working_value": null,
+      "engine_behavior": "BLOCKING: return REVIEW_REQUIRED for the affected rule/course and auto-create an escalation; never decide. Applies when CGPA<2.00 and planned load is 9-11.",
+      "suggested_resolution_non_binding": "تأكيد من مجلس الكلية: هل 12 حد أدنى للمنذرين فقط؟",
+      "status": "open",
+      "resolved_value": null
+    },
+    {
+      "id": "A-REG-02",
+      "severity": "blocking",
+      "type": "rule_conflict",
+      "title_ar": "تعارض الحد الأقصى للمنذرين أكاديمياً (15 مقابل 12)",
+      "description_ar": "مادة 8 تسمح بـ 15 ساعة لمن CGPA بين 1.00 و أقل من 2.00 و12 لمن أقل من 1.00، ومادة 16.5 تحصر المنذر في 12 ساعة، ومادة 7.2.ج تتحدث عن خفض العبء بقرار مجلس الكلية.",
+      "sources": [
+        {
+          "article": "8",
+          "page": 8
+        },
+        {
+          "article": "16.5",
+          "page": 14
+        },
+        {
+          "article": "7.2.ج",
+          "page": 8
+        }
+      ],
+      "affected_courses": [],
+      "affected_rules": [
+        "R-LOAD-MAX",
+        "R-PROB-16.5"
+      ],
+      "working_value": null,
+      "engine_behavior": "BLOCKING: return REVIEW_REQUIRED for the affected rule/course and auto-create an escalation; never decide. Planner may draft at 12 credits (most conservative) flagged REVIEW_REQUIRED; never hard-reject 13-15.",
+      "suggested_resolution_non_binding": "قرار رسمي من الكلية يوحّد الحد.",
+      "status": "open",
+      "resolved_value": null
+    },
+    {
+      "id": "A-REG-03",
+      "severity": "info",
+      "type": "feasibility",
+      "title_ar": "لا يمكن التخرج في 6 فصول بدون فصول صيفية",
+      "description_ar": "مادة 6.6 و17.3 تشترط 136 ساعة في 6 فصول نظامية على الأقل، لكن أقصى عبء 21 ساعة (126 ساعة في 6 فصول). الخطة الموصى بها 8 فصول (32/36/34/34).",
+      "sources": [
+        {
+          "article": "6.6",
+          "page": 6
+        },
+        {
+          "article": "17.3",
+          "page": 16
+        },
+        {
+          "article": "8",
+          "page": 8
+        }
+      ],
+      "affected_courses": [],
+      "affected_rules": [
+        "R-GRAD-DURATION"
+      ],
+      "working_value": null,
+      "engine_behavior": "INFO: no effect on decisions; document and show in admin dashboard. Planner must not promise a 6-semester graduation unless summer terms are used.",
+      "suggested_resolution_non_binding": "",
+      "status": "open",
+      "resolved_value": null
+    },
+    {
+      "id": "A-REG-04",
+      "severity": "info",
+      "type": "typo",
+      "title_ar": "خطأ مطبعي CGBA بدل CGPA في شرط مرتبة الشرف",
+      "description_ar": "مادة 16.4 تذكر CGBA.",
+      "sources": [
+        {
+          "article": "16.4",
+          "page": 14
+        }
+      ],
+      "affected_courses": [],
+      "affected_rules": [
+        "R-HONORS-16.4"
+      ],
+      "working_value": "CGPA",
+      "engine_behavior": "INFO: no effect on decisions; document and show in admin dashboard.",
+      "suggested_resolution_non_binding": "",
+      "status": "open",
+      "resolved_value": null
+    },
+    {
+      "id": "A-REG-05",
+      "severity": "warning",
+      "type": "rule_conflict",
+      "title_ar": "تكنولوجيا المعلومات UNI1204 إجباري رغم أنه ضمن الاختياري",
+      "description_ar": "جدول المقررات الاختيارية للجامعة يطلب اختيار 3 من 8 مقررات، لكن الهامش يقول إن UNI1204 إجباري لكل البرامج العلمية.",
+      "sources": [
+        {
+          "article": "25 (Table 1)",
+          "page": 22
+        }
+      ],
+      "affected_courses": [
+        "UNI1204"
+      ],
+      "affected_rules": [
+        "R-UNIV-ELECTIVE"
+      ],
+      "working_value": "UNI1204 mandatory + 2 other university electives",
+      "engine_behavior": "WARNING: evaluate using working_value but attach anomaly flag to the result; show in admin dashboard until confirmed.",
+      "suggested_resolution_non_binding": "",
+      "status": "open",
+      "resolved_value": null
+    },
+    {
+      "id": "A-REG-06",
+      "severity": "warning",
+      "type": "rule_overlap",
+      "title_ar": "شرط تسجيل مشروع التخرج: 96 ساعة (مادة 13.7) مقابل المتطلب السابق في الجداول",
+      "description_ar": "مادة 13.7 تشترط اجتياز 70% من الساعات (96 ساعة) لتكليف الطالب بمشروع التخرج، بينما جداول المقررات تذكر متطلبات سابقة مختلفة (CSB2105 / CSB2104 / لا شيء).",
+      "sources": [
+        {
+          "article": "13.7",
+          "page": 10
+        }
+      ],
+      "affected_courses": [
+        "CSC4105",
+        "INF4105",
+        "AIN4105",
+        "DSC4105"
+      ],
+      "affected_rules": [
+        "R-PROJECT-13.7"
+      ],
+      "working_value": "enforce BOTH: course prerequisite AND >=96 passed credit hours",
+      "engine_behavior": "WARNING: evaluate using working_value but attach anomaly flag to the result; show in admin dashboard until confirmed.",
+      "suggested_resolution_non_binding": "",
+      "status": "open",
+      "resolved_value": null
+    },
+    {
+      "id": "A-REG-07",
+      "severity": "blocking",
+      "type": "missing_data",
+      "title_ar": "مقرر Math 2 والدراسات التمهيدية بدون كود في الكتالوج",
+      "description_ar": "مادة 5.4-5.6 تتحدث عن امتحان تحديد مستوى، ودراسات إضافية، ومقرر رياضيات 2 لطلاب شعبة علوم، ولا يوجد لها أكواد أو ساعات في جداول المقررات.",
+      "sources": [
+        {
+          "article": "5.4-5.6",
+          "page": 5
+        }
+      ],
+      "affected_courses": [],
+      "affected_rules": [
+        "R-ADM-REMEDIAL"
+      ],
+      "working_value": null,
+      "engine_behavior": "UNKNOWN: return UNKNOWN for remedial/Math-2 status and ask the advisor; do not add these courses automatically.",
+      "suggested_resolution_non_binding": "",
+      "status": "open",
+      "resolved_value": null
+    },
+    {
+      "id": "A-REG-08",
+      "severity": "info",
+      "type": "inconsistency",
+      "title_ar": "تقسيم الساعات في مادة 24 لا يطابق الجداول بدقة",
+      "description_ar": "مثلا الرياضيات التطبيقية 3 ساعات في مادة 24 بينما CSC4104+CSC4205 = 4 ساعات. المجموع الكلي 136 متسق في كل البرامج.",
+      "sources": [
+        {
+          "article": "24",
+          "page": 20
+        }
+      ],
+      "affected_courses": [],
+      "affected_rules": [],
+      "working_value": null,
+      "engine_behavior": "INFO: no effect on decisions; document and show in admin dashboard.",
+      "suggested_resolution_non_binding": "",
+      "status": "open",
+      "resolved_value": null
+    },
+    {
+      "id": "A-REG-09",
+      "severity": "warning",
+      "type": "ambiguity",
+      "title_ar": "شرط 21 ساعة عند إمكانية التخرج",
+      "description_ar": "الصياغة في مادة 8 تمنح 21 ساعة لمن CGPA>=3.00 وكذلك عند إمكانية تخرج الطالب في نفس الفصل، دون توضيح هل ينطبق على أي CGPA.",
+      "sources": [
+        {
+          "article": "8",
+          "page": 8
+        }
+      ],
+      "affected_courses": [],
+      "affected_rules": [
+        "R-LOAD-MAX"
+      ],
+      "working_value": "21 allowed when graduation is possible in that semester regardless of CGPA, flagged for advisor approval",
+      "engine_behavior": "WARNING: evaluate using working_value but attach anomaly flag to the result; show in admin dashboard until confirmed.",
+      "suggested_resolution_non_binding": "",
+      "status": "open",
+      "resolved_value": null
+    },
+    {
+      "id": "A-CAT-01",
+      "severity": "warning",
+      "type": "wrong_code",
+      "title_ar": "كود MTH1210 في خطة المستوى الأول",
+      "description_ar": "الخطة تذكر MTH1210 للرياضيات المنفصلة بينما الكود في جدول 2 والملحق MTH1201.",
+      "sources": [
+        {
+          "where": "plan L1S2",
+          "page": 28
+        }
+      ],
+      "affected_courses": [
+        "MTH1201"
+      ],
+      "affected_rules": [],
+      "working_value": "MTH1201",
+      "engine_behavior": "WARNING: evaluate using working_value but attach anomaly flag to the result; show in admin dashboard until confirmed.",
+      "suggested_resolution_non_binding": "",
+      "status": "open",
+      "resolved_value": null
+    },
+    {
+      "id": "A-CAT-02",
+      "severity": "warning",
+      "type": "wrong_prereq",
+      "title_ar": "متطلب نظم قواعد البيانات CSB2204: CSB1101 أم CSB2107؟",
+      "description_ar": "الجدول 3 والملحق: CSB1101. خطة المستوى الثاني: CSB2107 (غير موجود، CSB2207 هو الرسم بالحاسب).",
+      "sources": [
+        {
+          "where": "Table 3",
+          "page": 23
+        },
+        {
+          "where": "appendix",
+          "page": 44
+        },
+        {
+          "where": "plan L2S2",
+          "page": 29
+        }
+      ],
+      "affected_courses": [
+        "CSB2204"
+      ],
+      "affected_rules": [],
+      "working_value": "CSB1101",
+      "engine_behavior": "WARNING: evaluate using working_value but attach anomaly flag to the result; show in admin dashboard until confirmed.",
+      "suggested_resolution_non_binding": "",
+      "status": "open",
+      "resolved_value": null
+    },
+    {
+      "id": "A-CAT-03",
+      "severity": "warning",
+      "type": "wrong_prereq",
+      "title_ar": "متطلب CSB2103: GNR1202 أم GNR1110؟",
+      "description_ar": "الجدول والخطة: GNR1202. الملحق: GNR1110 (غير موجود).",
+      "sources": [
+        {
+          "where": "Table 3",
+          "page": 23
+        },
+        {
+          "where": "appendix",
+          "page": 43
+        }
+      ],
+      "affected_courses": [
+        "CSB2103"
+      ],
+      "affected_rules": [],
+      "working_value": "GNR1202",
+      "engine_behavior": "WARNING: evaluate using working_value but attach anomaly flag to the result; show in admin dashboard until confirmed.",
+      "suggested_resolution_non_binding": "",
+      "status": "open",
+      "resolved_value": null
+    },
+    {
+      "id": "A-CAT-04",
+      "severity": "warning",
+      "type": "wrong_prereq",
+      "title_ar": "متطلب الحوسبة السحابية INF3201: CSB2101 أم CSC2113؟",
+      "description_ar": "الجداول 4/6/8/10: CSB2101. الملحق وخطة علوم البيانات: CSC2113 (غير موجود).",
+      "sources": [
+        {
+          "where": "Tables 4,6,8,10",
+          "page": "24-27"
+        },
+        {
+          "where": "appendix",
+          "page": 50
+        },
+        {
+          "where": "plan DS L3S2",
+          "page": 36
+        }
+      ],
+      "affected_courses": [
+        "INF3201"
+      ],
+      "affected_rules": [],
+      "working_value": "CSB2101",
+      "engine_behavior": "WARNING: evaluate using working_value but attach anomaly flag to the result; show in admin dashboard until confirmed.",
+      "suggested_resolution_non_binding": "",
+      "status": "open",
+      "resolved_value": null
+    },
+    {
+      "id": "A-CAT-05",
+      "severity": "warning",
+      "type": "wrong_prereq",
+      "title_ar": "متطلب المعالجة المتوازية CSC4203: CSB2101 أم CSC2101؟",
+      "description_ar": "الجدول 4: CSB2101. الملحق: CSC2101 (غير موجود).",
+      "sources": [
+        {
+          "where": "Table 4",
+          "page": 24
+        },
+        {
+          "where": "appendix",
+          "page": 48
+        }
+      ],
+      "affected_courses": [
+        "CSC4203"
+      ],
+      "affected_rules": [],
+      "working_value": "CSB2101",
+      "engine_behavior": "WARNING: evaluate using working_value but attach anomaly flag to the result; show in admin dashboard until confirmed.",
+      "suggested_resolution_non_binding": "",
+      "status": "open",
+      "resolved_value": null
+    },
+    {
+      "id": "A-CAT-06",
+      "severity": "warning",
+      "type": "wrong_code",
+      "title_ar": "أكواد خاطئة في خطة علوم الحاسب للمستوى الثالث",
+      "description_ar": "الخطة تذكر INF3204 للوقت الحقيقي (الصحيح INF3203) وINF5202 للنظم المدمجة (الصحيح INF3202).",
+      "sources": [
+        {
+          "where": "plan CS L3S2",
+          "page": 30
+        }
+      ],
+      "affected_courses": [
+        "INF3203",
+        "INF3202"
+      ],
+      "affected_rules": [],
+      "working_value": "INF3203 / INF3202",
+      "engine_behavior": "WARNING: evaluate using working_value but attach anomaly flag to the result; show in admin dashboard until confirmed.",
+      "suggested_resolution_non_binding": "",
+      "status": "open",
+      "resolved_value": null
+    },
+    {
+      "id": "A-CAT-07",
+      "severity": "warning",
+      "type": "wrong_prereq",
+      "title_ar": "متطلب CSC3103 مكتوب CSC2105 في الخطة",
+      "description_ar": "الجدول 4: CSB2105.",
+      "sources": [
+        {
+          "where": "plan CS L3S1",
+          "page": 30
+        },
+        {
+          "where": "Table 4",
+          "page": 24
+        }
+      ],
+      "affected_courses": [
+        "CSC3103"
+      ],
+      "affected_rules": [],
+      "working_value": "CSB2105",
+      "engine_behavior": "WARNING: evaluate using working_value but attach anomaly flag to the result; show in admin dashboard until confirmed.",
+      "suggested_resolution_non_binding": "",
+      "status": "open",
+      "resolved_value": null
+    },
+    {
+      "id": "A-CAT-08",
+      "severity": "warning",
+      "type": "wrong_prereq",
+      "title_ar": "أخطاء متطلبات في جدول 6 (تكنولوجيا المعلومات)",
+      "description_ar": "INF4101 متطلبه مكتوب INF2102 (الصحيح INF3102 حسب الملحق والخطة)، وINF4102 متطلبه مكتوب CSC2106 (الصحيح CSB2103).",
+      "sources": [
+        {
+          "where": "Table 6",
+          "page": 25
+        },
+        {
+          "where": "appendix",
+          "page": "50-51"
+        },
+        {
+          "where": "plan IT L4",
+          "page": 33
+        }
+      ],
+      "affected_courses": [
+        "INF4101",
+        "INF4102"
+      ],
+      "affected_rules": [],
+      "working_value": "INF3102 / CSB2103",
+      "engine_behavior": "WARNING: evaluate using working_value but attach anomaly flag to the result; show in admin dashboard until confirmed.",
+      "suggested_resolution_non_binding": "",
+      "status": "open",
+      "resolved_value": null
+    },
+    {
+      "id": "A-CAT-09",
+      "severity": "blocking",
+      "type": "prereq_conflict",
+      "title_ar": "متطلب INF4105: CSB2105 أم CSB2205؟",
+      "description_ar": "جدول 7 والملحق: CSB2105 (هندسة البرمجيات). خطة المستوى الرابع IT: CSB2205 (علوم البيانات). الاثنان كودان صحيحان.",
+      "sources": [
+        {
+          "where": "Table 7",
+          "page": 25
+        },
+        {
+          "where": "appendix",
+          "page": 52
+        },
+        {
+          "where": "plan IT L4S1",
+          "page": 33
+        }
+      ],
+      "affected_courses": [
+        "INF4105",
+        "INF4205"
+      ],
+      "affected_rules": [],
+      "working_value": null,
+      "engine_behavior": "BLOCKING: return REVIEW_REQUIRED for the affected rule/course and auto-create an escalation; never decide.",
+      "suggested_resolution_non_binding": "الأرجح CSB2105 كما في CS وAI، يحتاج اعتماد.",
+      "status": "open",
+      "resolved_value": null
+    },
+    {
+      "id": "A-CAT-10",
+      "severity": "blocking",
+      "type": "prereq_conflict",
+      "title_ar": "متطلب DSC4105: لا يوجد أم CSB2205؟",
+      "description_ar": "جدول 11 وخطة DS: لا متطلب. الملحق: CSB2205.",
+      "sources": [
+        {
+          "where": "Table 11",
+          "page": 27
+        },
+        {
+          "where": "plan DS L4S1",
+          "page": 37
+        },
+        {
+          "where": "appendix",
+          "page": 59
+        }
+      ],
+      "affected_courses": [
+        "DSC4105",
+        "DSC4205"
+      ],
+      "affected_rules": [],
+      "working_value": null,
+      "engine_behavior": "BLOCKING: return REVIEW_REQUIRED for the affected rule/course and auto-create an escalation; never decide.",
+      "suggested_resolution_non_binding": "",
+      "status": "open",
+      "resolved_value": null
+    },
+    {
+      "id": "A-CAT-11",
+      "severity": "blocking",
+      "type": "invalid_code",
+      "title_ar": "متطلب DSC3102 هو MTH1108 وهو غير موجود",
+      "description_ar": "الكود MTH1108 ظهر في الجدول والخطة والملحق ولا يوجد في الكتالوج؛ إحصاء واحتمالات هو MTH1102.",
+      "sources": [
+        {
+          "where": "Table 10",
+          "page": 27
+        },
+        {
+          "where": "plan DS L3S1",
+          "page": 36
+        },
+        {
+          "where": "appendix",
+          "page": 57
+        }
+      ],
+      "affected_courses": [
+        "DSC3102"
+      ],
+      "affected_rules": [],
+      "working_value": null,
+      "engine_behavior": "BLOCKING: return REVIEW_REQUIRED for the affected rule/course and auto-create an escalation; never decide.",
+      "suggested_resolution_non_binding": "الأرجح MTH1102، يحتاج اعتماد.",
+      "status": "open",
+      "resolved_value": null
+    },
+    {
+      "id": "A-CAT-12",
+      "severity": "blocking",
+      "type": "code_and_prereq_conflict",
+      "title_ar": "مقرر علوم البيانات الاختياري: DSC4204 أم DSC4104 أم DSC4203؟",
+      "description_ar": "جدول 11: DSC4204 بمتطلب DSC3102. الملحق: DSC4104 بمتطلب CSB2205. خطة DS: DSC4203. (DSC4203 مستخدم في CS/AI بمعنى مختلف في مكان آخر).",
+      "sources": [
+        {
+          "where": "Table 11",
+          "page": 27
+        },
+        {
+          "where": "appendix",
+          "page": 59
+        },
+        {
+          "where": "plan DS L4S2",
+          "page": 37
+        }
+      ],
+      "affected_courses": [
+        "DSC4204"
+      ],
+      "affected_rules": [],
+      "working_value": null,
+      "engine_behavior": "BLOCKING: return REVIEW_REQUIRED for the affected rule/course and auto-create an escalation; never decide.",
+      "suggested_resolution_non_binding": "",
+      "status": "open",
+      "resolved_value": null
+    },
+    {
+      "id": "A-CAT-13",
+      "severity": "warning",
+      "type": "wrong_prereq",
+      "title_ar": "متطلب DSC4205 مكتوب DSC4120",
+      "description_ar": "الصحيح DSC4105 حسب الخطة والملحق.",
+      "sources": [
+        {
+          "where": "Table 11",
+          "page": 27
+        },
+        {
+          "where": "plan",
+          "page": 37
+        },
+        {
+          "where": "appendix",
+          "page": 59
+        }
+      ],
+      "affected_courses": [
+        "DSC4205"
+      ],
+      "affected_rules": [],
+      "working_value": "DSC4105",
+      "engine_behavior": "WARNING: evaluate using working_value but attach anomaly flag to the result; show in admin dashboard until confirmed.",
+      "suggested_resolution_non_binding": "",
+      "status": "open",
+      "resolved_value": null
+    },
+    {
+      "id": "A-CAT-14",
+      "severity": "warning",
+      "type": "code_collision",
+      "title_ar": "كود التدريب الميداني لعلوم البيانات DSC3206 أم DSC3205؟",
+      "description_ar": "الجدول والملحق: DSC3206. خطة المستوى الرابع: DSC3205 وهو كود معمل تحليل البيانات (2).",
+      "sources": [
+        {
+          "where": "Table 11",
+          "page": 27
+        },
+        {
+          "where": "plan DS L4",
+          "page": 37
+        },
+        {
+          "where": "appendix",
+          "page": 60
+        }
+      ],
+      "affected_courses": [
+        "DSC3206",
+        "DSC3205"
+      ],
+      "affected_rules": [],
+      "working_value": "DSC3206",
+      "engine_behavior": "WARNING: evaluate using working_value but attach anomaly flag to the result; show in admin dashboard until confirmed.",
+      "suggested_resolution_non_binding": "",
+      "status": "open",
+      "resolved_value": null
+    },
+    {
+      "id": "A-CAT-15",
+      "severity": "warning",
+      "type": "wrong_prereq",
+      "title_ar": "متطلب DSC3205 مكتوب DSC3103",
+      "description_ar": "الصحيح DSC3105 حسب الخطة والملحق.",
+      "sources": [
+        {
+          "where": "Table 11",
+          "page": 27
+        },
+        {
+          "where": "plan",
+          "page": 36
+        },
+        {
+          "where": "appendix",
+          "page": 60
+        }
+      ],
+      "affected_courses": [
+        "DSC3205"
+      ],
+      "affected_rules": [],
+      "working_value": "DSC3105",
+      "engine_behavior": "WARNING: evaluate using working_value but attach anomaly flag to the result; show in admin dashboard until confirmed.",
+      "suggested_resolution_non_binding": "",
+      "status": "open",
+      "resolved_value": null
+    },
+    {
+      "id": "A-CAT-16",
+      "severity": "warning",
+      "type": "wrong_reference",
+      "title_ar": "الملحق يذكر AIN3106 في وصف AIN3205",
+      "description_ar": "الصحيح AIN3105 (معمل تصميم وبناء الروبوت 1).",
+      "sources": [
+        {
+          "where": "appendix",
+          "page": "56-57"
+        }
+      ],
+      "affected_courses": [
+        "AIN3205"
+      ],
+      "affected_rules": [],
+      "working_value": "AIN3105",
+      "engine_behavior": "WARNING: evaluate using working_value but attach anomaly flag to the result; show in admin dashboard until confirmed.",
+      "suggested_resolution_non_binding": "",
+      "status": "open",
+      "resolved_value": null
+    },
+    {
+      "id": "A-CAT-17",
+      "severity": "warning",
+      "type": "pool_conflict",
+      "title_ar": "اختياري علوم البيانات: AIN3102 إجباري ومكرر، وخطة DS تذكر مقررات خارج القائمة",
+      "description_ar": "جدول 10 يذكر AIN3102 إجبارياً واختيارياً معاً. خطة DS للمستوى الثالث تعرض AIN3101 وINF3101 وCSC4203 كاختياري وهما غير مدرجين في اختياري جدول 10 (INF3101 وCSC4203).",
+      "sources": [
+        {
+          "where": "Table 10",
+          "page": 27
+        },
+        {
+          "where": "plan DS L3S1",
+          "page": 36
+        }
+      ],
+      "affected_courses": [
+        "AIN3102",
+        "INF3101",
+        "CSC4203"
+      ],
+      "affected_rules": [],
+      "working_value": "Table 10 pool excluding AIN3102",
+      "engine_behavior": "WARNING: evaluate using working_value but attach anomaly flag to the result; show in admin dashboard until confirmed.",
+      "suggested_resolution_non_binding": "",
+      "status": "open",
+      "resolved_value": null
+    },
+    {
+      "id": "A-CAT-18",
+      "severity": "warning",
+      "type": "pool_conflict",
+      "title_ar": "خطة IT تعرض INF3201 كاختياري وهو إجباري في نفس الفصل",
+      "description_ar": "خطة المستوى الثالث الفصل الثاني لـ IT تكرر INF3201 في الاختياري، وجدول 6 يحسبه إجبارياً.",
+      "sources": [
+        {
+          "where": "plan IT L3S2",
+          "page": 32
+        },
+        {
+          "where": "Table 6",
+          "page": 25
+        }
+      ],
+      "affected_courses": [
+        "INF3201"
+      ],
+      "affected_rules": [],
+      "working_value": "IT_ELECTIVE pool from Table 6 (no INF3201)",
+      "engine_behavior": "WARNING: evaluate using working_value but attach anomaly flag to the result; show in admin dashboard until confirmed.",
+      "suggested_resolution_non_binding": "",
+      "status": "open",
+      "resolved_value": null
+    }
+  ]
+}

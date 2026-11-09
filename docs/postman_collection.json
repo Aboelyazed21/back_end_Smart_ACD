@@ -1,0 +1,3708 @@
+{
+  "info": {
+    "name": "Smart Academic Advisor API",
+    "description": "Advisory-only academic planning API. Run `Auth / Issue a CSRF token` and then `Auth / Authenticate...` first: their tests store {{csrfToken}} and {{accessToken}}. All plans are DRAFT and are never a registration.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{accessToken}}"
+      }
+    ]
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:4000"
+    },
+    {
+      "key": "accessToken",
+      "value": ""
+    },
+    {
+      "key": "csrfToken",
+      "value": ""
+    },
+    {
+      "key": "id",
+      "value": "00000000-0000-4000-8000-000000000000"
+    },
+    {
+      "key": "courseCode",
+      "value": "CSB1101"
+    },
+    {
+      "key": "code",
+      "value": "R-REG-09.5"
+    },
+    {
+      "key": "refresh_token",
+      "value": ""
+    }
+  ],
+  "item": [
+    {
+      "name": "Health",
+      "item": [
+        {
+          "name": "Process liveness",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/health/live",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "health",
+                "live"
+              ],
+              "query": [],
+              "variable": []
+            },
+            "description": ""
+          },
+          "response": []
+        },
+        {
+          "name": "Database and rule-engine readiness",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/health/ready",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "health",
+                "ready"
+              ],
+              "query": [],
+              "variable": []
+            },
+            "description": ""
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Issue a CSRF token (also sets the csrf_token cookie)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/csrf",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "csrf"
+              ],
+              "query": [],
+              "variable": []
+            },
+            "description": ""
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const token = pm.response.json().csrfToken;",
+                  "pm.collectionVariables.set(\"csrfToken\", token);",
+                  "console.log('csrf token saved');"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Authenticate and start a refresh-token family",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "login"
+              ],
+              "query": [],
+              "variable": []
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"student1@aidm.bua.edu.eg\",\n  \"password\": \"ChangeMe!2026\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const body = pm.response.json();",
+                  "pm.collectionVariables.set(\"accessToken\", body.accessToken);",
+                  "if (body.csrfToken) pm.collectionVariables.set(\"csrfToken\", body.csrfToken);",
+                  "console.log('access token saved');"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Rotate the refresh token and issue a new access token",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/refresh",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "refresh"
+              ],
+              "query": [],
+              "variable": []
+            },
+            "description": ""
+          },
+          "response": []
+        },
+        {
+          "name": "Revoke the current refresh token",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "x-csrf-token",
+                "value": "{{csrfToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/logout",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "logout"
+              ],
+              "query": [],
+              "variable": []
+            },
+            "description": ""
+          },
+          "response": []
+        },
+        {
+          "name": "Revoke every refresh session for the current user",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "x-csrf-token",
+                "value": "{{csrfToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/logout-all",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "logout-all"
+              ],
+              "query": [],
+              "variable": []
+            },
+            "description": ""
+          },
+          "response": []
+        },
+        {
+          "name": "Current user, student profile and advisor profile",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/me",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "me"
+              ],
+              "query": [],
+              "variable": []
+            },
+            "description": ""
+          },
+          "response": []
+        },
+        {
+          "name": "Change the current password and revoke all sessions",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "x-csrf-token",
+                "value": "{{csrfToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/change-password",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "change-password"
+              ],
+              "query": [],
+              "variable": []
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"currentPassword\": \"ChangeMe!2026\",\n  \"newPassword\": \"NewStrong!2026\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Request a password reset link (always returns the same message)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "x-csrf-token",
+                "value": "{{csrfToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/forgot-password",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "forgot-password"
+              ],
+              "query": [],
+              "variable": []
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"student1@aidm.bua.edu.eg\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Consume a reset token and set a new password",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "x-csrf-token",
+                "value": "{{csrfToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/reset-password",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "reset-password"
+              ],
+              "query": [],
+              "variable": []
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"token\": \"reset-token-placeholder-0123456789\",\n  \"newPassword\": \"NewStrong!2026\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "List the caller's refresh sessions",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/sessions",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "sessions"
+              ],
+              "query": [],
+              "variable": []
+            },
+            "description": ""
+          },
+          "response": []
+        },
+        {
+          "name": "Revoke one of the caller's sessions",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "x-csrf-token",
+                "value": "{{csrfToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/sessions/{{id}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "sessions",
+                "{{id}}"
+              ],
+              "query": [],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "00000000-0000-4000-8000-000000000000"
+                }
+              ]
+            },
+            "description": ""
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Student",
+      "item": [
+        {
+          "name": "Own student profile",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/student/profile",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "student",
+                "profile"
+              ],
+              "query": [],
+              "variable": []
+            },
+            "description": ""
+          },
+          "response": []
+        },
+        {
+          "name": "Dashboard summary for a term",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/student/dashboard",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "student",
+                "dashboard"
+              ],
+              "query": [
+                {
+                  "key": "term",
+                  "value": "2026-2027-fall",
+                  "description": "Optional term; defaults to the current academic term.",
+                  "disabled": true
+                },
+                {
+                  "key": "week",
+                  "value": "1",
+                  "description": "",
+                  "disabled": true
+                }
+              ],
+              "variable": []
+            },
+            "description": ""
+          },
+          "response": []
+        },
+        {
+          "name": "Completed and current enrollments",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/student/enrollments",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "student",
+                "enrollments"
+              ],
+              "query": [],
+              "variable": []
+            },
+            "description": ""
+          },
+          "response": []
+        },
+        {
+          "name": "Recommended (advisory) plan for a level",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/student/recommended-plan",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "student",
+                "recommended-plan"
+              ],
+              "query": [
+                {
+                  "key": "term",
+                  "value": "2026-2027-fall",
+                  "description": "Optional term; defaults to the current academic term.",
+                  "disabled": true
+                },
+                {
+                  "key": "level",
+                  "value": "1",
+                  "description": "",
+                  "disabled": true
+                }
+              ],
+              "variable": []
+            },
+            "description": ""
+          },
+          "response": []
+        },
+        {
+          "name": "Program structure and course catalogue",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/student/courses",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "student",
+                "courses"
+              ],
+              "query": [],
+              "variable": []
+            },
+            "description": ""
+          },
+          "response": []
+        },
+        {
+          "name": "Bulk eligibility for the student's candidates or explicit codes",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/student/eligibility",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "student",
+                "eligibility"
+              ],
+              "query": [
+                {
+                  "key": "term",
+                  "value": "2026-2027-fall",
+                  "description": "Optional term; defaults to the current academic term.",
+                  "disabled": true
+                },
+                {
+                  "key": "week",
+                  "value": "1",
+                  "description": "",
+                  "disabled": true
+                },
+                {
+                  "key": "courseCodes",
+                  "value": "string",
+                  "description": "Comma-separated course codes (max 100).",
+                  "disabled": true
+                },
+                {
+                  "key": "plannedCredits",
+                  "value": "15",
+                  "description": "",
+                  "disabled": true
+                }
+              ],
+              "variable": []
+            },
+            "description": ""
+          },
+          "response": []
+        },
+        {
+          "name": "Eligibility for one course",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/student/eligibility/{{courseCode}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "student",
+                "eligibility",
+                "{{courseCode}}"
+              ],
+              "query": [
+                {
+                  "key": "term",
+                  "value": "2026-2027-fall",
+                  "description": "Optional term; defaults to the current academic term.",
+                  "disabled": true
+                },
+                {
+                  "key": "plannedCredits",
+                  "value": "15",
+                  "description": "",
+                  "disabled": true
+                }
+              ],
+              "variable": [
+                {
+                  "key": "courseCode",
+                  "value": "CSB1101"
+                }
+              ]
+            },
+            "description": ""
+          },
+          "response": []
+        },
+        {
+          "name": "Academic standing, warnings, probation and dismissal risk",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/student/standing",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "student",
+                "standing"
+              ],
+              "query": [
+                {
+                  "key": "term",
+                  "value": "2026-2027-fall",
+                  "description": "Optional term; defaults to the current academic term.",
+                  "disabled": true
+                }
+              ],
+              "variable": []
+            },
+            "description": ""
+          },
+          "response": []
+        },
+        {
+          "name": "Early-warning risk assessment",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/student/early-warning",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "student",
+                "early-warning"
+              ],
+              "query": [
+                {
+                  "key": "term",
+                  "value": "2026-2027-fall",
+                  "description": "Optional term; defaults to the current academic term.",
+                  "disabled": true
+                }
+              ],
+              "variable": []
+            },
+            "description": ""
+          },
+          "response": []
+        },
+        {
+          "name": "Graduation audit",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/student/graduation-audit",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "student",
+                "graduation-audit"
+              ],
+              "query": [
+                {
+                  "key": "term",
+                  "value": "2026-2027-fall",
+                  "description": "Optional term; defaults to the current academic term.",
+                  "disabled": true
+                }
+              ],
+              "variable": []
+            },
+            "description": ""
+          },
+          "response": []
+        },
+        {
+          "name": "Simulate SGPA/CGPA for planned grades",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "x-csrf-token",
+                "value": "{{csrfToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/student/gpa/simulate",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "student",
+                "gpa",
+                "simulate"
+              ],
+              "query": [],
+              "variable": []
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"term\": \"2026-2027-fall\",\n  \"simulated\": [\n    {\n      \"courseCode\": \"CSB1101\",\n      \"percentage\": 85,\n      \"gradeLetter\": \"A\"\n    }\n  ],\n  \"futureCgpaTarget\": 3.0\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Estimate transferable credits for another program",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "x-csrf-token",
+                "value": "{{csrfToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/student/whatif/major-switch",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "student",
+                "whatif",
+                "major-switch"
+              ],
+              "query": [],
+              "variable": []
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"targetProgram\": \"CS\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "List own study plans",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/student/plans",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "student",
+                "plans"
+              ],
+              "query": [],
+              "variable": []
+            },
+            "description": ""
+          },
+          "response": []
+        },
+        {
+          "name": "Generate an advisory DRAFT plan",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "x-csrf-token",
+                "value": "{{csrfToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/student/plans",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "student",
+                "plans"
+              ],
+              "query": [],
+              "variable": []
+            },
+            "description": "Deterministic generator. The plan is capped at the resolved maximum\nload, is persisted as `DRAFT` and is never a registration. Every item\ncarries its own eligibility decision.\n",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"term\": \"2026-2027-fall\",\n  \"week\": 1,\n  \"maxCredits\": 15,\n  \"planningSlot\": \"3-1\",\n  \"preferences\": {\n    \"avoid_days\": [\n      \"sat\"\n    ],\n    \"compress_days\": false,\n    \"prefer_morning\": false\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get one own plan (foreign IDs return 404)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/student/plans/{{id}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "student",
+                "plans",
+                "{{id}}"
+              ],
+              "query": [],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "00000000-0000-4000-8000-000000000000"
+                }
+              ]
+            },
+            "description": ""
+          },
+          "response": []
+        },
+        {
+          "name": "Submit a DRAFT plan to the advisor",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "x-csrf-token",
+                "value": "{{csrfToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/student/plans/{{id}}/submit",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "student",
+                "plans",
+                "{{id}}",
+                "submit"
+              ],
+              "query": [],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "00000000-0000-4000-8000-000000000000"
+                }
+              ]
+            },
+            "description": ""
+          },
+          "response": []
+        },
+        {
+          "name": "Download the plan as a PDF with a signed QR code",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/student/plans/{{id}}/export",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "student",
+                "plans",
+                "{{id}}",
+                "export"
+              ],
+              "query": [],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "00000000-0000-4000-8000-000000000000"
+                }
+              ]
+            },
+            "description": ""
+          },
+          "response": []
+        },
+        {
+          "name": "Assigned advisor and office hours",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/student/advisor",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "student",
+                "advisor"
+              ],
+              "query": [],
+              "variable": []
+            },
+            "description": ""
+          },
+          "response": []
+        },
+        {
+          "name": "List own office-hour requests",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/student/office-hours/requests",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "student",
+                "office-hours",
+                "requests"
+              ],
+              "query": [],
+              "variable": []
+            },
+            "description": ""
+          },
+          "response": []
+        },
+        {
+          "name": "Request an office-hour slot from the assigned advisor",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "x-csrf-token",
+                "value": "{{csrfToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/student/office-hours/requests",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "student",
+                "office-hours",
+                "requests"
+              ],
+              "query": [],
+              "variable": []
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"slotId\": \"00000000-0000-4000-8000-000000000000\",\n  \"reason\": \"Scheduling conflict\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "List notifications",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/student/notifications",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "student",
+                "notifications"
+              ],
+              "query": [
+                {
+                  "key": "unread",
+                  "value": "true",
+                  "description": "",
+                  "disabled": true
+                },
+                {
+                  "key": "page",
+                  "value": "1",
+                  "description": "",
+                  "disabled": false
+                },
+                {
+                  "key": "limit",
+                  "value": "1",
+                  "description": "",
+                  "disabled": false
+                }
+              ],
+              "variable": []
+            },
+            "description": ""
+          },
+          "response": []
+        },
+        {
+          "name": "Mark one notification as read",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "x-csrf-token",
+                "value": "{{csrfToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/student/notifications/{{id}}/read",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "student",
+                "notifications",
+                "{{id}}",
+                "read"
+              ],
+              "query": [],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "00000000-0000-4000-8000-000000000000"
+                }
+              ]
+            },
+            "description": ""
+          },
+          "response": []
+        },
+        {
+          "name": "Mark all notifications as read",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "x-csrf-token",
+                "value": "{{csrfToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/student/notifications/read-all",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "student",
+                "notifications",
+                "read-all"
+              ],
+              "query": [],
+              "variable": []
+            },
+            "description": ""
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Advisor",
+      "item": [
+        {
+          "name": "Advisor workload and risk summary",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/advisor/dashboard",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "advisor",
+                "dashboard"
+              ],
+              "query": [],
+              "variable": []
+            },
+            "description": ""
+          },
+          "response": []
+        },
+        {
+          "name": "List assigned students",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/advisor/students",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "advisor",
+                "students"
+              ],
+              "query": [
+                {
+                  "key": "search",
+                  "value": "student",
+                  "description": "",
+                  "disabled": true
+                },
+                {
+                  "key": "page",
+                  "value": "1",
+                  "description": "",
+                  "disabled": false
+                },
+                {
+                  "key": "limit",
+                  "value": "1",
+                  "description": "",
+                  "disabled": false
+                }
+              ],
+              "variable": []
+            },
+            "description": ""
+          },
+          "response": []
+        },
+        {
+          "name": "Assigned students at academic risk",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/advisor/at-risk",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "advisor",
+                "at-risk"
+              ],
+              "query": [],
+              "variable": []
+            },
+            "description": ""
+          },
+          "response": []
+        },
+        {
+          "name": "Assigned student detail",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/advisor/students/{{id}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "advisor",
+                "students",
+                "{{id}}"
+              ],
+              "query": [],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "00000000-0000-4000-8000-000000000000"
+                }
+              ]
+            },
+            "description": ""
+          },
+          "response": []
+        },
+        {
+          "name": "Assigned student's standing",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/advisor/students/{{id}}/standing",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "advisor",
+                "students",
+                "{{id}}",
+                "standing"
+              ],
+              "query": [
+                {
+                  "key": "term",
+                  "value": "2026-2027-fall",
+                  "description": "Optional term; defaults to the current academic term.",
+                  "disabled": true
+                }
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "00000000-0000-4000-8000-000000000000"
+                }
+              ]
+            },
+            "description": ""
+          },
+          "response": []
+        },
+        {
+          "name": "Assigned student's bulk eligibility",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/advisor/students/{{id}}/eligibility",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "advisor",
+                "students",
+                "{{id}}",
+                "eligibility"
+              ],
+              "query": [
+                {
+                  "key": "term",
+                  "value": "2026-2027-fall",
+                  "description": "Optional term; defaults to the current academic term.",
+                  "disabled": true
+                },
+                {
+                  "key": "courseCodes",
+                  "value": "string",
+                  "description": "",
+                  "disabled": true
+                }
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "00000000-0000-4000-8000-000000000000"
+                }
+              ]
+            },
+            "description": ""
+          },
+          "response": []
+        },
+        {
+          "name": "Assigned student's graduation audit",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/advisor/students/{{id}}/graduation-audit",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "advisor",
+                "students",
+                "{{id}}",
+                "graduation-audit"
+              ],
+              "query": [
+                {
+                  "key": "term",
+                  "value": "2026-2027-fall",
+                  "description": "Optional term; defaults to the current academic term.",
+                  "disabled": true
+                }
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "00000000-0000-4000-8000-000000000000"
+                }
+              ]
+            },
+            "description": ""
+          },
+          "response": []
+        },
+        {
+          "name": "Assigned student's early warning",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/advisor/students/{{id}}/early-warning",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "advisor",
+                "students",
+                "{{id}}",
+                "early-warning"
+              ],
+              "query": [
+                {
+                  "key": "term",
+                  "value": "2026-2027-fall",
+                  "description": "Optional term; defaults to the current academic term.",
+                  "disabled": true
+                }
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "00000000-0000-4000-8000-000000000000"
+                }
+              ]
+            },
+            "description": ""
+          },
+          "response": []
+        },
+        {
+          "name": "Notes visible to the advisor",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/advisor/students/{{id}}/notes",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "advisor",
+                "students",
+                "{{id}}",
+                "notes"
+              ],
+              "query": [],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "00000000-0000-4000-8000-000000000000"
+                }
+              ]
+            },
+            "description": ""
+          },
+          "response": []
+        },
+        {
+          "name": "Add an advising note",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "x-csrf-token",
+                "value": "{{csrfToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/advisor/students/{{id}}/notes",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "advisor",
+                "students",
+                "{{id}}",
+                "notes"
+              ],
+              "query": [],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "00000000-0000-4000-8000-000000000000"
+                }
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"note\": \"Reviewed with the student.\",\n  \"visibility\": \"advisor_only\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Plans of assigned students",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/advisor/plans",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "advisor",
+                "plans"
+              ],
+              "query": [
+                {
+                  "key": "status",
+                  "value": "DRAFT",
+                  "description": "",
+                  "disabled": true
+                }
+              ],
+              "variable": []
+            },
+            "description": ""
+          },
+          "response": []
+        },
+        {
+          "name": "Review a submitted plan",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "x-csrf-token",
+                "value": "{{csrfToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/advisor/plans/{{id}}/review",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "advisor",
+                "plans",
+                "{{id}}",
+                "review"
+              ],
+              "query": [],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "00000000-0000-4000-8000-000000000000"
+                }
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"decision\": \"APPROVED\",\n  \"feedback\": \"Plan matches the bylaw.\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Own office-hour slots",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/advisor/office-hours",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "advisor",
+                "office-hours"
+              ],
+              "query": [],
+              "variable": []
+            },
+            "description": ""
+          },
+          "response": []
+        },
+        {
+          "name": "Create an office-hour slot",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "x-csrf-token",
+                "value": "{{csrfToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/advisor/office-hours",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "advisor",
+                "office-hours"
+              ],
+              "query": [],
+              "variable": []
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"weekday\": 0,\n  \"startTime\": \"10:00\",\n  \"endTime\": \"11:00\",\n  \"location\": \"Advisor office\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update an own office-hour slot",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "x-csrf-token",
+                "value": "{{csrfToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/advisor/office-hours/{{id}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "advisor",
+                "office-hours",
+                "{{id}}"
+              ],
+              "query": [],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "00000000-0000-4000-8000-000000000000"
+                }
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"weekday\": 0,\n  \"startTime\": \"10:00\",\n  \"endTime\": \"11:00\",\n  \"location\": \"Advisor office\",\n  \"active\": false\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Delete an own office-hour slot",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "x-csrf-token",
+                "value": "{{csrfToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/advisor/office-hours/{{id}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "advisor",
+                "office-hours",
+                "{{id}}"
+              ],
+              "query": [],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "00000000-0000-4000-8000-000000000000"
+                }
+              ]
+            },
+            "description": ""
+          },
+          "response": []
+        },
+        {
+          "name": "Requests for own office hours",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/advisor/office-hour-requests",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "advisor",
+                "office-hour-requests"
+              ],
+              "query": [],
+              "variable": []
+            },
+            "description": ""
+          },
+          "response": []
+        },
+        {
+          "name": "Approve, reject or cancel a request",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "x-csrf-token",
+                "value": "{{csrfToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/advisor/office-hour-requests/{{id}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "advisor",
+                "office-hour-requests",
+                "{{id}}"
+              ],
+              "query": [],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "00000000-0000-4000-8000-000000000000"
+                }
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"approved\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Escalations visible to the advisor",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/advisor/escalations",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "advisor",
+                "escalations"
+              ],
+              "query": [
+                {
+                  "key": "status",
+                  "value": "open",
+                  "description": "",
+                  "disabled": true
+                }
+              ],
+              "variable": []
+            },
+            "description": ""
+          },
+          "response": []
+        },
+        {
+          "name": "Update an escalation",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "x-csrf-token",
+                "value": "{{csrfToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/advisor/escalations/{{id}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "advisor",
+                "escalations",
+                "{{id}}"
+              ],
+              "query": [],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "00000000-0000-4000-8000-000000000000"
+                }
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"open\",\n  \"priority\": \"low\",\n  \"resolution\": \"Confirmed with the college council.\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Admin",
+      "item": [
+        {
+          "name": "List users",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/users",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "users"
+              ],
+              "query": [
+                {
+                  "key": "role",
+                  "value": "student",
+                  "description": "",
+                  "disabled": true
+                },
+                {
+                  "key": "status",
+                  "value": "active",
+                  "description": "",
+                  "disabled": true
+                },
+                {
+                  "key": "search",
+                  "value": "student",
+                  "description": "",
+                  "disabled": true
+                },
+                {
+                  "key": "page",
+                  "value": "1",
+                  "description": "",
+                  "disabled": false
+                },
+                {
+                  "key": "limit",
+                  "value": "1",
+                  "description": "",
+                  "disabled": false
+                }
+              ],
+              "variable": []
+            },
+            "description": ""
+          },
+          "response": []
+        },
+        {
+          "name": "Create a user",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "x-csrf-token",
+                "value": "{{csrfToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/users",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "users"
+              ],
+              "query": [],
+              "variable": []
+            },
+            "description": "Student/advisor profiles are created in the same transaction. A temporary password is generated when none is supplied and the account must change it.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"student1@aidm.bua.edu.eg\",\n  \"fullName\": \"Student One\",\n  \"role\": \"student\",\n  \"phone\": \"+201000000000\",\n  \"password\": \"ChangeMe!2026\",\n  \"isDemo\": false,\n  \"student\": {\n    \"studentCode\": \"26000001\",\n    \"program\": \"CS\",\n    \"level\": 1,\n    \"advisorId\": \"00000000-0000-4000-8000-000000000000\",\n    \"departmentId\": \"00000000-0000-4000-8000-000000000000\",\n    \"admissionTerm\": \"string\",\n    \"cgpa\": 1.0,\n    \"passedCredits\": 1,\n    \"transferCredits\": 1\n  },\n  \"advisor\": {\n    \"departmentId\": \"00000000-0000-4000-8000-000000000000\",\n    \"officeLocation\": \"string\",\n    \"maxStudents\": 1\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update a user's name, phone or status",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "x-csrf-token",
+                "value": "{{csrfToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/users/{{id}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "users",
+                "{{id}}"
+              ],
+              "query": [],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "00000000-0000-4000-8000-000000000000"
+                }
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"fullName\": \"Student One\",\n  \"phone\": \"+201000000000\",\n  \"status\": \"active\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Soft-delete a user",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "x-csrf-token",
+                "value": "{{csrfToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/users/{{id}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "users",
+                "{{id}}"
+              ],
+              "query": [],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "00000000-0000-4000-8000-000000000000"
+                }
+              ]
+            },
+            "description": ""
+          },
+          "response": []
+        },
+        {
+          "name": "Issue a temporary password and force a change",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "x-csrf-token",
+                "value": "{{csrfToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/users/{{id}}/reset-password",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "users",
+                "{{id}}",
+                "reset-password"
+              ],
+              "query": [],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "00000000-0000-4000-8000-000000000000"
+                }
+              ]
+            },
+            "description": ""
+          },
+          "response": []
+        },
+        {
+          "name": "List advisors",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/advisors",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "advisors"
+              ],
+              "query": [],
+              "variable": []
+            },
+            "description": ""
+          },
+          "response": []
+        },
+        {
+          "name": "Update an advisor's department, office or cap",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "x-csrf-token",
+                "value": "{{csrfToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/advisors/{{id}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "advisors",
+                "{{id}}"
+              ],
+              "query": [],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "00000000-0000-4000-8000-000000000000"
+                }
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"departmentId\": \"00000000-0000-4000-8000-000000000000\",\n  \"officeLocation\": \"string\",\n  \"maxStudents\": 1\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "List students",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/students",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "students"
+              ],
+              "query": [
+                {
+                  "key": "program",
+                  "value": "CS",
+                  "description": "",
+                  "disabled": true
+                },
+                {
+                  "key": "level",
+                  "value": "1",
+                  "description": "",
+                  "disabled": true
+                },
+                {
+                  "key": "search",
+                  "value": "student",
+                  "description": "",
+                  "disabled": true
+                },
+                {
+                  "key": "atRisk",
+                  "value": "true",
+                  "description": "",
+                  "disabled": true
+                },
+                {
+                  "key": "page",
+                  "value": "1",
+                  "description": "",
+                  "disabled": false
+                },
+                {
+                  "key": "limit",
+                  "value": "1",
+                  "description": "",
+                  "disabled": false
+                }
+              ],
+              "variable": []
+            },
+            "description": ""
+          },
+          "response": []
+        },
+        {
+          "name": "Student detail",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/students/{{id}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "students",
+                "{{id}}"
+              ],
+              "query": [],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "00000000-0000-4000-8000-000000000000"
+                }
+              ]
+            },
+            "description": ""
+          },
+          "response": []
+        },
+        {
+          "name": "Update a student's academic record",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "x-csrf-token",
+                "value": "{{csrfToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/students/{{id}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "students",
+                "{{id}}"
+              ],
+              "query": [],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "00000000-0000-4000-8000-000000000000"
+                }
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "List departments",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/departments",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "departments"
+              ],
+              "query": [],
+              "variable": []
+            },
+            "description": ""
+          },
+          "response": []
+        },
+        {
+          "name": "Create a department",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "x-csrf-token",
+                "value": "{{csrfToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/departments",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "departments"
+              ],
+              "query": [],
+              "variable": []
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"code\": \"CSB1101\",\n  \"nameAr\": \"علوم الحاسب\",\n  \"nameEn\": \"Computer Science\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Rename a department",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "x-csrf-token",
+                "value": "{{csrfToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/departments/{{id}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "departments",
+                "{{id}}"
+              ],
+              "query": [],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "00000000-0000-4000-8000-000000000000"
+                }
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nameAr\": \"علوم الحاسب\",\n  \"nameEn\": \"Computer Science\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "List courses",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/courses",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "courses"
+              ],
+              "query": [
+                {
+                  "key": "search",
+                  "value": "student",
+                  "description": "",
+                  "disabled": true
+                },
+                {
+                  "key": "program",
+                  "value": "CS",
+                  "description": "",
+                  "disabled": true
+                },
+                {
+                  "key": "level",
+                  "value": "1",
+                  "description": "",
+                  "disabled": true
+                },
+                {
+                  "key": "active",
+                  "value": "true",
+                  "description": "",
+                  "disabled": true
+                },
+                {
+                  "key": "page",
+                  "value": "1",
+                  "description": "",
+                  "disabled": false
+                },
+                {
+                  "key": "limit",
+                  "value": "1",
+                  "description": "",
+                  "disabled": false
+                }
+              ],
+              "variable": []
+            },
+            "description": ""
+          },
+          "response": []
+        },
+        {
+          "name": "Create a course",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "x-csrf-token",
+                "value": "{{csrfToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/courses",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "courses"
+              ],
+              "query": [],
+              "variable": []
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"code\": \"CSB1101\",\n  \"nameAr\": \"علوم الحاسب\",\n  \"nameEn\": \"Computer Science\",\n  \"credits\": 3,\n  \"category\": \"string\",\n  \"countsInGpa\": false,\n  \"levelHint\": 1,\n  \"termHint\": 1,\n  \"anomalyIds\": [\n    \"string\"\n  ],\n  \"prerequisites\": {\n    \"allOf\": [\n      \"string\"\n    ],\n    \"minPassedCreditHours\": 60\n  },\n  \"roles\": {}\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Course detail with prerequisites and offerings",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/courses/{{id}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "courses",
+                "{{id}}"
+              ],
+              "query": [],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "00000000-0000-4000-8000-000000000000"
+                }
+              ]
+            },
+            "description": ""
+          },
+          "response": []
+        },
+        {
+          "name": "Update a course",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "x-csrf-token",
+                "value": "{{csrfToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/courses/{{id}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "courses",
+                "{{id}}"
+              ],
+              "query": [],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "00000000-0000-4000-8000-000000000000"
+                }
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nameAr\": \"علوم الحاسب\",\n  \"nameEn\": \"Computer Science\",\n  \"credits\": 3,\n  \"category\": \"string\",\n  \"countsInGpa\": false,\n  \"levelHint\": 1,\n  \"termHint\": 1,\n  \"active\": false\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Soft-delete a course",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "x-csrf-token",
+                "value": "{{csrfToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/courses/{{id}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "courses",
+                "{{id}}"
+              ],
+              "query": [],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "00000000-0000-4000-8000-000000000000"
+                }
+              ]
+            },
+            "description": ""
+          },
+          "response": []
+        },
+        {
+          "name": "Add a prerequisite, corequisite or credit-hours requirement",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "x-csrf-token",
+                "value": "{{csrfToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/courses/{{id}}/prerequisites",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "courses",
+                "{{id}}",
+                "prerequisites"
+              ],
+              "query": [],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "00000000-0000-4000-8000-000000000000"
+                }
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"type\": \"prerequisite\",\n  \"requiredCourseCode\": \"string\",\n  \"minPassedCreditHours\": 60\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Delete a prerequisite requirement",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "x-csrf-token",
+                "value": "{{csrfToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/prerequisites/{{id}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "prerequisites",
+                "{{id}}"
+              ],
+              "query": [],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "00000000-0000-4000-8000-000000000000"
+                }
+              ]
+            },
+            "description": ""
+          },
+          "response": []
+        },
+        {
+          "name": "Create a term offering",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "x-csrf-token",
+                "value": "{{csrfToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/courses/{{id}}/offerings",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "courses",
+                "{{id}}",
+                "offerings"
+              ],
+              "query": [],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "00000000-0000-4000-8000-000000000000"
+                }
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"academicYear\": \"2026-2027\",\n  \"season\": \"fall\",\n  \"capacity\": 30,\n  \"status\": \"open\",\n  \"meetingTimes\": [\n    {\n      \"day\": \"sat\",\n      \"start\": \"10:00\",\n      \"end\": \"11:00\",\n      \"room\": \"B-101\"\n    }\n  ],\n  \"exam\": {\n    \"date\": \"2026-12-15\",\n    \"start\": \"10:00\",\n    \"end\": \"11:00\",\n    \"room\": \"B-101\"\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update capacity, enrollment or status",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "x-csrf-token",
+                "value": "{{csrfToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/offerings/{{id}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "offerings",
+                "{{id}}"
+              ],
+              "query": [],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "00000000-0000-4000-8000-000000000000"
+                }
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"capacity\": 30,\n  \"enrolledCount\": 1,\n  \"status\": \"open\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Delete an offering",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "x-csrf-token",
+                "value": "{{csrfToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/offerings/{{id}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "offerings",
+                "{{id}}"
+              ],
+              "query": [],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "00000000-0000-4000-8000-000000000000"
+                }
+              ]
+            },
+            "description": ""
+          },
+          "response": []
+        },
+        {
+          "name": "List regulation anomalies",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/anomalies",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "anomalies"
+              ],
+              "query": [
+                {
+                  "key": "status",
+                  "value": "open",
+                  "description": "",
+                  "disabled": true
+                },
+                {
+                  "key": "severity",
+                  "value": "blocking",
+                  "description": "",
+                  "disabled": true
+                },
+                {
+                  "key": "type",
+                  "value": "string",
+                  "description": "",
+                  "disabled": true
+                },
+                {
+                  "key": "course",
+                  "value": "string",
+                  "description": "",
+                  "disabled": true
+                },
+                {
+                  "key": "page",
+                  "value": "1",
+                  "description": "",
+                  "disabled": false
+                },
+                {
+                  "key": "limit",
+                  "value": "1",
+                  "description": "",
+                  "disabled": false
+                }
+              ],
+              "variable": []
+            },
+            "description": ""
+          },
+          "response": []
+        },
+        {
+          "name": "Anomaly detail",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/anomalies/{{id}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "anomalies",
+                "{{id}}"
+              ],
+              "query": [],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "00000000-0000-4000-8000-000000000000"
+                }
+              ]
+            },
+            "description": ""
+          },
+          "response": []
+        },
+        {
+          "name": "Resolve an anomaly, re-evaluate affected decisions and audit it",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "x-csrf-token",
+                "value": "{{csrfToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/anomalies/{{id}}/resolve",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "anomalies",
+                "{{id}}",
+                "resolve"
+              ],
+              "query": [],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "00000000-0000-4000-8000-000000000000"
+                }
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"resolvedValue\": \"12\",\n  \"note\": \"Reviewed with the student.\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Reopen a resolved anomaly with a reason",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "x-csrf-token",
+                "value": "{{csrfToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/anomalies/{{id}}/reopen",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "anomalies",
+                "{{id}}",
+                "reopen"
+              ],
+              "query": [],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "00000000-0000-4000-8000-000000000000"
+                }
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"reason\": \"Scheduling conflict\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "List regulation rules",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/regulation/rules",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "regulation",
+                "rules"
+              ],
+              "query": [
+                {
+                  "key": "search",
+                  "value": "student",
+                  "description": "",
+                  "disabled": true
+                },
+                {
+                  "key": "status",
+                  "value": "active",
+                  "description": "",
+                  "disabled": true
+                },
+                {
+                  "key": "page",
+                  "value": "1",
+                  "description": "",
+                  "disabled": false
+                },
+                {
+                  "key": "limit",
+                  "value": "1",
+                  "description": "",
+                  "disabled": false
+                }
+              ],
+              "variable": []
+            },
+            "description": ""
+          },
+          "response": []
+        },
+        {
+          "name": "Rule detail with article, clause and page",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/regulation/rules/{{code}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "regulation",
+                "rules",
+                "{{code}}"
+              ],
+              "query": [],
+              "variable": [
+                {
+                  "key": "code",
+                  "value": "R-REG-09.5"
+                }
+              ]
+            },
+            "description": ""
+          },
+          "response": []
+        },
+        {
+          "name": "Query the append-only audit log",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/audit-logs",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "audit-logs"
+              ],
+              "query": [
+                {
+                  "key": "actorId",
+                  "value": "00000000-0000-4000-8000-000000000000",
+                  "description": "",
+                  "disabled": true
+                },
+                {
+                  "key": "entityType",
+                  "value": "string",
+                  "description": "",
+                  "disabled": true
+                },
+                {
+                  "key": "entityId",
+                  "value": "string",
+                  "description": "",
+                  "disabled": true
+                },
+                {
+                  "key": "action",
+                  "value": "string",
+                  "description": "",
+                  "disabled": true
+                },
+                {
+                  "key": "from",
+                  "value": "2026-10-01T09:00:00Z",
+                  "description": "",
+                  "disabled": true
+                },
+                {
+                  "key": "to",
+                  "value": "2026-10-01T09:00:00Z",
+                  "description": "",
+                  "disabled": true
+                },
+                {
+                  "key": "page",
+                  "value": "1",
+                  "description": "",
+                  "disabled": false
+                },
+                {
+                  "key": "limit",
+                  "value": "1",
+                  "description": "",
+                  "disabled": false
+                }
+              ],
+              "variable": []
+            },
+            "description": ""
+          },
+          "response": []
+        },
+        {
+          "name": "List escalations",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/escalations",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "escalations"
+              ],
+              "query": [
+                {
+                  "key": "status",
+                  "value": "open",
+                  "description": "",
+                  "disabled": true
+                },
+                {
+                  "key": "type",
+                  "value": "RULE_ENGINE",
+                  "description": "",
+                  "disabled": true
+                },
+                {
+                  "key": "priority",
+                  "value": "low",
+                  "description": "",
+                  "disabled": true
+                },
+                {
+                  "key": "page",
+                  "value": "1",
+                  "description": "",
+                  "disabled": false
+                },
+                {
+                  "key": "limit",
+                  "value": "1",
+                  "description": "",
+                  "disabled": false
+                }
+              ],
+              "variable": []
+            },
+            "description": ""
+          },
+          "response": []
+        },
+        {
+          "name": "Update or assign an escalation",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "x-csrf-token",
+                "value": "{{csrfToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/escalations/{{id}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "escalations",
+                "{{id}}"
+              ],
+              "query": [],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "00000000-0000-4000-8000-000000000000"
+                }
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"open\",\n  \"priority\": \"low\",\n  \"resolution\": \"Confirmed with the college council.\",\n  \"assignedTo\": \"00000000-0000-4000-8000-000000000000\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Institution-wide totals",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/analytics/overview",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "analytics",
+                "overview"
+              ],
+              "query": [],
+              "variable": []
+            },
+            "description": ""
+          },
+          "response": []
+        },
+        {
+          "name": "Courses blocking the most students",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/analytics/bottlenecks",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "analytics",
+                "bottlenecks"
+              ],
+              "query": [
+                {
+                  "key": "limit",
+                  "value": "1",
+                  "description": "",
+                  "disabled": false
+                }
+              ],
+              "variable": []
+            },
+            "description": ""
+          },
+          "response": []
+        },
+        {
+          "name": "Enrollment trends",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/analytics/enrollments",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "analytics",
+                "enrollments"
+              ],
+              "query": [],
+              "variable": []
+            },
+            "description": ""
+          },
+          "response": []
+        },
+        {
+          "name": "Escalation volume by type and status",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/analytics/escalations",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "analytics",
+                "escalations"
+              ],
+              "query": [],
+              "variable": []
+            },
+            "description": ""
+          },
+          "response": []
+        },
+        {
+          "name": "Plan status distribution",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/analytics/plans",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "analytics",
+                "plans"
+              ],
+              "query": [],
+              "variable": []
+            },
+            "description": ""
+          },
+          "response": []
+        },
+        {
+          "name": "Import students from CSV",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "x-csrf-token",
+                "value": "{{csrfToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/imports/students",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "imports",
+                "students"
+              ],
+              "query": [],
+              "variable": []
+            },
+            "description": "Multipart upload, field `file`. Headers are validated; up to 5,000 rows;\nper-row errors are stored without aborting the whole file. Imported\naccounts get a random temporary password and must reset it.\n",
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "file",
+                  "type": "file",
+                  "src": [],
+                  "description": "Select a CSV file"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Import transcript rows from CSV",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "x-csrf-token",
+                "value": "{{csrfToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/imports/transcripts",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "imports",
+                "transcripts"
+              ],
+              "query": [],
+              "variable": []
+            },
+            "description": "",
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "file",
+                  "type": "file",
+                  "src": [],
+                  "description": "Select a CSV file"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "List import jobs",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/imports",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "imports"
+              ],
+              "query": [
+                {
+                  "key": "type",
+                  "value": "students",
+                  "description": "",
+                  "disabled": true
+                },
+                {
+                  "key": "status",
+                  "value": "pending",
+                  "description": "",
+                  "disabled": true
+                },
+                {
+                  "key": "page",
+                  "value": "1",
+                  "description": "",
+                  "disabled": false
+                },
+                {
+                  "key": "limit",
+                  "value": "1",
+                  "description": "",
+                  "disabled": false
+                }
+              ],
+              "variable": []
+            },
+            "description": ""
+          },
+          "response": []
+        },
+        {
+          "name": "Import job detail",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/imports/{{id}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "imports",
+                "{{id}}"
+              ],
+              "query": [],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "00000000-0000-4000-8000-000000000000"
+                }
+              ]
+            },
+            "description": ""
+          },
+          "response": []
+        },
+        {
+          "name": "Per-row import errors",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/imports/{{id}}/errors",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "imports",
+                "{{id}}",
+                "errors"
+              ],
+              "query": [],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "00000000-0000-4000-8000-000000000000"
+                }
+              ]
+            },
+            "description": ""
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Chat",
+      "item": [
+        {
+          "name": "List own chat sessions",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/chat/sessions",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "chat",
+                "sessions"
+              ],
+              "query": [],
+              "variable": []
+            },
+            "description": ""
+          },
+          "response": []
+        },
+        {
+          "name": "Create a chat session",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "x-csrf-token",
+                "value": "{{csrfToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/chat/sessions",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "chat",
+                "sessions"
+              ],
+              "query": [],
+              "variable": []
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"string\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get a session with its messages",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/chat/sessions/{{id}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "chat",
+                "sessions",
+                "{{id}}"
+              ],
+              "query": [],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "00000000-0000-4000-8000-000000000000"
+                }
+              ]
+            },
+            "description": ""
+          },
+          "response": []
+        },
+        {
+          "name": "Ask a policy question (RAG)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "x-csrf-token",
+                "value": "{{csrfToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/chat/sessions/{{id}}/messages",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "chat",
+                "sessions",
+                "{{id}}",
+                "messages"
+              ],
+              "query": [],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "00000000-0000-4000-8000-000000000000"
+                }
+              ]
+            },
+            "description": "Answers are extractive from stored bylaw chunks and always carry\ncitations. Low confidence or open-anomaly topics return an escalation\ninstead of an answer. Numeric questions are answered by the rule engine.\n",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"question\": \"ما هو الحد الأقصى للعبء الدراسي؟\",\n  \"language\": \"ar\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,378 @@
+%% Smart Academic Advisor — full ERD
+%% Source of truth: db/migrations/1700000000000_init.js
+%% Paste into https://mermaid.live or render with the Mermaid CLI.
+erDiagram
+    DEPARTMENTS ||--o{ ADVISORS : "departments"
+    DEPARTMENTS ||--o{ STUDENTS : "departments"
+    USERS ||--o| ADVISORS : "profile"
+    USERS ||--o| STUDENTS : "profile"
+    ADVISORS ||--o{ STUDENTS : "advises"
+
+    COURSES ||--o{ COURSE_PREREQUISITES : "course"
+    COURSES ||--o{ COURSE_PREREQUISITES : "required"
+    ELECTIVE_POOLS ||--o{ ELECTIVE_POOL_COURSES : "pool"
+    COURSES ||--o{ ELECTIVE_POOL_COURSES : "member"
+    COURSES ||--o{ PROGRAM_REQUIREMENTS : "course"
+    ELECTIVE_POOLS ||--o{ PROGRAM_REQUIREMENTS : "pool"
+    COURSES ||--o{ RECOMMENDED_PLANS : "course"
+    ELECTIVE_POOLS ||--o{ RECOMMENDED_PLANS : "pool"
+
+    COURSES ||--o{ COURSE_OFFERINGS : "offered"
+    COURSE_OFFERINGS ||--o{ MEETING_TIMES : "meetings"
+    COURSE_OFFERINGS ||--o{ EXAMS : "exams"
+    STUDENTS ||--o{ ENROLLMENTS : "enrolls"
+    COURSES ||--o{ ENROLLMENTS : "course"
+    COURSE_OFFERINGS ||--o{ ENROLLMENTS : "section"
+
+    STUDENTS ||--o{ STUDY_PLANS : "plans"
+    USERS ||--o{ STUDY_PLANS : "generated_or_reviewed"
+    STUDY_PLANS ||--o{ STUDY_PLAN_ITEMS : "items"
+    COURSES ||--o{ STUDY_PLAN_ITEMS : "course"
+    STUDENTS ||--o{ ELIGIBILITY_CHECKS : "checks"
+    COURSES ||--o{ ELIGIBILITY_CHECKS : "course"
+    STUDENTS ||--o{ ACADEMIC_STANDING : "standing"
+    STUDENTS ||--o{ ESCALATIONS : "cases"
+    USERS ||--o{ ESCALATIONS : "created_assigned_resolved"
+    STUDY_PLANS ||--o{ ESCALATIONS : "related_plan"
+    ESCALATIONS ||--o{ ESCALATION_EVENTS : "events"
+    USERS ||--o{ ESCALATION_EVENTS : "actor"
+    ADVISORS ||--o{ ADVISING_NOTES : "notes"
+    STUDENTS ||--o{ ADVISING_NOTES : "about"
+    ADVISORS ||--o{ OFFICE_HOUR_SLOTS : "slots"
+    OFFICE_HOUR_SLOTS ||--o{ OFFICE_HOUR_REQUESTS : "requests"
+    STUDENTS ||--o{ OFFICE_HOUR_REQUESTS : "requests"
+    USERS ||--o{ NOTIFICATIONS : "receives"
+
+    USERS ||--o{ DATA_ANOMALIES : "resolves"
+    POLICY_DOCUMENTS ||--o{ POLICY_CHUNKS : "chunks"
+    STUDENTS ||--o{ CHAT_SESSIONS : "chats"
+    CHAT_SESSIONS ||--o{ CHAT_MESSAGES : "messages"
+    USERS ||--o{ IMPORT_JOBS : "runs"
+    IMPORT_JOBS ||--o{ IMPORT_ROW_ERRORS : "errors"
+    USERS ||--o{ REFRESH_TOKENS : "sessions"
+    USERS ||--o{ PASSWORD_RESETS : "resets"
+    USERS ||--o{ AUDIT_LOGS : "actor"
+
+    DEPARTMENTS {
+        uuid id PK
+        text code UK
+        text name_ar
+        text name_en
+    }
+    USERS {
+        uuid id PK
+        citext email UK
+        text password_hash
+        text role
+        text status
+        text full_name
+        boolean must_change_password
+        boolean is_demo
+        timestamptz deleted_at
+    }
+    ADVISORS {
+        uuid id PK
+        uuid user_id FK
+        uuid department_id FK
+        text office_location
+        int max_students
+    }
+    STUDENTS {
+        uuid id PK
+        uuid user_id FK
+        text student_code UK
+        uuid department_id FK
+        uuid advisor_id FK
+        text program
+        int level
+        numeric current_cgpa
+        int passed_credits
+    }
+    COURSES {
+        uuid id PK
+        text code UK
+        text name_ar
+        text name_en
+        int credits
+        text category
+        boolean counts_in_gpa
+        int level_hint
+        int term_hint
+        jsonb anomaly_ids
+        boolean active
+        timestamptz deleted_at
+    }
+    COURSE_PREREQUISITES {
+        uuid id PK
+        uuid course_id FK
+        text type
+        uuid required_course_id FK
+        int min_passed_credit_hours
+    }
+    ELECTIVE_POOLS {
+        uuid id PK
+        text code UK
+        int credits_required
+    }
+    ELECTIVE_POOL_COURSES {
+        uuid id PK
+        uuid pool_id FK
+        uuid course_id FK
+        boolean is_mandatory
+    }
+    PROGRAM_REQUIREMENTS {
+        uuid id PK
+        text program
+        uuid course_id FK
+        text role
+        uuid pool_id FK
+    }
+    RECOMMENDED_PLANS {
+        uuid id PK
+        text program
+        int level
+        int term
+        int position
+        uuid course_id FK
+        uuid pool_id FK
+        int credits
+    }
+    COURSE_OFFERINGS {
+        uuid id PK
+        uuid course_id FK
+        text academic_year
+        text season
+        int capacity
+        int enrolled_count
+        text status
+    }
+    MEETING_TIMES {
+        uuid id PK
+        uuid offering_id FK
+        text day
+        time start_time
+        time end_time
+        text room
+    }
+    EXAMS {
+        uuid id PK
+        uuid offering_id FK
+        text exam_type
+        date exam_date
+        time start_time
+        time end_time
+        text room
+    }
+    ENROLLMENTS {
+        uuid id PK
+        uuid student_id FK
+        uuid course_id FK
+        uuid offering_id FK
+        text term
+        text grade_letter
+        numeric percentage
+        numeric grade_points
+        text status
+        int attempt_no
+    }
+    GRADE_SCALE {
+        text letter PK
+        numeric min_pct
+        numeric max_pct_exclusive
+        numeric points
+        boolean counts_in_gpa
+        boolean passed
+    }
+    STUDY_PLANS {
+        uuid id PK
+        uuid student_id FK
+        text term
+        text status
+        int total_credits
+        uuid generated_by FK
+        jsonb engine_payload
+        uuid reviewed_by FK
+    }
+    STUDY_PLAN_ITEMS {
+        uuid id PK
+        uuid plan_id FK
+        uuid course_id FK
+        int position
+        int credits
+        text eligibility_status
+        text rule_code
+        text article
+        text page
+        jsonb anomaly_ids
+    }
+    ELIGIBILITY_CHECKS {
+        uuid id PK
+        uuid student_id FK
+        uuid course_id FK
+        text course_code
+        text term
+        text status
+        text rule_code
+        jsonb anomaly_ids
+    }
+    ACADEMIC_STANDING {
+        uuid id PK
+        uuid student_id FK
+        text term
+        numeric sgpa
+        numeric cgpa
+        int warning_no
+        boolean probation
+        boolean dismissal_risk
+    }
+    ESCALATIONS {
+        uuid id PK
+        text ticket_no UK
+        uuid student_id FK
+        uuid created_by FK
+        uuid assigned_to FK
+        text type
+        text status
+        text priority
+        uuid related_plan_id FK
+        jsonb anomaly_ids
+    }
+    ESCALATION_EVENTS {
+        uuid id PK
+        uuid escalation_id FK
+        uuid actor_id FK
+        text event_type
+        text notes
+    }
+    ADVISING_NOTES {
+        uuid id PK
+        uuid advisor_id FK
+        uuid student_id FK
+        text note
+        text visibility
+    }
+    OFFICE_HOUR_SLOTS {
+        uuid id PK
+        uuid advisor_id FK
+        int weekday
+        time start_time
+        time end_time
+        text location
+        boolean active
+    }
+    OFFICE_HOUR_REQUESTS {
+        uuid id PK
+        uuid slot_id FK
+        uuid student_id FK
+        text status
+        text reason
+    }
+    NOTIFICATIONS {
+        uuid id PK
+        uuid user_id FK
+        text type
+        text title
+        text body
+        text channel
+        timestamptz read_at
+    }
+    REGULATION_RULES {
+        text rule_code PK
+        text article_no
+        text clause_no
+        text page_no
+        text title_ar
+        text summary_ar
+        text status
+    }
+    DATA_ANOMALIES {
+        text id PK
+        text severity
+        text type
+        text title_ar
+        text description_ar
+        jsonb affected_courses
+        jsonb affected_rules
+        text working_value
+        text resolved_value
+        text status
+        uuid resolved_by FK
+    }
+    POLICY_DOCUMENTS {
+        uuid id PK
+        text title
+        text source_file
+        text checksum UK
+        int page_count
+        text language
+    }
+    POLICY_CHUNKS {
+        uuid id PK
+        uuid document_id FK
+        text article_no
+        int page_no
+        text text
+        text source_ref
+        text chunk_hash UK
+        vector embedding
+    }
+    CHAT_SESSIONS {
+        uuid id PK
+        uuid student_id FK
+        text title
+    }
+    CHAT_MESSAGES {
+        uuid id PK
+        uuid session_id FK
+        text role
+        text content
+        jsonb citations
+        numeric confidence
+        boolean escalated
+        text rule_code
+    }
+    IMPORT_JOBS {
+        uuid id PK
+        text type
+        text status
+        text filename
+        int total_rows
+        int success_rows
+        int error_rows
+        uuid created_by FK
+    }
+    IMPORT_ROW_ERRORS {
+        uuid id PK
+        uuid job_id FK
+        int row_no
+        text code
+        text message
+        jsonb raw
+    }
+    REFRESH_TOKENS {
+        uuid id PK
+        uuid user_id FK
+        text token_hash UK
+        uuid family_id
+        timestamptz expires_at
+        timestamptz revoked_at
+        uuid replaced_by
+    }
+    PASSWORD_RESETS {
+        uuid id PK
+        uuid user_id FK
+        text token_hash UK
+        timestamptz expires_at
+        timestamptz used_at
+    }
+    AUDIT_LOGS {
+        uuid id PK
+        uuid actor_id FK
+        text action
+        text entity_type
+        text entity_id
+        jsonb before
+        jsonb after
+        text correlation_id
+        timestamptz created_at
+    }

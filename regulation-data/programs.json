@@ -1,0 +1,669 @@
+{
+  "programs": {
+    "CS": {
+      "name_ar": "علوم الحاسب",
+      "name_en": "Computer Science",
+      "compulsory": [
+        "CSC3101",
+        "CSC3102",
+        "CSC3103",
+        "CSC3104",
+        "INF3203",
+        "CSC3201",
+        "INF3202",
+        "CSC3202",
+        "CSC4101",
+        "INF4103",
+        "CSC4103",
+        "INF4102",
+        "CSC4201",
+        "CSC4202",
+        "CSC4203"
+      ],
+      "elective_pool": "CS_ELECTIVE",
+      "selected_topic": "CSC4204",
+      "labs": [
+        "CSC3105",
+        "CSC3205"
+      ],
+      "project": [
+        "CSC4105",
+        "CSC4206"
+      ],
+      "field_training": "CSC3206"
+    },
+    "IT": {
+      "name_ar": "تكنولوجيا المعلومات",
+      "name_en": "Information Technology",
+      "compulsory": [
+        "CSC3101",
+        "INF3101",
+        "INF3102",
+        "CSC3102",
+        "INF3201",
+        "CSC3201",
+        "INF3202",
+        "INF3203",
+        "CSC4101",
+        "INF4103",
+        "INF4101",
+        "INF4102",
+        "INF4201",
+        "CSC4202",
+        "INF4202"
+      ],
+      "elective_pool": "IT_ELECTIVE",
+      "selected_topic": "INF4204",
+      "labs": [
+        "INF3105",
+        "INF3205"
+      ],
+      "project": [
+        "INF4105",
+        "INF4205"
+      ],
+      "field_training": "INF3206"
+    },
+    "AI": {
+      "name_ar": "الذكاء الاصطناعي",
+      "name_en": "Artificial Intelligence",
+      "compulsory": [
+        "AIN3101",
+        "AIN3102",
+        "CSC3101",
+        "AIN3104",
+        "AIN3201",
+        "AIN3202",
+        "AIN3203",
+        "CSC3201",
+        "INF4102",
+        "AIN4101",
+        "AIN4102",
+        "AIN4103",
+        "AIN4201",
+        "AIN4202",
+        "AIN4203"
+      ],
+      "elective_pool": "AI_ELECTIVE",
+      "selected_topic": "AIN4204",
+      "labs": [
+        "AIN3105",
+        "AIN3205"
+      ],
+      "project": [
+        "AIN4105",
+        "AIN4205"
+      ],
+      "field_training": "AIN3206"
+    },
+    "DS": {
+      "name_ar": "علوم البيانات",
+      "name_en": "Data Science",
+      "compulsory": [
+        "DSC3101",
+        "DSC3102",
+        "CSC3102",
+        "AIN3102",
+        "INF3201",
+        "AIN3202",
+        "DSC3201",
+        "DSC3202",
+        "DSC4101",
+        "DSC4102",
+        "INF4102",
+        "DSC4103",
+        "AIN4202",
+        "DSC4201",
+        "DSC4202"
+      ],
+      "elective_pool": "DS_ELECTIVE",
+      "selected_topic": "DSC4204",
+      "labs": [
+        "DSC3105",
+        "DSC3205"
+      ],
+      "project": [
+        "DSC4105",
+        "DSC4205"
+      ],
+      "field_training": "DSC3206"
+    }
+  },
+  "common_compulsory": [
+    "UNI1101",
+    "UNI1202",
+    "GNR1101",
+    "GNR1201",
+    "GNR1202",
+    "MTH1101",
+    "MTH1102",
+    "MTH1201",
+    "CSB1101",
+    "CSB1201",
+    "CSB1202",
+    "CSB2101",
+    "CSB2102",
+    "CSB2103",
+    "CSB2104",
+    "CSB2105",
+    "CSB2201",
+    "CSB2202",
+    "CSB2203",
+    "CSB2204",
+    "CSB2205",
+    "CSC4104",
+    "CSC4205"
+  ],
+  "elective_pools": {
+    "UNIV_ELECTIVE": {
+      "credits_required": 3,
+      "mandatory": [
+        "UNI1204"
+      ],
+      "courses": [
+        "UNI1103",
+        "UNI1204",
+        "UNI1105",
+        "UNI1106",
+        "UNI1107",
+        "UNI1208",
+        "UNI1209",
+        "UNI1210"
+      ],
+      "source": "Art.24, Table 1 p.22 (+footnote: UNI1204 mandatory for scientific programs)"
+    },
+    "HUMANITIES_ELECTIVE": {
+      "credits_required": 3,
+      "courses": [
+        "GNR2101",
+        "GNR2102",
+        "GNR2103"
+      ],
+      "source": "Table 3 p.23"
+    },
+    "BASIC_COMPUTING_ELECTIVE": {
+      "credits_required": 3,
+      "courses": [
+        "CSB2206",
+        "CSB2207",
+        "GNR2201"
+      ],
+      "source": "Table 3 p.23"
+    },
+    "CS_ELECTIVE": {
+      "credits_required": 6,
+      "courses": [
+        "AIN3101",
+        "AIN3102",
+        "AIN3104",
+        "INF3201",
+        "AIN3202",
+        "DSC3201"
+      ],
+      "source": "Table 4 p.24"
+    },
+    "IT_ELECTIVE": {
+      "credits_required": 6,
+      "courses": [
+        "AIN3101",
+        "AIN3102",
+        "AIN3104",
+        "AIN3202",
+        "CSC3202",
+        "DSC3201"
+      ],
+      "source": "Table 6 p.25"
+    },
+    "AI_ELECTIVE": {
+      "credits_required": 6,
+      "courses": [
+        "CSC3102",
+        "CSC3103",
+        "AIN3103",
+        "INF3201",
+        "DSC3201",
+        "DSC3202"
+      ],
+      "source": "Table 8 p.26"
+    },
+    "DS_ELECTIVE": {
+      "credits_required": 6,
+      "courses": [
+        "AIN3101",
+        "AIN3104",
+        "INF3202",
+        "INF3203",
+        "CSC3202"
+      ],
+      "source": "Table 10 p.27 (AIN3102 excluded: it is compulsory - see A-CAT-17)"
+    }
+  },
+  "recommended_plans": {
+    "COMMON": {
+      "1-1": [
+        {
+          "course": "UNI1101"
+        },
+        {
+          "course": "GNR1101"
+        },
+        {
+          "course": "MTH1101"
+        },
+        {
+          "course": "MTH1102"
+        },
+        {
+          "course": "CSB1101"
+        },
+        {
+          "elective_pool": "UNIV_ELECTIVE",
+          "credits": 2
+        }
+      ],
+      "1-2": [
+        {
+          "course": "UNI1202"
+        },
+        {
+          "course": "GNR1201"
+        },
+        {
+          "course": "MTH1201"
+        },
+        {
+          "course": "CSB1201"
+        },
+        {
+          "course": "CSB1202"
+        },
+        {
+          "course": "GNR1202"
+        },
+        {
+          "elective_pool": "UNIV_ELECTIVE",
+          "credits": 1
+        }
+      ],
+      "2-1": [
+        {
+          "course": "CSB2101"
+        },
+        {
+          "course": "CSB2102"
+        },
+        {
+          "course": "CSB2103"
+        },
+        {
+          "course": "CSB2104"
+        },
+        {
+          "course": "CSB2105"
+        },
+        {
+          "elective_pool": "HUMANITIES_ELECTIVE",
+          "credits": 3
+        }
+      ],
+      "2-2": [
+        {
+          "course": "CSB2201"
+        },
+        {
+          "course": "CSB2202"
+        },
+        {
+          "course": "CSB2203"
+        },
+        {
+          "course": "CSB2204"
+        },
+        {
+          "course": "CSB2205"
+        },
+        {
+          "elective_pool": "BASIC_COMPUTING_ELECTIVE",
+          "credits": 3
+        }
+      ]
+    },
+    "CS": {
+      "3-1": [
+        {
+          "course": "CSC3101"
+        },
+        {
+          "course": "CSC3102"
+        },
+        {
+          "course": "CSC3103"
+        },
+        {
+          "course": "CSC3104"
+        },
+        {
+          "course": "CSC3105"
+        },
+        {
+          "elective_pool": "CS_ELECTIVE",
+          "credits": 3
+        }
+      ],
+      "3-2": [
+        {
+          "course": "INF3203"
+        },
+        {
+          "course": "CSC3201"
+        },
+        {
+          "course": "INF3202"
+        },
+        {
+          "course": "CSC3202"
+        },
+        {
+          "course": "CSC3205"
+        },
+        {
+          "elective_pool": "CS_ELECTIVE",
+          "credits": 3
+        }
+      ],
+      "4-1": [
+        {
+          "course": "CSC4101"
+        },
+        {
+          "course": "INF4103"
+        },
+        {
+          "course": "CSC4103"
+        },
+        {
+          "course": "INF4102"
+        },
+        {
+          "course": "CSC4104"
+        },
+        {
+          "course": "CSC4105"
+        }
+      ],
+      "4-2": [
+        {
+          "course": "CSC4201"
+        },
+        {
+          "course": "CSC4202"
+        },
+        {
+          "course": "CSC4203"
+        },
+        {
+          "course": "CSC4204"
+        },
+        {
+          "course": "CSC4205"
+        },
+        {
+          "course": "CSC4206"
+        }
+      ]
+    },
+    "IT": {
+      "3-1": [
+        {
+          "course": "CSC3101"
+        },
+        {
+          "course": "INF3101"
+        },
+        {
+          "course": "INF3102"
+        },
+        {
+          "course": "CSC3102"
+        },
+        {
+          "course": "INF3105"
+        },
+        {
+          "elective_pool": "IT_ELECTIVE",
+          "credits": 3
+        }
+      ],
+      "3-2": [
+        {
+          "course": "INF3201"
+        },
+        {
+          "course": "CSC3201"
+        },
+        {
+          "course": "INF3202"
+        },
+        {
+          "course": "INF3203"
+        },
+        {
+          "course": "INF3205"
+        },
+        {
+          "elective_pool": "IT_ELECTIVE",
+          "credits": 3
+        }
+      ],
+      "4-1": [
+        {
+          "course": "CSC4101"
+        },
+        {
+          "course": "INF4103"
+        },
+        {
+          "course": "INF4101"
+        },
+        {
+          "course": "INF4102"
+        },
+        {
+          "course": "CSC4104"
+        },
+        {
+          "course": "INF4105"
+        }
+      ],
+      "4-2": [
+        {
+          "course": "INF4201"
+        },
+        {
+          "course": "CSC4202"
+        },
+        {
+          "course": "INF4202"
+        },
+        {
+          "course": "INF4204"
+        },
+        {
+          "course": "CSC4205"
+        },
+        {
+          "course": "INF4205"
+        }
+      ]
+    },
+    "AI": {
+      "3-1": [
+        {
+          "course": "AIN3101"
+        },
+        {
+          "course": "AIN3102"
+        },
+        {
+          "course": "CSC3101"
+        },
+        {
+          "course": "AIN3104"
+        },
+        {
+          "course": "AIN3105"
+        },
+        {
+          "elective_pool": "AI_ELECTIVE",
+          "credits": 3
+        }
+      ],
+      "3-2": [
+        {
+          "course": "AIN3201"
+        },
+        {
+          "course": "AIN3202"
+        },
+        {
+          "course": "AIN3203"
+        },
+        {
+          "course": "CSC3201"
+        },
+        {
+          "course": "AIN3205"
+        },
+        {
+          "elective_pool": "AI_ELECTIVE",
+          "credits": 3
+        }
+      ],
+      "4-1": [
+        {
+          "course": "INF4102"
+        },
+        {
+          "course": "AIN4101"
+        },
+        {
+          "course": "AIN4102"
+        },
+        {
+          "course": "AIN4103"
+        },
+        {
+          "course": "CSC4104"
+        },
+        {
+          "course": "AIN4105"
+        }
+      ],
+      "4-2": [
+        {
+          "course": "AIN4201"
+        },
+        {
+          "course": "AIN4202"
+        },
+        {
+          "course": "AIN4203"
+        },
+        {
+          "course": "AIN4204"
+        },
+        {
+          "course": "CSC4205"
+        },
+        {
+          "course": "AIN4205"
+        }
+      ]
+    },
+    "DS": {
+      "3-1": [
+        {
+          "course": "DSC3101"
+        },
+        {
+          "course": "DSC3102"
+        },
+        {
+          "course": "CSC3102"
+        },
+        {
+          "course": "AIN3102"
+        },
+        {
+          "course": "DSC3105"
+        },
+        {
+          "elective_pool": "DS_ELECTIVE",
+          "credits": 3
+        }
+      ],
+      "3-2": [
+        {
+          "course": "INF3201"
+        },
+        {
+          "course": "AIN3202"
+        },
+        {
+          "course": "DSC3201"
+        },
+        {
+          "course": "DSC3202"
+        },
+        {
+          "course": "DSC3205"
+        },
+        {
+          "elective_pool": "DS_ELECTIVE",
+          "credits": 3
+        }
+      ],
+      "4-1": [
+        {
+          "course": "DSC4101"
+        },
+        {
+          "course": "DSC4102"
+        },
+        {
+          "course": "INF4102"
+        },
+        {
+          "course": "DSC4103"
+        },
+        {
+          "course": "CSC4104"
+        },
+        {
+          "course": "DSC4105"
+        }
+      ],
+      "4-2": [
+        {
+          "course": "AIN4202"
+        },
+        {
+          "course": "DSC4201"
+        },
+        {
+          "course": "DSC4202"
+        },
+        {
+          "course": "DSC4204"
+        },
+        {
+          "course": "CSC4205"
+        },
+        {
+          "course": "DSC4205"
+        }
+      ]
+    }
+  },
+  "note": "plan slot = {course} or {elective_pool, credits}. Recommended plans are advisory (Art.26)."
+}

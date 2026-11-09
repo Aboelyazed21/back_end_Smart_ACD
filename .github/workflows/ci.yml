@@ -1,0 +1,183 @@
+name: CI
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  regulation-data:
+    name: Regulation data integrity
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Validate extraction, plans, anomalies, rules and policy chunks
+        run: node scripts/validate-data.mjs
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install spec tooling
+        run: pip install pyyaml
+      - name: Check OpenAPI references and duplicate keys
+        run: python scripts/check-openapi.py
+
+  rule-engine:
+    name: Rule engine (pytest + ruff)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: rule-engine
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: pip
+          cache-dependency-path: rule-engine/requirements.txt
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+      - name: Lint
+        run: ruff check app tests
+      - name: Golden and rule tests
+        run: pytest --cov-report=xml:coverage.xml
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: engine-coverage
+          path: rule-engine/coverage.xml
+          if-no-files-found: ignore
+
+  backend-api:
+    name: Backend API (build, lint, integration tests)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend-api
+    services:
+      postgres:
+        image: pgvector/pgvector:pg16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: smart_advisor_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d smart_advisor_test"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 20
+    env:
+      MIGRATION_DATABASE_URL: postgres://postgres:postgres@localhost:5432/smart_advisor_test
+      TEST_DATABASE_URL: postgres://postgres:postgres@localhost:5432/smart_advisor_test
+      DATABASE_URL: postgres://postgres:postgres@localhost:5432/smart_advisor_test
+      DB_APP_PASSWORD: ci_app_password_change_me
+      NODE_ENV: test
+      SEED_DEMO: 'true'
+      REGULATION_DATA_DIR: ${{ github.workspace }}/regulation-data
+      DEMO_PASSWORD: 'ChangeMe!2026'
+      ENGINE_URL: http://127.0.0.1:4599
+      ENGINE_SERVICE_TOKEN: ci-engine-token-0123456789
+      ENGINE_HMAC_SECRET: ci-engine-hmac-secret-0123456789abcdef
+      JWT_ACCESS_SECRET: ci-access-secret-0123456789abcdef0123456789
+      JWT_REFRESH_PEPPER: ci-refresh-pepper-0123456789abcdef0123456789
+      QR_SIGNING_SECRET: ci-qr-secret-0123456789abcdef
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+          cache-dependency-path: backend-api/package-lock.json
+      - name: Install dependencies
+        run: npm ci
+      - name: Type-check
+        run: npx tsc --noEmit
+      - name: Lint
+        run: npm run lint
+      - name: Format check
+        run: npm run format
+      - name: Build
+        run: npm run build
+      - name: Migrate test database
+        run: npm run migrate:up
+      - name: Seed test database (idempotency check runs it twice)
+        run: |
+          npm run seed
+          npm run seed
+      - name: Verify the least-privilege role cannot mutate audit history
+        env:
+          DATABASE_URL: postgres://smart_advisor_app:ci_app_password_change_me@localhost:5432/smart_advisor_test
+        run: node scripts/check-audit-append-only.mjs
+      - name: Integration tests with coverage
+        run: npm run test:coverage
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: backend-coverage
+          path: backend-api/coverage
+          if-no-files-found: ignore
+
+  frontend:
+    name: Frontend (typecheck, lint, tests, build)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - name: Install dependencies
+        run: npm ci
+      - name: Type-check
+        run: npm run typecheck
+      - name: Lint
+        run: npm run lint
+      - name: Unit tests
+        run: npm test
+      - name: Production build
+        run: npm run build
+
+  docker:
+    name: Docker images build
+    runs-on: ubuntu-latest
+    needs: [regulation-data]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/setup-buildx-action@v3
+      - name: Build backend image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: backend-api/Dockerfile
+          push: false
+          tags: smart-advisor/backend-api:ci
+      - name: Build rule engine image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: rule-engine/Dockerfile
+          push: false
+          tags: smart-advisor/rule-engine:ci
+      - name: Build frontend image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: frontend/Dockerfile
+          push: false
+          tags: smart-advisor/frontend:ci

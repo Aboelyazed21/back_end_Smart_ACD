@@ -1,0 +1,130 @@
+name: smart-academic-advisor
+
+# The rule engine is deliberately not published to the host: only the Node API
+# may call it, over the private compose network.
+services:
+  db:
+    image: pgvector/pgvector:pg16
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-smart_advisor}
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+    volumes:
+      - db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER:-postgres} -d $${POSTGRES_DB:-smart_advisor}"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+      start_period: 10s
+    ports:
+      - "${POSTGRES_PORT:-55433}:5432"
+    restart: unless-stopped
+
+  mailhog:
+    image: mailhog/mailhog:v1.0.1
+    ports:
+      - "${MAILHOG_UI_PORT:-8025}:8025"
+      - "${MAILHOG_SMTP_PORT:-1025}:1025"
+    restart: unless-stopped
+
+  migrate:
+    build:
+      context: .
+      dockerfile: backend-api/Dockerfile
+    environment:
+      NODE_ENV: ${NODE_ENV:-development}
+      MIGRATION_DATABASE_URL: postgres://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@db:5432/${POSTGRES_DB:-smart_advisor}
+      DB_APP_PASSWORD: ${DB_APP_PASSWORD:-dev_app_password_change_me}
+      JWT_ACCESS_SECRET: ${JWT_ACCESS_SECRET:-dev-access-secret-change-me-0123456789abcdef}
+      JWT_REFRESH_PEPPER: ${JWT_REFRESH_PEPPER:-dev-refresh-pepper-change-me-0123456789abcdef}
+      ENGINE_SERVICE_TOKEN: ${ENGINE_SERVICE_TOKEN:-dev-engine-token-change-me}
+      DATABASE_URL: postgres://smart_advisor_app:${DB_APP_PASSWORD:-dev_app_password_change_me}@db:5432/${POSTGRES_DB:-smart_advisor}
+    entrypoint: ["npm", "run", "migrate:up"]
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: "no"
+
+  rule-engine:
+    build:
+      context: .
+      dockerfile: rule-engine/Dockerfile
+    environment:
+      APP_ENV: ${APP_ENV:-development}
+      ENGINE_SERVICE_TOKEN: ${ENGINE_SERVICE_TOKEN:-dev-engine-token-change-me}
+      ENGINE_HMAC_SECRET: ${ENGINE_HMAC_SECRET:-dev-engine-hmac-secret-change-me-0123456789}
+      REGULATION_DATA_DIR: /app/regulation-data
+      DATABASE_URL: postgres://smart_advisor_app:${DB_APP_PASSWORD:-dev_app_password_change_me}@db:5432/${POSTGRES_DB:-smart_advisor}
+      POLICY_INGEST_ON_START: "true"
+      RAG_MIN_CONFIDENCE: ${RAG_MIN_CONFIDENCE:-0.32}
+      RAG_TOP_K: ${RAG_TOP_K:-5}
+      LOG_LEVEL: ${ENGINE_LOG_LEVEL:-INFO}
+    depends_on:
+      db:
+        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
+    expose:
+      - "8000"
+    restart: unless-stopped
+
+  backend-api:
+    build:
+      context: .
+      dockerfile: backend-api/Dockerfile
+    environment:
+      NODE_ENV: ${NODE_ENV:-development}
+      PORT: "4000"
+      DATABASE_URL: postgres://smart_advisor_app:${DB_APP_PASSWORD:-dev_app_password_change_me}@db:5432/${POSTGRES_DB:-smart_advisor}
+      MIGRATION_DATABASE_URL: postgres://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@db:5432/${POSTGRES_DB:-smart_advisor}
+      DB_APP_PASSWORD: ${DB_APP_PASSWORD:-dev_app_password_change_me}
+      DB_POOL_MAX: ${DB_POOL_MAX:-10}
+      JWT_ACCESS_SECRET: ${JWT_ACCESS_SECRET:-dev-access-secret-change-me-0123456789abcdef}
+      JWT_REFRESH_PEPPER: ${JWT_REFRESH_PEPPER:-dev-refresh-pepper-change-me-0123456789abcdef}
+      JWT_ISSUER: ${JWT_ISSUER:-bua-aidm-advisor}
+      JWT_AUDIENCE: ${JWT_AUDIENCE:-bua-aidm-api}
+      ACCESS_TOKEN_TTL_SECONDS: "900"
+      REFRESH_TOKEN_TTL_DAYS: "7"
+      ENGINE_URL: http://rule-engine:8000
+      ENGINE_SERVICE_TOKEN: ${ENGINE_SERVICE_TOKEN:-dev-engine-token-change-me}
+      ENGINE_HMAC_SECRET: ${ENGINE_HMAC_SECRET:-dev-engine-hmac-secret-change-me-0123456789}
+      ENGINE_TIMEOUT_MS: "8000"
+      ALLOWED_EMAIL_DOMAIN: ${ALLOWED_EMAIL_DOMAIN:-aidm.bua.edu.eg}
+      CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:5173}
+      COOKIE_SECURE: ${COOKIE_SECURE:-false}
+      TRUST_PROXY: ${TRUST_PROXY:-loopback}
+      SMTP_HOST: mailhog
+      SMTP_PORT: "1025"
+      SMTP_FROM: ${SMTP_FROM:-no-reply@aidm.bua.edu.eg}
+      APP_BASE_URL: ${APP_BASE_URL:-http://localhost:5173}
+      QR_SIGNING_SECRET: ${QR_SIGNING_SECRET:-dev-qr-secret-change-me-0123456789}
+      DEMO_PASSWORD: ${DEMO_PASSWORD:-ChangeMe!2026}
+      REGULATION_DATA_DIR: /app/regulation-data
+      RUN_MIGRATIONS: "false"
+      RUN_SEED: ${RUN_SEED:-true}
+      # Demo accounts follow NODE_ENV unless SEED_DEMO is set explicitly.
+    depends_on:
+      db:
+        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
+      rule-engine:
+        condition: service_healthy
+    ports:
+      - "${API_PORT:-4000}:4000"
+    restart: unless-stopped
+
+  frontend:
+    build:
+      context: .
+      dockerfile: frontend/Dockerfile
+    depends_on:
+      backend-api:
+        condition: service_healthy
+    ports:
+      - "${FRONTEND_PORT:-5173}:80"
+    restart: unless-stopped
+
+volumes:
+  db-data:

@@ -1,0 +1,505 @@
+{
+  "meta": {
+    "source": "اللائحة الدراسية لبرامج البكالوريوس بنظام الساعات المعتمدة، كلية الذكاء الاصطناعي وإدارة البيانات، جامعة بدر بأسيوط، 2023",
+    "extraction": "OCR of the supplied PDF - every number must be re-verified against the original by the college before production",
+    "total_credit_hours": 136,
+    "university_credits": 5,
+    "college_credits": 67,
+    "program_credits": 64,
+    "plan_level_credits": {
+      "1": 32,
+      "2": 36,
+      "3": 34,
+      "4": 34
+    }
+  },
+  "grade_scale": [
+    {
+      "letter": "A+",
+      "min_pct": 96,
+      "max_pct_exclusive": null,
+      "points": 4.0
+    },
+    {
+      "letter": "A",
+      "min_pct": 92,
+      "max_pct_exclusive": 96,
+      "points": 3.7
+    },
+    {
+      "letter": "A-",
+      "min_pct": 88,
+      "max_pct_exclusive": 92,
+      "points": 3.4
+    },
+    {
+      "letter": "B+",
+      "min_pct": 84,
+      "max_pct_exclusive": 88,
+      "points": 3.2
+    },
+    {
+      "letter": "B",
+      "min_pct": 80,
+      "max_pct_exclusive": 84,
+      "points": 3.0
+    },
+    {
+      "letter": "B-",
+      "min_pct": 76,
+      "max_pct_exclusive": 80,
+      "points": 2.8
+    },
+    {
+      "letter": "C+",
+      "min_pct": 72,
+      "max_pct_exclusive": 76,
+      "points": 2.6
+    },
+    {
+      "letter": "C",
+      "min_pct": 68,
+      "max_pct_exclusive": 72,
+      "points": 2.4
+    },
+    {
+      "letter": "C-",
+      "min_pct": 64,
+      "max_pct_exclusive": 68,
+      "points": 2.2
+    },
+    {
+      "letter": "D+",
+      "min_pct": 60,
+      "max_pct_exclusive": 64,
+      "points": 2.0
+    },
+    {
+      "letter": "D",
+      "min_pct": 55,
+      "max_pct_exclusive": 60,
+      "points": 1.5
+    },
+    {
+      "letter": "D-",
+      "min_pct": 50,
+      "max_pct_exclusive": 55,
+      "points": 1.0
+    },
+    {
+      "letter": "F",
+      "min_pct": 0,
+      "max_pct_exclusive": 50,
+      "points": 0.0
+    }
+  ],
+  "special_grades": {
+    "Abs": {
+      "points": 0.0,
+      "counts_in_gpa": true,
+      "passed": false,
+      "note": "غياب بدون عذر مقبول، يعامل كرسوب"
+    },
+    "F": {
+      "points": 0.0,
+      "counts_in_gpa": true,
+      "passed": false
+    },
+    "W": {
+      "counts_in_gpa": false,
+      "passed": false,
+      "note": "منسحب"
+    },
+    "I": {
+      "counts_in_gpa": false,
+      "passed": false,
+      "note": "غير مكتمل، مؤقت"
+    },
+    "Con": {
+      "counts_in_gpa": false,
+      "passed": false,
+      "note": "مقرر مستمر"
+    },
+    "P": {
+      "counts_in_gpa": false,
+      "passed": true,
+      "note": "مقررات بدون ساعات معتمدة"
+    }
+  },
+  "gpa": {
+    "sgpa": "sum(points*credits)/sum(credits of completed courses in the term)",
+    "cgpa": "same over all attempts counted once",
+    "round_decimals": 2,
+    "repeat_cap_pct": 83,
+    "repeat_cap_points": 3.0,
+    "repeat_cap_note": "إعادة مقرر (رسوب أو تحسين): تحتسب أعلى درجة بحد أقصى 83% أي B (3.00) ويحسب عدد الساعات مرة واحدة (16.11, 16.14, 16.15)",
+    "improvement_max_courses_when_cgpa_ge_2": 3,
+    "improvement_level_rule": "المقرر من مستوى الطالب أو أقل منه بمستوى واحد (16.14)"
+  },
+  "overall_classification": [
+    {
+      "label_ar": "ضعيف جداً",
+      "min": 0,
+      "max_exclusive": 1.0
+    },
+    {
+      "label_ar": "ضعيف",
+      "min": 1.0,
+      "max_exclusive": 2.0
+    },
+    {
+      "label_ar": "مقبول",
+      "min": 2.0,
+      "max_exclusive": 2.5
+    },
+    {
+      "label_ar": "جيد",
+      "min": 2.5,
+      "max_exclusive": 3.0
+    },
+    {
+      "label_ar": "جيد جداً",
+      "min": 3.0,
+      "max_exclusive": 3.5
+    },
+    {
+      "label_ar": "ممتاز",
+      "min": 3.5,
+      "max_exclusive": null
+    }
+  ],
+  "levels": [
+    {
+      "level": 1,
+      "name": "Freshman",
+      "min_credits": 0,
+      "max_exclusive": 26
+    },
+    {
+      "level": 2,
+      "name": "Sophomore",
+      "min_credits": 26,
+      "max_exclusive": 62
+    },
+    {
+      "level": 3,
+      "name": "Junior",
+      "min_credits": 62,
+      "max_exclusive": 96
+    },
+    {
+      "level": 4,
+      "name": "Senior",
+      "min_credits": 96,
+      "max_exclusive": 136
+    }
+  ],
+  "load": {
+    "min_regular": 9,
+    "min_waived_if_remaining_credits_lt": 9,
+    "max_by_cgpa": [
+      {
+        "cgpa_min": 3.0,
+        "cgpa_max_exclusive": null,
+        "max": 21
+      },
+      {
+        "cgpa_min": 2.0,
+        "cgpa_max_exclusive": 3.0,
+        "max": 18
+      },
+      {
+        "cgpa_min": 1.0,
+        "cgpa_max_exclusive": 2.0,
+        "max": 15
+      },
+      {
+        "cgpa_min": 0.0,
+        "cgpa_max_exclusive": 1.0,
+        "max": 12
+      }
+    ],
+    "new_student_first_semester_max": 18,
+    "graduation_possible_max": 21,
+    "extra_course_if_previous_incomplete": 1,
+    "summer_max": 9,
+    "conflicts": [
+      "A-REG-01",
+      "A-REG-02",
+      "A-REG-09"
+    ]
+  },
+  "attendance_min_pct": 75,
+  "min_students_to_open_course": 5,
+  "dates": {
+    "add_drop_until_week": 2,
+    "withdraw_until_week": 10,
+    "late_registration_week": 2,
+    "regular_semester_weeks": "16-17",
+    "summer_weeks": 8
+  },
+  "durations": {
+    "max_regular_semesters": 16,
+    "min_regular_semesters_to_graduate": 6,
+    "suspension_max_consecutive": 4,
+    "suspension_max_total": 6,
+    "dismissal_consecutive_warnings": 4,
+    "dismissal_total_warnings": 6,
+    "final_chance_min_pct_completed": 80,
+    "final_chance_min_credits": 109
+  },
+  "assessment": {
+    "theory_applied": {
+      "coursework": 25,
+      "midterm": 25,
+      "final": 50
+    },
+    "final_min_pct_of_final_exam": 30,
+    "pass_total_pct": 50,
+    "graduation_project": {
+      "coursework": 50,
+      "oral": 50
+    },
+    "field_training_max": 100,
+    "field_training_in_gpa": false
+  },
+  "field_training": {
+    "min_passed_credits": 68,
+    "duration_weeks": 6,
+    "credits": 0
+  },
+  "graduation_project": {
+    "min_passed_credits": 96,
+    "register_in": [
+      "fall",
+      "spring"
+    ]
+  },
+  "graduation": {
+    "min_credits": 136,
+    "min_cgpa": 2.0,
+    "min_regular_semesters": 6,
+    "must_pass_non_credit": true,
+    "field_training_required": true
+  },
+  "honors": {
+    "min_cgpa": 3.0,
+    "max_regular_semesters": 8,
+    "no_failures_or_deprivation": true,
+    "ref": "16.4 (typo CGBA)"
+  },
+  "probation": {
+    "cgpa_lt": 2.0,
+    "not_in_first_semester": true,
+    "ref": "16.5",
+    "conflicts": [
+      "A-REG-01",
+      "A-REG-02"
+    ]
+  },
+  "transfer": {
+    "max_transferable_pct": 40
+  },
+  "rules": [
+    {
+      "rule_code": "R-ADM-05.2",
+      "article": "5",
+      "clause": 2,
+      "page": 5,
+      "title_ar": "التحويل",
+      "summary_ar": "لا يزيد ما يمكن تحويله عن 40% من مقررات البرنامج وتدرج التقديرات ضمن التراكمي."
+    },
+    {
+      "rule_code": "R-ACA-06.3",
+      "article": "6",
+      "clause": 3,
+      "page": 6,
+      "title_ar": "الفصل الصيفي",
+      "summary_ar": "اختياري ومكثف 8 أسابيع بأقصى 9 ساعات، ويسمح لمن لم يستوف الحد الأقصى أو لإعادة المقررات أو رفع CGPA أو الانتقال لمستوى أعلى أو استكمال التخرج."
+    },
+    {
+      "rule_code": "R-GRAD-DURATION",
+      "article": "6",
+      "clause": "4,6",
+      "page": 6,
+      "title_ar": "المدة",
+      "summary_ar": "الحد الأقصى 16 فصلاً نظامياً ولا تحتسب فصول إيقاف القيد المعتمدة، والتخرج بـ 136 ساعة في 6 فصول نظامية على الأقل."
+    },
+    {
+      "rule_code": "R-LOAD-MIN",
+      "article": "8",
+      "clause": 1,
+      "page": 8,
+      "title_ar": "الحد الأدنى",
+      "summary_ar": "9 ساعات ويجوز التجاوز إذا كان المتبقي للتخرج أقل من 9."
+    },
+    {
+      "rule_code": "R-LOAD-MAX",
+      "article": "8",
+      "clause": 1,
+      "page": 8,
+      "title_ar": "الحد الأقصى",
+      "summary_ar": "حسب CGPA بداية الفصل: >=3.00 → 21، 2.00-3.00 → 18، 1.00-2.00 → 15، <1.00 → 12، والمستجد 18."
+    },
+    {
+      "rule_code": "R-REG-09.5",
+      "article": "9",
+      "clause": 5,
+      "page": 8,
+      "title_ar": "المتطلب السابق",
+      "summary_ar": "لا يسجل مقرر له متطلب إلا بعد دراسته والنجاح فيه."
+    },
+    {
+      "rule_code": "R-REG-09.8",
+      "article": "9",
+      "clause": 8,
+      "page": 9,
+      "title_ar": "التسجيل المتزامن",
+      "summary_ar": "استثناء مع المتطلب السابق إذا كان يؤثر على التخرج، بموافقة المرشد، ومجلس الكلية في حالة الرسوب في المتطلب → REVIEW_REQUIRED."
+    },
+    {
+      "rule_code": "R-REG-09.6-7",
+      "article": "9",
+      "clause": "6,7",
+      "page": "8-9",
+      "title_ar": "الإعادة",
+      "summary_ar": "يحق إعادة المقرر الراسب، ويحق إعادة مقرر ناجح لتحسين CGPA."
+    },
+    {
+      "rule_code": "R-DROP-10",
+      "article": "10",
+      "clause": "1-6",
+      "page": 9,
+      "title_ar": "الحذف والإضافة والانسحاب",
+      "summary_ar": "حذف وإضافة حتى نهاية الأسبوع 2، انسحاب بتقدير W حتى نهاية الأسبوع 10 بشرط عدم تجاوز نسبة الغياب وعدم الإخلال بالعبء، وبعده F. لا ينطبق على الصيفي."
+    },
+    {
+      "rule_code": "R-ATT-11",
+      "article": "11",
+      "clause": "1-3",
+      "page": 9,
+      "title_ar": "المواظبة",
+      "summary_ar": "حضور لا يقل عن 75%، وبعد إنذارين متعاقبين يحرم ويحصل على F، وبعذر مقبول يسجل W."
+    },
+    {
+      "rule_code": "R-LVL-12",
+      "article": "12",
+      "clause": 1,
+      "page": 10,
+      "title_ar": "المستويات",
+      "summary_ar": "حسب الساعات المجتازة: 0-<26، 26-<62، 62-<96، 96-<136."
+    },
+    {
+      "rule_code": "R-TRAIN-13",
+      "article": "13",
+      "clause": "1-4",
+      "page": 10,
+      "title_ar": "التدريب الميداني",
+      "summary_ar": "بدون ساعات ولا يحسب في GPA ومتطلب تخرج، بعد 68 ساعة مجتازة، ويجوز في الصيف."
+    },
+    {
+      "rule_code": "R-PROJECT-13.7",
+      "article": "13",
+      "clause": 7,
+      "page": 10,
+      "title_ar": "مشروع التخرج",
+      "summary_ar": "للمستوى الرابع بعد اجتياز 70% من الساعات (96)، ويسجل في الفصول الرئيسية."
+    },
+    {
+      "rule_code": "R-SUSP-14",
+      "article": "14",
+      "clause": "1-4",
+      "page": 11,
+      "title_ar": "إيقاف القيد",
+      "summary_ar": "طلب قبل شهر من الامتحانات النهائية، ولا يتجاوز 4 فصول متتالية أو 6 متفرقة."
+    },
+    {
+      "rule_code": "R-EXAM-15",
+      "article": "15",
+      "clause": "8-10",
+      "page": 12,
+      "title_ar": "التقييم",
+      "summary_ar": "أعمال 25 + نصفي 25 + نهائي 50، ويرسب لائحياً بأقل من 30% من النهائي أو أقل من 50% من المجموع."
+    },
+    {
+      "rule_code": "R-GRADE-16.1",
+      "article": "16",
+      "clause": 1,
+      "page": "12-13",
+      "title_ar": "جدول التقديرات",
+      "summary_ar": "من A+ (96%+) إلى F (<50%) بنقاط 4.00-0.00 (grade_scale)."
+    },
+    {
+      "rule_code": "R-GPA-16.2",
+      "article": "16",
+      "clause": 2,
+      "page": "13-14",
+      "title_ar": "المتوسطات",
+      "summary_ar": "SGPA وCGPA بالمعادلة، ويقربان إلى رقمين عشريين."
+    },
+    {
+      "rule_code": "R-HONORS-16.4",
+      "article": "16",
+      "clause": 4,
+      "page": 14,
+      "title_ar": "مرتبة الشرف",
+      "summary_ar": "CGPA>=3.00 دون رسوب أو حرمان وخلال 8 فصول."
+    },
+    {
+      "rule_code": "R-PROB-16.5",
+      "article": "16",
+      "clause": 5,
+      "page": 14,
+      "title_ar": "الإنذار الأكاديمي",
+      "summary_ar": "CGPA أقل من 2.00 في أي فصل غير الأول → إنذار وملاحظة أكاديمية وتقييد العبء."
+    },
+    {
+      "rule_code": "R-REPEAT-16.6",
+      "article": "16",
+      "clause": 6,
+      "page": 14,
+      "title_ar": "تكرار الرسوب",
+      "summary_ar": "الرسوب يحتسب مرة واحدة في CGPA ويسجل عدد المحاولات وآخر درجة نجاح."
+    },
+    {
+      "rule_code": "R-INCOMPLETE-16.8",
+      "article": "16",
+      "clause": "8-9",
+      "page": "14-15",
+      "title_ar": "غير مكتمل",
+      "summary_ar": "عذر قهري خلال يومين من النهائي وبحد أدنى 60% من الأعمال ودون حرمان → I، وإلا → W."
+    },
+    {
+      "rule_code": "R-REPEAT-CAP-16.11",
+      "article": "16",
+      "clause": "11,14,15",
+      "page": "15-16",
+      "title_ar": "سقف درجة الإعادة",
+      "summary_ar": "درجة الإعادة بحد أقصى 83% (B)، وتحسين المقررات الناجحة بحد أقصى 3 مقررات عند CGPA>=2.00."
+    },
+    {
+      "rule_code": "R-GRAD-17",
+      "article": "17",
+      "clause": "1-5",
+      "page": 16,
+      "title_ar": "متطلبات التخرج",
+      "summary_ar": "136 ساعة بـ CGPA>=2.00، نجاح المقررات بدون ساعات، 6 فصول نظامية على الأقل، التدريب الميداني."
+    },
+    {
+      "rule_code": "R-GRAD-18",
+      "article": "18",
+      "clause": "1-3",
+      "page": 16,
+      "title_ar": "التخرج",
+      "summary_ar": "التخرج بعد نتيجة الفصل الثاني (يونيو) أو دور سبتمبر بعد الصيفي."
+    },
+    {
+      "rule_code": "R-DISMISS-21",
+      "article": "21",
+      "clause": "1-4",
+      "page": 18,
+      "title_ar": "الفصل من الكلية",
+      "summary_ar": "4 إنذارات متتالية أو 6 متفرقة أو تجاوز المدة، وفرصة أخيرة لمن اجتاز 80% من الساعات (109)."
+    }
+  ]
+}

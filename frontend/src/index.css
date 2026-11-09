@@ -1,0 +1,72 @@
+@import url('https://fonts.googleapis.com/css2?family=Cairo:wght@500;600;700;800;900&family=Tajawal:wght@400;500;700;800&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    color-scheme: light;
+  }
+
+  html {
+    -webkit-text-size-adjust: 100%;
+  }
+
+  body {
+    @apply bg-ink-50 font-sans text-ink-900 antialiased;
+  }
+
+  ::selection {
+    @apply bg-brand-200 text-brand-950;
+  }
+
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: #a1b9d0 transparent;
+  }
+
+  *::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  *::-webkit-scrollbar-thumb {
+    @apply rounded-full bg-ink-300;
+  }
+
+  *::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  input[type='number']::-webkit-outer-spin-button,
+  input[type='number']::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+
+  input[type='number'] {
+    -moz-appearance: textfield;
+  }
+
+  :focus-visible {
+    @apply outline-none;
+  }
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+
+  .paper-grid {
+    background-image:
+      linear-gradient(to right, rgba(22, 71, 65, 0.05) 1px, transparent 1px),
+      linear-gradient(to bottom, rgba(22, 71, 65, 0.05) 1px, transparent 1px);
+    background-size: 28px 28px;
+  }
+
+  .tabular-nums {
+    font-variant-numeric: tabular-nums;
+  }
+}

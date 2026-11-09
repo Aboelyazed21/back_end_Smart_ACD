@@ -1,0 +1,2132 @@
+{
+  "courses": [
+    {
+      "code": "UNI1101",
+      "name_ar": "قضايا معاصرة",
+      "name_en": "Contemporary Issues",
+      "credits": 1,
+      "category": "university_compulsory",
+      "level_hint": 1,
+      "term_hint": 1,
+      "prerequisites": {
+        "all_of": [],
+        "min_passed_credit_hours": null
+      },
+      "counts_in_gpa": true,
+      "roles": {
+        "ALL": "compulsory"
+      },
+      "anomaly_ids": []
+    },
+    {
+      "code": "UNI1202",
+      "name_ar": "مهارات التفكير العلمي وإعداد التقارير",
+      "name_en": "Scientific Thinking and Report Writing",
+      "credits": 1,
+      "category": "university_compulsory",
+      "level_hint": 1,
+      "term_hint": 2,
+      "prerequisites": {
+        "all_of": [],
+        "min_passed_credit_hours": null
+      },
+      "counts_in_gpa": true,
+      "roles": {
+        "ALL": "compulsory"
+      },
+      "anomaly_ids": []
+    },
+    {
+      "code": "UNI1103",
+      "name_ar": "مهارات حل المشكلات واتخاذ القرار",
+      "name_en": "Problem-Solving and Decision-Making Skills",
+      "credits": 1,
+      "category": "university_elective",
+      "level_hint": 1,
+      "term_hint": 1,
+      "prerequisites": {
+        "all_of": [],
+        "min_passed_credit_hours": null
+      },
+      "counts_in_gpa": true,
+      "roles": {
+        "ALL": "elective:UNIV_ELECTIVE"
+      },
+      "anomaly_ids": []
+    },
+    {
+      "code": "UNI1204",
+      "name_ar": "تكنولوجيا المعلومات",
+      "name_en": "Information Technology",
+      "credits": 1,
+      "category": "university_elective",
+      "level_hint": 1,
+      "term_hint": 2,
+      "prerequisites": {
+        "all_of": [],
+        "min_passed_credit_hours": null
+      },
+      "counts_in_gpa": true,
+      "roles": {
+        "ALL": "elective:UNIV_ELECTIVE"
+      },
+      "anomaly_ids": [
+        "A-REG-05"
+      ]
+    },
+    {
+      "code": "UNI1105",
+      "name_ar": "علم النفس",
+      "name_en": "Fundamentals of Psychology",
+      "credits": 1,
+      "category": "university_elective",
+      "level_hint": 1,
+      "term_hint": 1,
+      "prerequisites": {
+        "all_of": [],
+        "min_passed_credit_hours": null
+      },
+      "counts_in_gpa": true,
+      "roles": {
+        "ALL": "elective:UNIV_ELECTIVE"
+      },
+      "anomaly_ids": []
+    },
+    {
+      "code": "UNI1106",
+      "name_ar": "الأدب العربي",
+      "name_en": "Arabic Literature",
+      "credits": 1,
+      "category": "university_elective",
+      "level_hint": 1,
+      "term_hint": 1,
+      "prerequisites": {
+        "all_of": [],
+        "min_passed_credit_hours": null
+      },
+      "counts_in_gpa": true,
+      "roles": {
+        "ALL": "elective:UNIV_ELECTIVE"
+      },
+      "anomaly_ids": []
+    },
+    {
+      "code": "UNI1107",
+      "name_ar": "السلامة الصناعية والبيئة",
+      "name_en": "Industrial and Environmental Safety",
+      "credits": 1,
+      "category": "university_elective",
+      "level_hint": 1,
+      "term_hint": 1,
+      "prerequisites": {
+        "all_of": [],
+        "min_passed_credit_hours": null
+      },
+      "counts_in_gpa": true,
+      "roles": {
+        "ALL": "elective:UNIV_ELECTIVE"
+      },
+      "anomaly_ids": []
+    },
+    {
+      "code": "UNI1208",
+      "name_ar": "التاريخ المصري",
+      "name_en": "Egyptian History",
+      "credits": 1,
+      "category": "university_elective",
+      "level_hint": 1,
+      "term_hint": 2,
+      "prerequisites": {
+        "all_of": [],
+        "min_passed_credit_hours": null
+      },
+      "counts_in_gpa": true,
+      "roles": {
+        "ALL": "elective:UNIV_ELECTIVE"
+      },
+      "anomaly_ids": []
+    },
+    {
+      "code": "UNI1209",
+      "name_ar": "التذوق الفني",
+      "name_en": "Artistic Taste",
+      "credits": 1,
+      "category": "university_elective",
+      "level_hint": 1,
+      "term_hint": 2,
+      "prerequisites": {
+        "all_of": [],
+        "min_passed_credit_hours": null
+      },
+      "counts_in_gpa": true,
+      "roles": {
+        "ALL": "elective:UNIV_ELECTIVE"
+      },
+      "anomaly_ids": []
+    },
+    {
+      "code": "UNI1210",
+      "name_ar": "التذوق الموسيقي",
+      "name_en": "Tasting Music",
+      "credits": 1,
+      "category": "university_elective",
+      "level_hint": 1,
+      "term_hint": 2,
+      "prerequisites": {
+        "all_of": [],
+        "min_passed_credit_hours": null
+      },
+      "counts_in_gpa": true,
+      "roles": {
+        "ALL": "elective:UNIV_ELECTIVE"
+      },
+      "anomaly_ids": []
+    },
+    {
+      "code": "GNR1101",
+      "name_ar": "لغة انجليزية",
+      "name_en": "English Language",
+      "credits": 3,
+      "category": "college_humanities",
+      "level_hint": 1,
+      "term_hint": 1,
+      "prerequisites": {
+        "all_of": [],
+        "min_passed_credit_hours": null
+      },
+      "counts_in_gpa": true,
+      "roles": {
+        "ALL": "compulsory"
+      },
+      "anomaly_ids": []
+    },
+    {
+      "code": "GNR1201",
+      "name_ar": "فيزياء",
+      "name_en": "Physics",
+      "credits": 3,
+      "category": "college_math_basic_sci",
+      "level_hint": 1,
+      "term_hint": 2,
+      "prerequisites": {
+        "all_of": [],
+        "min_passed_credit_hours": null
+      },
+      "counts_in_gpa": true,
+      "roles": {
+        "ALL": "compulsory"
+      },
+      "anomaly_ids": []
+    },
+    {
+      "code": "GNR1202",
+      "name_ar": "إلكترونيات (1)",
+      "name_en": "Electronics (1)",
+      "credits": 3,
+      "category": "college_math_basic_sci",
+      "level_hint": 1,
+      "term_hint": 2,
+      "prerequisites": {
+        "all_of": [],
+        "min_passed_credit_hours": null
+      },
+      "counts_in_gpa": true,
+      "roles": {
+        "ALL": "compulsory"
+      },
+      "anomaly_ids": []
+    },
+    {
+      "code": "MTH1101",
+      "name_ar": "رياضيات بحتة",
+      "name_en": "Pure Mathematics",
+      "credits": 3,
+      "category": "college_math_basic_sci",
+      "level_hint": 1,
+      "term_hint": 1,
+      "prerequisites": {
+        "all_of": [],
+        "min_passed_credit_hours": null
+      },
+      "counts_in_gpa": true,
+      "roles": {
+        "ALL": "compulsory"
+      },
+      "anomaly_ids": []
+    },
+    {
+      "code": "MTH1102",
+      "name_ar": "إحصاء واحتمالات",
+      "name_en": "Probability and Statistics",
+      "credits": 3,
+      "category": "college_math_basic_sci",
+      "level_hint": 1,
+      "term_hint": 1,
+      "prerequisites": {
+        "all_of": [],
+        "min_passed_credit_hours": null
+      },
+      "counts_in_gpa": true,
+      "roles": {
+        "ALL": "compulsory"
+      },
+      "anomaly_ids": []
+    },
+    {
+      "code": "MTH1201",
+      "name_ar": "رياضيات منفصلة",
+      "name_en": "Discrete Mathematics",
+      "credits": 3,
+      "category": "college_math_basic_sci",
+      "level_hint": 1,
+      "term_hint": 2,
+      "prerequisites": {
+        "all_of": [
+          "MTH1101"
+        ],
+        "min_passed_credit_hours": null
+      },
+      "counts_in_gpa": true,
+      "roles": {
+        "ALL": "compulsory"
+      },
+      "anomaly_ids": [
+        "A-CAT-01"
+      ]
+    },
+    {
+      "code": "CSB1101",
+      "name_ar": "أساسيات الحاسب الآلي",
+      "name_en": "Fundamentals of Computers",
+      "credits": 3,
+      "category": "college_basic_computing",
+      "level_hint": 1,
+      "term_hint": 1,
+      "prerequisites": {
+        "all_of": [],
+        "min_passed_credit_hours": null
+      },
+      "counts_in_gpa": true,
+      "roles": {
+        "ALL": "compulsory"
+      },
+      "anomaly_ids": []
+    },
+    {
+      "code": "CSB1201",
+      "name_ar": "برمجة هيكلية",
+      "name_en": "Structured Programming",
+      "credits": 3,
+      "category": "college_basic_computing",
+      "level_hint": 1,
+      "term_hint": 2,
+      "prerequisites": {
+        "all_of": [
+          "CSB1101"
+        ],
+        "min_passed_credit_hours": null
+      },
+      "counts_in_gpa": true,
+      "roles": {
+        "ALL": "compulsory"
+      },
+      "anomaly_ids": []
+    },
+    {
+      "code": "CSB1202",
+      "name_ar": "تصميم منطقي",
+      "name_en": "Logic Design",
+      "credits": 3,
+      "category": "college_basic_computing",
+      "level_hint": 1,
+      "term_hint": 2,
+      "prerequisites": {
+        "all_of": [
+          "CSB1101"
+        ],
+        "min_passed_credit_hours": null
+      },
+      "counts_in_gpa": true,
+      "roles": {
+        "ALL": "compulsory"
+      },
+      "anomaly_ids": []
+    },
+    {
+      "code": "CSB2101",
+      "name_ar": "برمجة شيئية",
+      "name_en": "Object Oriented Programming",
+      "credits": 3,
+      "category": "college_basic_computing",
+      "level_hint": 2,
+      "term_hint": 1,
+      "prerequisites": {
+        "all_of": [
+          "CSB1201"
+        ],
+        "min_passed_credit_hours": null
+      },
+      "counts_in_gpa": true,
+      "roles": {
+        "ALL": "compulsory"
+      },
+      "anomaly_ids": []
+    },
+    {
+      "code": "CSB2102",
+      "name_ar": "عمارة الحاسب",
+      "name_en": "Computer Architecture",
+      "credits": 3,
+      "category": "college_basic_computing",
+      "level_hint": 2,
+      "term_hint": 1,
+      "prerequisites": {
+        "all_of": [
+          "CSB1101"
+        ],
+        "min_passed_credit_hours": null
+      },
+      "counts_in_gpa": true,
+      "roles": {
+        "ALL": "compulsory"
+      },
+      "anomaly_ids": []
+    },
+    {
+      "code": "CSB2103",
+      "name_ar": "أساسيات شبكات الحاسب",
+      "name_en": "Fundamentals of Computer Networks",
+      "credits": 3,
+      "category": "college_basic_computing",
+      "level_hint": 2,
+      "term_hint": 1,
+      "prerequisites": {
+        "all_of": [
+          "GNR1202"
+        ],
+        "min_passed_credit_hours": null
+      },
+      "counts_in_gpa": true,
+      "roles": {
+        "ALL": "compulsory"
+      },
+      "anomaly_ids": [
+        "A-CAT-03"
+      ]
+    },
+    {
+      "code": "CSB2104",
+      "name_ar": "أساسيات الذكاء الاصطناعي",
+      "name_en": "Fundamentals of Artificial Intelligence",
+      "credits": 3,
+      "category": "college_basic_computing",
+      "level_hint": 2,
+      "term_hint": 1,
+      "prerequisites": {
+        "all_of": [
+          "CSB1101"
+        ],
+        "min_passed_credit_hours": null
+      },
+      "counts_in_gpa": true,
+      "roles": {
+        "ALL": "compulsory"
+      },
+      "anomaly_ids": []
+    },
+    {
+      "code": "CSB2105",
+      "name_ar": "أساسيات هندسة البرمجيات",
+      "name_en": "Fundamentals of Software Engineering",
+      "credits": 3,
+      "category": "college_basic_computing",
+      "level_hint": 2,
+      "term_hint": 1,
+      "prerequisites": {
+        "all_of": [
+          "CSB1101"
+        ],
+        "min_passed_credit_hours": null
+      },
+      "counts_in_gpa": true,
+      "roles": {
+        "ALL": "compulsory"
+      },
+      "anomaly_ids": []
+    },
+    {
+      "code": "CSB2201",
+      "name_ar": "هياكل البيانات والخوارزميات",
+      "name_en": "Data Structures and Algorithms",
+      "credits": 3,
+      "category": "college_basic_computing",
+      "level_hint": 2,
+      "term_hint": 2,
+      "prerequisites": {
+        "all_of": [
+          "CSB1201"
+        ],
+        "min_passed_credit_hours": null
+      },
+      "counts_in_gpa": true,
+      "roles": {
+        "ALL": "compulsory"
+      },
+      "anomaly_ids": []
+    },
+    {
+      "code": "CSB2202",
+      "name_ar": "نظم التشغيل",
+      "name_en": "Operating Systems",
+      "credits": 3,
+      "category": "college_basic_computing",
+      "level_hint": 2,
+      "term_hint": 2,
+      "prerequisites": {
+        "all_of": [
+          "CSB1101"
+        ],
+        "min_passed_credit_hours": null
+      },
+      "counts_in_gpa": true,
+      "roles": {
+        "ALL": "compulsory"
+      },
+      "anomaly_ids": []
+    },
+    {
+      "code": "CSB2203",
+      "name_ar": "برمجة الويب",
+      "name_en": "Web Programming",
+      "credits": 3,
+      "category": "college_basic_computing",
+      "level_hint": 2,
+      "term_hint": 2,
+      "prerequisites": {
+        "all_of": [
+          "CSB1201"
+        ],
+        "min_passed_credit_hours": null
+      },
+      "counts_in_gpa": true,
+      "roles": {
+        "ALL": "compulsory"
+      },
+      "anomaly_ids": []
+    },
+    {
+      "code": "CSB2204",
+      "name_ar": "نظم قواعد البيانات",
+      "name_en": "Database Systems",
+      "credits": 3,
+      "category": "college_basic_computing",
+      "level_hint": 2,
+      "term_hint": 2,
+      "prerequisites": {
+        "all_of": [
+          "CSB1101"
+        ],
+        "min_passed_credit_hours": null
+      },
+      "counts_in_gpa": true,
+      "roles": {
+        "ALL": "compulsory"
+      },
+      "anomaly_ids": [
+        "A-CAT-02"
+      ]
+    },
+    {
+      "code": "CSB2205",
+      "name_ar": "أساسيات علوم البيانات",
+      "name_en": "Fundamentals of Data Science",
+      "credits": 3,
+      "category": "college_basic_computing",
+      "level_hint": 2,
+      "term_hint": 2,
+      "prerequisites": {
+        "all_of": [
+          "CSB1201"
+        ],
+        "min_passed_credit_hours": null
+      },
+      "counts_in_gpa": true,
+      "roles": {
+        "ALL": "compulsory"
+      },
+      "anomaly_ids": []
+    },
+    {
+      "code": "CSC4104",
+      "name_ar": "طرق عددية",
+      "name_en": "Numerical Methods",
+      "credits": 2,
+      "category": "college_applied_math",
+      "level_hint": 4,
+      "term_hint": 1,
+      "prerequisites": {
+        "all_of": [
+          "MTH1201"
+        ],
+        "min_passed_credit_hours": null
+      },
+      "counts_in_gpa": true,
+      "roles": {
+        "ALL": "compulsory"
+      },
+      "anomaly_ids": []
+    },
+    {
+      "code": "CSC4205",
+      "name_ar": "بحوث عمليات",
+      "name_en": "Operations Research",
+      "credits": 2,
+      "category": "college_applied_math",
+      "level_hint": 4,
+      "term_hint": 2,
+      "prerequisites": {
+        "all_of": [
+          "MTH1201"
+        ],
+        "min_passed_credit_hours": null
+      },
+      "counts_in_gpa": true,
+      "roles": {
+        "ALL": "compulsory"
+      },
+      "anomaly_ids": []
+    },
+    {
+      "code": "GNR2101",
+      "name_ar": "مبادئ الإدارة",
+      "name_en": "Fundamentals of Management",
+      "credits": 3,
+      "category": "college_humanities_elective",
+      "level_hint": 2,
+      "term_hint": 1,
+      "prerequisites": {
+        "all_of": [],
+        "min_passed_credit_hours": null
+      },
+      "counts_in_gpa": true,
+      "roles": {
+        "ALL": "elective:HUMANITIES_ELECTIVE"
+      },
+      "anomaly_ids": []
+    },
+    {
+      "code": "GNR2102",
+      "name_ar": "مهارات الاتصال",
+      "name_en": "Communication Skills",
+      "credits": 3,
+      "category": "college_humanities_elective",
+      "level_hint": 2,
+      "term_hint": 1,
+      "prerequisites": {
+        "all_of": [],
+        "min_passed_credit_hours": null
+      },
+      "counts_in_gpa": true,
+      "roles": {
+        "ALL": "elective:HUMANITIES_ELECTIVE"
+      },
+      "anomaly_ids": []
+    },
+    {
+      "code": "GNR2103",
+      "name_ar": "إدارة مشروعات",
+      "name_en": "Project Management",
+      "credits": 3,
+      "category": "college_humanities_elective",
+      "level_hint": 2,
+      "term_hint": 1,
+      "prerequisites": {
+        "all_of": [],
+        "min_passed_credit_hours": null
+      },
+      "counts_in_gpa": true,
+      "roles": {
+        "ALL": "elective:HUMANITIES_ELECTIVE"
+      },
+      "anomaly_ids": []
+    },
+    {
+      "code": "CSB2206",
+      "name_ar": "تنظيم الملفات",
+      "name_en": "File Organization",
+      "credits": 3,
+      "category": "college_basic_computing_elective",
+      "level_hint": 2,
+      "term_hint": 2,
+      "prerequisites": {
+        "all_of": [
+          "CSB2101"
+        ],
+        "min_passed_credit_hours": null
+      },
+      "counts_in_gpa": true,
+      "roles": {
+        "ALL": "elective:BASIC_COMPUTING_ELECTIVE"
+      },
+      "anomaly_ids": []
+    },
+    {
+      "code": "CSB2207",
+      "name_ar": "الرسم بالحاسب",
+      "name_en": "Computer Graphics",
+      "credits": 3,
+      "category": "college_basic_computing_elective",
+      "level_hint": 2,
+      "term_hint": 2,
+      "prerequisites": {
+        "all_of": [
+          "CSB1101"
+        ],
+        "min_passed_credit_hours": null
+      },
+      "counts_in_gpa": true,
+      "roles": {
+        "ALL": "elective:BASIC_COMPUTING_ELECTIVE"
+      },
+      "anomaly_ids": []
+    },
+    {
+      "code": "GNR2201",
+      "name_ar": "إلكترونيات (2)",
+      "name_en": "Electronics (2)",
+      "credits": 3,
+      "category": "college_basic_computing_elective",
+      "level_hint": 2,
+      "term_hint": 2,
+      "prerequisites": {
+        "all_of": [
+          "GNR1202"
+        ],
+        "min_passed_credit_hours": null
+      },
+      "counts_in_gpa": true,
+      "roles": {
+        "ALL": "elective:BASIC_COMPUTING_ELECTIVE"
+      },
+      "anomaly_ids": []
+    },
+    {
+      "code": "CSC3101",
+      "name_ar": "نظرية الرسم البياني",
+      "name_en": "Graph Theory",
+      "credits": 3,
+      "category": "program_applied",
+      "level_hint": 3,
+      "term_hint": 1,
+      "prerequisites": {
+        "all_of": [
+          "MTH1201"
+        ],
+        "min_passed_credit_hours": null
+      },
+      "counts_in_gpa": true,
+      "roles": {
+        "CS": "compulsory",
+        "IT": "compulsory",
+        "AI": "compulsory"
+      },
+      "anomaly_ids": []
+    },
+    {
+      "code": "CSC3102",
+      "name_ar": "أمن البرمجيات",
+      "name_en": "Software Security",
+      "credits": 3,
+      "category": "program_applied",
+      "level_hint": 3,
+      "term_hint": 1,
+      "prerequisites": {
+        "all_of": [
+          "CSB2105"
+        ],
+        "min_passed_credit_hours": null
+      },
+      "counts_in_gpa": true,
+      "roles": {
+        "CS": "compulsory",
+        "IT": "compulsory",
+        "AI": "elective:AI_ELECTIVE",
+        "DS": "compulsory"
+      },
+      "anomaly_ids": []
+    },
+    {
+      "code": "CSC3103",
+      "name_ar": "نظم اختبار جودة البرمجيات",
+      "name_en": "Software Testing",
+      "credits": 3,
+      "category": "program_applied",
+      "level_hint": 3,
+      "term_hint": 1,
+      "prerequisites": {
+        "all_of": [
+          "CSB2105"
+        ],
+        "min_passed_credit_hours": null
+      },
+      "counts_in_gpa": true,
+      "roles": {
+        "CS": "compulsory",
+        "AI": "elective:AI_ELECTIVE"
+      },
+      "anomaly_ids": [
+        "A-CAT-07"
+      ]
+    },
+    {
+      "code": "CSC3104",
+      "name_ar": "تحليل وتصميم نظم المعلومات",
+      "name_en": "Systems Analysis and Design",
+      "credits": 3,
+      "category": "program_applied",
+      "level_hint": 3,
+      "term_hint": 1,
+      "prerequisites": {
+        "all_of": [
+          "CSB2204"
+        ],
+        "min_passed_credit_hours": null
+      },
+      "counts_in_gpa": true,
+      "roles": {
+        "CS": "compulsory"
+      },
+      "anomaly_ids": []
+    },
+    {
+      "code": "CSC3201",
+      "name_ar": "نظم الوسائط المتعددة",
+      "name_en": "Multimedia System",
+      "credits": 3,
+      "category": "program_applied",
+      "level_hint": 3,
+      "term_hint": 2,
+      "prerequisites": {
+        "all_of": [
+          "CSB2105"
+        ],
+        "min_passed_credit_hours": null
+      },
+      "counts_in_gpa": true,
+      "roles": {
+        "CS": "compulsory",
+        "IT": "compulsory",
+        "AI": "compulsory"
+      },
+      "anomaly_ids": []
+    },
+    {
+      "code": "CSC3202",
+      "name_ar": "المعلوماتية الحيوية",
+      "name_en": "Bioinformatics",
+      "credits": 3,
+      "category": "program_applied",
+      "level_hint": 3,
+      "term_hint": 2,
+      "prerequisites": {
+        "all_of": [
+          "CSB1101"
+        ],
+        "min_passed_credit_hours": null
+      },
+      "counts_in_gpa": true,
+      "roles": {
+        "CS": "compulsory",
+        "IT": "elective:IT_ELECTIVE",
+        "DS": "elective:DS_ELECTIVE"
+      },
+      "anomaly_ids": []
+    },
+    {
+      "code": "CSC4101",
+      "name_ar": "معالجة الصور",
+      "name_en": "Image Processing",
+      "credits": 3,
+      "category": "program_applied",
+      "level_hint": 4,
+      "term_hint": 1,
+      "prerequisites": {
+        "all_of": [
+          "CSC3201"
+        ],
+        "min_passed_credit_hours": null
+      },
+      "counts_in_gpa": true,
+      "roles": {
+        "CS": "compulsory",
+        "IT": "compulsory"
+      },
+      "anomaly_ids": []
+    },
+    {
+      "code": "CSC4103",
+      "name_ar": "النظم الذكية",
+      "name_en": "Intelligent Systems",
+      "credits": 3,
+      "category": "program_applied",
+      "level_hint": 4,
+      "term_hint": 1,
+      "prerequisites": {
+        "all_of": [
+          "CSB2104"
+        ],
+        "min_passed_credit_hours": null
+      },
+      "counts_in_gpa": true,
+      "roles": {
+        "CS": "compulsory"
+      },
+      "anomaly_ids": []
+    },
+    {
+      "code": "CSC4201",
+      "name_ar": "نظم قواعد البيانات الموزعة الشيئية",
+      "name_en": "Distributed and Object Databases",
+      "credits": 3,
+      "category": "program_applied",
+      "level_hint": 4,
+      "term_hint": 2,
+      "prerequisites": {
+        "all_of": [
+          "CSB2204"
+        ],
+        "min_passed_credit_hours": null
+      },
+      "counts_in_gpa": true,
+      "roles": {
+        "CS": "compulsory"
+      },
+      "anomaly_ids": []
+    },
+    {
+      "code": "CSC4202",
+      "name_ar": "الواقع الافتراضي",
+      "name_en": "Virtual Reality",
+      "credits": 3,
+      "category": "program_applied",
+      "level_hint": 4,
+      "term_hint": 2,
+      "prerequisites": {
+        "all_of": [
+          "CSC3201"
+        ],
+        "min_passed_credit_hours": null
+      },
+      "counts_in_gpa": true,
+      "roles": {
+        "CS": "compulsory",
+        "IT": "compulsory"
+      },
+      "anomaly_ids": []
+    },
+    {
+      "code": "CSC4203",
+      "name_ar": "المعالجة المتوازية",
+      "name_en": "Parallel Processing",
+      "credits": 3,
+      "category": "program_applied",
+      "level_hint": 4,
+      "term_hint": 2,
+      "prerequisites": {
+        "all_of": [
+          "CSB2101"
+        ],
+        "min_passed_credit_hours": null
+      },
+      "counts_in_gpa": true,
+      "roles": {
+        "CS": "compulsory"
+      },
+      "anomaly_ids": [
+        "A-CAT-05",
+        "A-CAT-17"
+      ]
+    },
+    {
+      "code": "INF3101",
+      "name_ar": "البرمجة المرئية",
+      "name_en": "Visual Programming",
+      "credits": 3,
+      "category": "program_applied",
+      "level_hint": 3,
+      "term_hint": 1,
+      "prerequisites": {
+        "all_of": [
+          "CSB2101"
+        ],
+        "min_passed_credit_hours": null
+      },
+      "counts_in_gpa": true,
+      "roles": {
+        "IT": "compulsory"
+      },
+      "anomaly_ids": [
+        "A-CAT-17"
+      ]
+    },
+    {
+      "code": "INF3102",
+      "name_ar": "برمجة شبكات الحاسب",
+      "name_en": "Network Programming",
+      "credits": 3,
+      "category": "program_applied",
+      "level_hint": 3,
+      "term_hint": 1,
+      "prerequisites": {
+        "all_of": [
+          "CSB2103"
+        ],
+        "min_passed_credit_hours": null
+      },
+      "counts_in_gpa": true,
+      "roles": {
+        "IT": "compulsory"
+      },
+      "anomaly_ids": []
+    },
+    {
+      "code": "INF3201",
+      "name_ar": "الحوسبة السحابية",
+      "name_en": "Cloud Computing",
+      "credits": 3,
+      "category": "program_applied",
+      "level_hint": 3,
+      "term_hint": 2,
+      "prerequisites": {
+        "all_of": [
+          "CSB2101"
+        ],
+        "min_passed_credit_hours": null
+      },
+      "counts_in_gpa": true,
+      "roles": {
+        "CS": "elective:CS_ELECTIVE",
+        "IT": "compulsory",
+        "AI": "elective:AI_ELECTIVE",
+        "DS": "compulsory"
+      },
+      "anomaly_ids": [
+        "A-CAT-04",
+        "A-CAT-18"
+      ]
+    },
+    {
+      "code": "INF3202",
+      "name_ar": "النظم المدمجة",
+      "name_en": "Embedded Systems",
+      "credits": 3,
+      "category": "program_applied",
+      "level_hint": 3,
+      "term_hint": 2,
+      "prerequisites": {
+        "all_of": [
+          "CSB2102"
+        ],
+        "min_passed_credit_hours": null
+      },
+      "counts_in_gpa": true,
+      "roles": {
+        "CS": "compulsory",
+        "IT": "compulsory",
+        "DS": "elective:DS_ELECTIVE"
+      },
+      "anomaly_ids": [
+        "A-CAT-06"
+      ]
+    },
+    {
+      "code": "INF3203",
+      "name_ar": "نظم الوقت الحقيقي",
+      "name_en": "Real Time Systems",
+      "credits": 3,
+      "category": "program_applied",
+      "level_hint": 3,
+      "term_hint": 2,
+      "prerequisites": {
+        "all_of": [
+          "CSB2102"
+        ],
+        "min_passed_credit_hours": null
+      },
+      "counts_in_gpa": true,
+      "roles": {
+        "CS": "compulsory",
+        "IT": "compulsory",
+        "DS": "elective:DS_ELECTIVE"
+      },
+      "anomaly_ids": [
+        "A-CAT-06"
+      ]
+    },
+    {
+      "code": "INF4101",
+      "name_ar": "الشبكات اللاسلكية والمحمول",
+      "name_en": "Wireless and Mobile Networks",
+      "credits": 3,
+      "category": "program_applied",
+      "level_hint": 4,
+      "term_hint": 1,
+      "prerequisites": {
+        "all_of": [
+          "INF3102"
+        ],
+        "min_passed_credit_hours": null
+      },
+      "counts_in_gpa": true,
+      "roles": {
+        "IT": "compulsory"
+      },
+      "anomaly_ids": [
+        "A-CAT-08"
+      ]
+    },
+    {
+      "code": "INF4102",
+      "name_ar": "أنترنت الأشياء",
+      "name_en": "Internet of Things",
+      "credits": 3,
+      "category": "program_applied",
+      "level_hint": 4,
+      "term_hint": 1,
+      "prerequisites": {
+        "all_of": [
+          "CSB2103"
+        ],
+        "min_passed_credit_hours": null
+      },
+      "counts_in_gpa": true,
+      "roles": {
+        "CS": "compulsory",
+        "IT": "compulsory",
+        "AI": "compulsory",
+        "DS": "compulsory"
+      },
+      "anomaly_ids": [
+        "A-CAT-08"
+      ]
+    },
+    {
+      "code": "INF4103",
+      "name_ar": "تصميم الرسوم المتحركة",
+      "name_en": "Computer Animation",
+      "credits": 3,
+      "category": "program_applied",
+      "level_hint": 4,
+      "term_hint": 1,
+      "prerequisites": {
+        "all_of": [
+          "CSC3201"
+        ],
+        "min_passed_credit_hours": null
+      },
+      "counts_in_gpa": true,
+      "roles": {
+        "CS": "compulsory",
+        "IT": "compulsory"
+      },
+      "anomaly_ids": []
+    },
+    {
+      "code": "INF4201",
+      "name_ar": "تطوير تطبيقات الموبايل",
+      "name_en": "Mobile Application Development",
+      "credits": 3,
+      "category": "program_applied",
+      "level_hint": 4,
+      "term_hint": 2,
+      "prerequisites": {
+        "all_of": [
+          "CSC3201"
+        ],
+        "min_passed_credit_hours": null
+      },
+      "counts_in_gpa": true,
+      "roles": {
+        "IT": "compulsory"
+      },
+      "anomaly_ids": []
+    },
+    {
+      "code": "INF4202",
+      "name_ar": "معالجة الوسائط المتعددة",
+      "name_en": "Multimedia Processing",
+      "credits": 3,
+      "category": "program_applied",
+      "level_hint": 4,
+      "term_hint": 2,
+      "prerequisites": {
+        "all_of": [
+          "CSC3201"
+        ],
+        "min_passed_credit_hours": null
+      },
+      "counts_in_gpa": true,
+      "roles": {
+        "IT": "compulsory"
+      },
+      "anomaly_ids": []
+    },
+    {
+      "code": "AIN3101",
+      "name_ar": "أساسيات الرؤية بالحاسب",
+      "name_en": "Fundamentals of Computer Vision",
+      "credits": 3,
+      "category": "program_applied",
+      "level_hint": 3,
+      "term_hint": 1,
+      "prerequisites": {
+        "all_of": [
+          "CSB2104"
+        ],
+        "min_passed_credit_hours": null
+      },
+      "counts_in_gpa": true,
+      "roles": {
+        "CS": "elective:CS_ELECTIVE",
+        "IT": "elective:IT_ELECTIVE",
+        "AI": "compulsory",
+        "DS": "elective:DS_ELECTIVE"
+      },
+      "anomaly_ids": []
+    },
+    {
+      "code": "AIN3102",
+      "name_ar": "تعلم الآلة (1)",
+      "name_en": "Machine Learning (1)",
+      "credits": 3,
+      "category": "program_applied",
+      "level_hint": 3,
+      "term_hint": 1,
+      "prerequisites": {
+        "all_of": [
+          "CSB2104"
+        ],
+        "min_passed_credit_hours": null
+      },
+      "counts_in_gpa": true,
+      "roles": {
+        "CS": "elective:CS_ELECTIVE",
+        "IT": "elective:IT_ELECTIVE",
+        "AI": "compulsory",
+        "DS": "compulsory"
+      },
+      "anomaly_ids": [
+        "A-CAT-17"
+      ]
+    },
+    {
+      "code": "AIN3103",
+      "name_ar": "تقنيات النانو والذكاء الاصطناعي",
+      "name_en": "Nanotechnology and Artificial Intelligence",
+      "credits": 3,
+      "category": "program_applied",
+      "level_hint": 3,
+      "term_hint": 1,
+      "prerequisites": {
+        "all_of": [
+          "CSB2104"
+        ],
+        "min_passed_credit_hours": null
+      },
+      "counts_in_gpa": true,
+      "roles": {
+        "AI": "elective:AI_ELECTIVE"
+      },
+      "anomaly_ids": []
+    },
+    {
+      "code": "AIN3104",
+      "name_ar": "أساسيات الروبوت",
+      "name_en": "Fundamentals of Robotics",
+      "credits": 3,
+      "category": "program_applied",
+      "level_hint": 3,
+      "term_hint": 1,
+      "prerequisites": {
+        "all_of": [
+          "CSB2104"
+        ],
+        "min_passed_credit_hours": null
+      },
+      "counts_in_gpa": true,
+      "roles": {
+        "CS": "elective:CS_ELECTIVE",
+        "IT": "elective:IT_ELECTIVE",
+        "AI": "compulsory",
+        "DS": "elective:DS_ELECTIVE"
+      },
+      "anomaly_ids": []
+    },
+    {
+      "code": "AIN3201",
+      "name_ar": "الرؤية بالحاسب والتعرف على الأشياء",
+      "name_en": "Computer Vision and Pattern Recognition",
+      "credits": 3,
+      "category": "program_applied",
+      "level_hint": 3,
+      "term_hint": 2,
+      "prerequisites": {
+        "all_of": [
+          "AIN3102"
+        ],
+        "min_passed_credit_hours": null
+      },
+      "counts_in_gpa": true,
+      "roles": {
+        "AI": "compulsory"
+      },
+      "anomaly_ids": []
+    },
+    {
+      "code": "AIN3202",
+      "name_ar": "الشبكات العصبية",
+      "name_en": "Neural Networks",
+      "credits": 3,
+      "category": "program_applied",
+      "level_hint": 3,
+      "term_hint": 2,
+      "prerequisites": {
+        "all_of": [
+          "CSB2104"
+        ],
+        "min_passed_credit_hours": null
+      },
+      "counts_in_gpa": true,
+      "roles": {
+        "CS": "elective:CS_ELECTIVE",
+        "IT": "elective:IT_ELECTIVE",
+        "AI": "compulsory",
+        "DS": "compulsory"
+      },
+      "anomaly_ids": []
+    },
+    {
+      "code": "AIN3203",
+      "name_ar": "أساسيات التعليم العميق للرؤية بالحاسب",
+      "name_en": "Fundamentals of Deep Learning for Computer Vision",
+      "credits": 3,
+      "category": "program_applied",
+      "level_hint": 3,
+      "term_hint": 2,
+      "prerequisites": {
+        "all_of": [
+          "AIN3102"
+        ],
+        "min_passed_credit_hours": null
+      },
+      "counts_in_gpa": true,
+      "roles": {
+        "AI": "compulsory"
+      },
+      "anomaly_ids": []
+    },
+    {
+      "code": "AIN4101",
+      "name_ar": "تعلم الآلة (2)",
+      "name_en": "Machine Learning (2)",
+      "credits": 3,
+      "category": "program_applied",
+      "level_hint": 4,
+      "term_hint": 1,
+      "prerequisites": {
+        "all_of": [
+          "AIN3202"
+        ],
+        "min_passed_credit_hours": null
+      },
+      "counts_in_gpa": true,
+      "roles": {
+        "AI": "compulsory"
+      },
+      "anomaly_ids": []
+    },
+    {
+      "code": "AIN4102",
+      "name_ar": "أساسيات التعامل الإدراكي مع الروبوت",
+      "name_en": "Fundamental of Cognitive Interaction with Robots",
+      "credits": 3,
+      "category": "program_applied",
+      "level_hint": 4,
+      "term_hint": 1,
+      "prerequisites": {
+        "all_of": [
+          "AIN3102",
+          "AIN3104"
+        ],
+        "min_passed_credit_hours": null
+      },
+      "counts_in_gpa": true,
+      "roles": {
+        "AI": "compulsory"
+      },
+      "anomaly_ids": []
+    },
+    {
+      "code": "AIN4103",
+      "name_ar": "التعلم العميق للسيارات ذاتية القيادة",
+      "name_en": "Deep Learning for Self-Driving Cars",
+      "credits": 3,
+      "category": "program_applied",
+      "level_hint": 4,
+      "term_hint": 1,
+      "prerequisites": {
+        "all_of": [
+          "AIN3201"
+        ],
+        "min_passed_credit_hours": null
+      },
+      "counts_in_gpa": true,
+      "roles": {
+        "AI": "compulsory"
+      },
+      "anomaly_ids": []
+    },
+    {
+      "code": "AIN4201",
+      "name_ar": "التفاعل بين الإنسان والآلة",
+      "name_en": "Human Computer Interaction",
+      "credits": 3,
+      "category": "program_applied",
+      "level_hint": 4,
+      "term_hint": 2,
+      "prerequisites": {
+        "all_of": [
+          "CSB2201"
+        ],
+        "min_passed_credit_hours": null
+      },
+      "counts_in_gpa": true,
+      "roles": {
+        "AI": "compulsory"
+      },
+      "anomaly_ids": []
+    },
+    {
+      "code": "AIN4202",
+      "name_ar": "مفاهيم الذكاء الاصطناعي في المدن الذكية",
+      "name_en": "AI in Smart Cities",
+      "credits": 3,
+      "category": "program_applied",
+      "level_hint": 4,
+      "term_hint": 2,
+      "prerequisites": {
+        "all_of": [
+          "AIN3102"
+        ],
+        "min_passed_credit_hours": null
+      },
+      "counts_in_gpa": true,
+      "roles": {
+        "AI": "compulsory",
+        "DS": "compulsory"
+      },
+      "anomaly_ids": []
+    },
+    {
+      "code": "AIN4203",
+      "name_ar": "حاسبات الكوانتم",
+      "name_en": "Quantum Computing",
+      "credits": 3,
+      "category": "program_applied",
+      "level_hint": 4,
+      "term_hint": 2,
+      "prerequisites": {
+        "all_of": [
+          "AIN3102"
+        ],
+        "min_passed_credit_hours": null
+      },
+      "counts_in_gpa": true,
+      "roles": {
+        "AI": "compulsory"
+      },
+      "anomaly_ids": []
+    },
+    {
+      "code": "DSC3101",
+      "name_ar": "البحث واسترجاع المعلومات",
+      "name_en": "Information Retrieval and Web Search",
+      "credits": 3,
+      "category": "program_applied",
+      "level_hint": 3,
+      "term_hint": 1,
+      "prerequisites": {
+        "all_of": [
+          "CSB2205"
+        ],
+        "min_passed_credit_hours": null
+      },
+      "counts_in_gpa": true,
+      "roles": {
+        "DS": "compulsory"
+      },
+      "anomaly_ids": []
+    },
+    {
+      "code": "DSC3102",
+      "name_ar": "هندسة البيانات",
+      "name_en": "Data Engineering",
+      "credits": 3,
+      "category": "program_applied",
+      "level_hint": 3,
+      "term_hint": 1,
+      "prerequisites": {
+        "all_of": [
+          "MTH1108"
+        ],
+        "min_passed_credit_hours": null
+      },
+      "counts_in_gpa": true,
+      "roles": {
+        "DS": "compulsory"
+      },
+      "anomaly_ids": [
+        "A-CAT-11"
+      ]
+    },
+    {
+      "code": "DSC3201",
+      "name_ar": "تحليل البيانات الكبيرة",
+      "name_en": "Big Data Analysis",
+      "credits": 3,
+      "category": "program_applied",
+      "level_hint": 3,
+      "term_hint": 2,
+      "prerequisites": {
+        "all_of": [
+          "CSB2205"
+        ],
+        "min_passed_credit_hours": null
+      },
+      "counts_in_gpa": true,
+      "roles": {
+        "CS": "elective:CS_ELECTIVE",
+        "IT": "elective:IT_ELECTIVE",
+        "AI": "elective:AI_ELECTIVE",
+        "DS": "compulsory"
+      },
+      "anomaly_ids": []
+    },
+    {
+      "code": "DSC3202",
+      "name_ar": "البرمجة المتقدمة لعلوم البيانات",
+      "name_en": "Advanced Programming for Data Science",
+      "credits": 3,
+      "category": "program_applied",
+      "level_hint": 3,
+      "term_hint": 2,
+      "prerequisites": {
+        "all_of": [
+          "CSB2101"
+        ],
+        "min_passed_credit_hours": null
+      },
+      "counts_in_gpa": true,
+      "roles": {
+        "AI": "elective:AI_ELECTIVE",
+        "DS": "compulsory"
+      },
+      "anomaly_ids": []
+    },
+    {
+      "code": "DSC4101",
+      "name_ar": "تقنيات تنقيب البيانات",
+      "name_en": "Data Mining Techniques",
+      "credits": 3,
+      "category": "program_applied",
+      "level_hint": 4,
+      "term_hint": 1,
+      "prerequisites": {
+        "all_of": [
+          "DSC3201"
+        ],
+        "min_passed_credit_hours": null
+      },
+      "counts_in_gpa": true,
+      "roles": {
+        "DS": "compulsory"
+      },
+      "anomaly_ids": []
+    },
+    {
+      "code": "DSC4102",
+      "name_ar": "النمذجة والمحاكاة",
+      "name_en": "Simulation and Modeling",
+      "credits": 3,
+      "category": "program_applied",
+      "level_hint": 4,
+      "term_hint": 1,
+      "prerequisites": {
+        "all_of": [
+          "MTH1102"
+        ],
+        "min_passed_credit_hours": null
+      },
+      "counts_in_gpa": true,
+      "roles": {
+        "DS": "compulsory"
+      },
+      "anomaly_ids": []
+    },
+    {
+      "code": "DSC4103",
+      "name_ar": "تقنيات سلاسل الكتل",
+      "name_en": "Block Chain Technologies",
+      "credits": 3,
+      "category": "program_applied",
+      "level_hint": 4,
+      "term_hint": 1,
+      "prerequisites": {
+        "all_of": [
+          "DSC3101"
+        ],
+        "min_passed_credit_hours": null
+      },
+      "counts_in_gpa": true,
+      "roles": {
+        "DS": "compulsory"
+      },
+      "anomaly_ids": []
+    },
+    {
+      "code": "DSC4201",
+      "name_ar": "تقنيات التعلم العميق المتقدم",
+      "name_en": "Advanced Deep Learning",
+      "credits": 3,
+      "category": "program_applied",
+      "level_hint": 4,
+      "term_hint": 2,
+      "prerequisites": {
+        "all_of": [
+          "CSB2205"
+        ],
+        "min_passed_credit_hours": null
+      },
+      "counts_in_gpa": true,
+      "roles": {
+        "DS": "compulsory"
+      },
+      "anomaly_ids": []
+    },
+    {
+      "code": "DSC4202",
+      "name_ar": "تنقيب البيانات المكانية",
+      "name_en": "Spatial Data Mining",
+      "credits": 3,
+      "category": "program_applied",
+      "level_hint": 4,
+      "term_hint": 2,
+      "prerequisites": {
+        "all_of": [
+          "DSC3101"
+        ],
+        "min_passed_credit_hours": null
+      },
+      "counts_in_gpa": true,
+      "roles": {
+        "DS": "compulsory"
+      },
+      "anomaly_ids": []
+    },
+    {
+      "code": "CSC4204",
+      "name_ar": "مقرر اختياري في التقنيات الحديثة لعلوم الحاسب",
+      "name_en": "Selected Topics in Computer Science",
+      "credits": 3,
+      "category": "program_selected_topic",
+      "level_hint": 4,
+      "term_hint": 2,
+      "prerequisites": {
+        "all_of": [
+          "CSB2105"
+        ],
+        "min_passed_credit_hours": null
+      },
+      "counts_in_gpa": true,
+      "roles": {
+        "CS": "selected_topic"
+      },
+      "anomaly_ids": []
+    },
+    {
+      "code": "INF4204",
+      "name_ar": "مقرر اختياري في التقنيات الحديثة في تكنولوجيا المعلومات",
+      "name_en": "Selected Topics in Information Technology",
+      "credits": 3,
+      "category": "program_selected_topic",
+      "level_hint": 4,
+      "term_hint": 2,
+      "prerequisites": {
+        "all_of": [
+          "CSB1101"
+        ],
+        "min_passed_credit_hours": null
+      },
+      "counts_in_gpa": true,
+      "roles": {
+        "IT": "selected_topic"
+      },
+      "anomaly_ids": []
+    },
+    {
+      "code": "AIN4204",
+      "name_ar": "مقرر اختياري في التقنيات الحديثة للذكاء الاصطناعي",
+      "name_en": "Selected Topics in Artificial Intelligence",
+      "credits": 3,
+      "category": "program_selected_topic",
+      "level_hint": 4,
+      "term_hint": 2,
+      "prerequisites": {
+        "all_of": [
+          "CSB2104"
+        ],
+        "min_passed_credit_hours": null
+      },
+      "counts_in_gpa": true,
+      "roles": {
+        "AI": "selected_topic"
+      },
+      "anomaly_ids": []
+    },
+    {
+      "code": "DSC4204",
+      "name_ar": "مقرر اختياري في التقنيات الحديثة لعلوم البيانات",
+      "name_en": "Selected Topics in Data Science",
+      "credits": 3,
+      "category": "program_selected_topic",
+      "level_hint": 4,
+      "term_hint": 2,
+      "prerequisites": {
+        "all_of": [
+          "DSC3102"
+        ],
+        "min_passed_credit_hours": null
+      },
+      "counts_in_gpa": true,
+      "roles": {
+        "DS": "selected_topic"
+      },
+      "anomaly_ids": [
+        "A-CAT-12"
+      ]
+    },
+    {
+      "code": "CSC4105",
+      "name_ar": "مشروع التخرج (1)",
+      "name_en": "Graduation Project (1)",
+      "credits": 3,
+      "category": "graduation_project",
+      "level_hint": 4,
+      "term_hint": 1,
+      "prerequisites": {
+        "all_of": [
+          "CSB2105"
+        ],
+        "min_passed_credit_hours": null
+      },
+      "counts_in_gpa": true,
+      "roles": {
+        "CS": "project"
+      },
+      "anomaly_ids": [
+        "A-REG-06"
+      ]
+    },
+    {
+      "code": "CSC4206",
+      "name_ar": "مشروع التخرج (2)",
+      "name_en": "Graduation Project (2)",
+      "credits": 3,
+      "category": "graduation_project",
+      "level_hint": 4,
+      "term_hint": 2,
+      "prerequisites": {
+        "all_of": [
+          "CSC4105"
+        ],
+        "min_passed_credit_hours": null
+      },
+      "counts_in_gpa": true,
+      "roles": {
+        "CS": "project"
+      },
+      "anomaly_ids": []
+    },
+    {
+      "code": "INF4105",
+      "name_ar": "مشروع التخرج (1)",
+      "name_en": "Graduation Project (1)",
+      "credits": 3,
+      "category": "graduation_project",
+      "level_hint": 4,
+      "term_hint": 1,
+      "prerequisites": {
+        "all_of": [
+          "CSB2105"
+        ],
+        "min_passed_credit_hours": null
+      },
+      "counts_in_gpa": true,
+      "roles": {
+        "IT": "project"
+      },
+      "anomaly_ids": [
+        "A-REG-06",
+        "A-CAT-09"
+      ]
+    },
+    {
+      "code": "INF4205",
+      "name_ar": "مشروع التخرج (2)",
+      "name_en": "Graduation Project (2)",
+      "credits": 3,
+      "category": "graduation_project",
+      "level_hint": 4,
+      "term_hint": 2,
+      "prerequisites": {
+        "all_of": [
+          "INF4105"
+        ],
+        "min_passed_credit_hours": null
+      },
+      "counts_in_gpa": true,
+      "roles": {
+        "IT": "project"
+      },
+      "anomaly_ids": [
+        "A-CAT-09"
+      ]
+    },
+    {
+      "code": "AIN4105",
+      "name_ar": "مشروع التخرج (1)",
+      "name_en": "Graduation Project (1)",
+      "credits": 3,
+      "category": "graduation_project",
+      "level_hint": 4,
+      "term_hint": 1,
+      "prerequisites": {
+        "all_of": [
+          "CSB2104"
+        ],
+        "min_passed_credit_hours": null
+      },
+      "counts_in_gpa": true,
+      "roles": {
+        "AI": "project"
+      },
+      "anomaly_ids": [
+        "A-REG-06"
+      ]
+    },
+    {
+      "code": "AIN4205",
+      "name_ar": "مشروع التخرج (2)",
+      "name_en": "Graduation Project (2)",
+      "credits": 3,
+      "category": "graduation_project",
+      "level_hint": 4,
+      "term_hint": 2,
+      "prerequisites": {
+        "all_of": [
+          "AIN4105"
+        ],
+        "min_passed_credit_hours": null
+      },
+      "counts_in_gpa": true,
+      "roles": {
+        "AI": "project"
+      },
+      "anomaly_ids": []
+    },
+    {
+      "code": "DSC4105",
+      "name_ar": "مشروع التخرج (1)",
+      "name_en": "Graduation Project (1)",
+      "credits": 3,
+      "category": "graduation_project",
+      "level_hint": 4,
+      "term_hint": 1,
+      "prerequisites": {
+        "all_of": [],
+        "min_passed_credit_hours": null
+      },
+      "counts_in_gpa": true,
+      "roles": {
+        "DS": "project"
+      },
+      "anomaly_ids": [
+        "A-REG-06",
+        "A-CAT-10"
+      ]
+    },
+    {
+      "code": "DSC4205",
+      "name_ar": "مشروع التخرج (2)",
+      "name_en": "Graduation Project (2)",
+      "credits": 3,
+      "category": "graduation_project",
+      "level_hint": 4,
+      "term_hint": 2,
+      "prerequisites": {
+        "all_of": [
+          "DSC4105"
+        ],
+        "min_passed_credit_hours": null
+      },
+      "counts_in_gpa": true,
+      "roles": {
+        "DS": "project"
+      },
+      "anomaly_ids": [
+        "A-CAT-10",
+        "A-CAT-13"
+      ]
+    },
+    {
+      "code": "CSC3105",
+      "name_ar": "معمل برمجة تطبيقات الانترنت",
+      "name_en": "Internet Application Programming Lab",
+      "credits": 2,
+      "category": "program_lab",
+      "level_hint": 3,
+      "term_hint": 1,
+      "prerequisites": {
+        "all_of": [
+          "CSB2203"
+        ],
+        "min_passed_credit_hours": null
+      },
+      "counts_in_gpa": true,
+      "roles": {
+        "CS": "lab"
+      },
+      "anomaly_ids": []
+    },
+    {
+      "code": "CSC3205",
+      "name_ar": "معمل اختبار جودة البرمجيات",
+      "name_en": "Software Testing Tools Lab",
+      "credits": 2,
+      "category": "program_lab",
+      "level_hint": 3,
+      "term_hint": 2,
+      "prerequisites": {
+        "all_of": [
+          "CSC3103"
+        ],
+        "min_passed_credit_hours": null
+      },
+      "counts_in_gpa": true,
+      "roles": {
+        "CS": "lab"
+      },
+      "anomaly_ids": []
+    },
+    {
+      "code": "INF3105",
+      "name_ar": "معمل شبكات (1)",
+      "name_en": "Networking Fundamentals Lab",
+      "credits": 2,
+      "category": "program_lab",
+      "level_hint": 3,
+      "term_hint": 1,
+      "prerequisites": {
+        "all_of": [
+          "CSB2103"
+        ],
+        "min_passed_credit_hours": null
+      },
+      "counts_in_gpa": true,
+      "roles": {
+        "IT": "lab"
+      },
+      "anomaly_ids": []
+    },
+    {
+      "code": "INF3205",
+      "name_ar": "معمل شبكات (2)",
+      "name_en": "Network Routing and Switching Lab",
+      "credits": 2,
+      "category": "program_lab",
+      "level_hint": 3,
+      "term_hint": 2,
+      "prerequisites": {
+        "all_of": [
+          "INF3105"
+        ],
+        "min_passed_credit_hours": null
+      },
+      "counts_in_gpa": true,
+      "roles": {
+        "IT": "lab"
+      },
+      "anomaly_ids": []
+    },
+    {
+      "code": "AIN3105",
+      "name_ar": "معمل تصميم وبناء الروبوت (1)",
+      "name_en": "Robot Construction Lab (1)",
+      "credits": 2,
+      "category": "program_lab",
+      "level_hint": 3,
+      "term_hint": 1,
+      "prerequisites": {
+        "all_of": [
+          "CSB2104"
+        ],
+        "min_passed_credit_hours": null
+      },
+      "counts_in_gpa": true,
+      "roles": {
+        "AI": "lab"
+      },
+      "anomaly_ids": []
+    },
+    {
+      "code": "AIN3205",
+      "name_ar": "معمل تصميم وبناء الروبوت (2)",
+      "name_en": "Robot Construction Lab (2)",
+      "credits": 2,
+      "category": "program_lab",
+      "level_hint": 3,
+      "term_hint": 2,
+      "prerequisites": {
+        "all_of": [
+          "AIN3105",
+          "AIN3104"
+        ],
+        "min_passed_credit_hours": null
+      },
+      "counts_in_gpa": true,
+      "roles": {
+        "AI": "lab"
+      },
+      "anomaly_ids": [
+        "A-CAT-16"
+      ]
+    },
+    {
+      "code": "DSC3105",
+      "name_ar": "معمل تحليل البيانات (1)",
+      "name_en": "Data Analysis Lab (1)",
+      "credits": 2,
+      "category": "program_lab",
+      "level_hint": 3,
+      "term_hint": 1,
+      "prerequisites": {
+        "all_of": [
+          "CSB2205"
+        ],
+        "min_passed_credit_hours": null
+      },
+      "counts_in_gpa": true,
+      "roles": {
+        "DS": "lab"
+      },
+      "anomaly_ids": []
+    },
+    {
+      "code": "DSC3205",
+      "name_ar": "معمل تحليل البيانات (2)",
+      "name_en": "Data Analysis Lab (2)",
+      "credits": 2,
+      "category": "program_lab",
+      "level_hint": 3,
+      "term_hint": 2,
+      "prerequisites": {
+        "all_of": [
+          "DSC3105"
+        ],
+        "min_passed_credit_hours": null
+      },
+      "counts_in_gpa": true,
+      "roles": {
+        "DS": "lab"
+      },
+      "anomaly_ids": [
+        "A-CAT-14",
+        "A-CAT-15"
+      ]
+    },
+    {
+      "code": "CSC3206",
+      "name_ar": "تدريب ميداني صيفي",
+      "name_en": "Field Training",
+      "credits": 0,
+      "category": "field_training",
+      "level_hint": 3,
+      "term_hint": 2,
+      "prerequisites": {
+        "all_of": [],
+        "min_passed_credit_hours": 68
+      },
+      "counts_in_gpa": false,
+      "roles": {
+        "CS": "field_training"
+      },
+      "anomaly_ids": []
+    },
+    {
+      "code": "INF3206",
+      "name_ar": "تدريب ميداني صيفي",
+      "name_en": "Field Training",
+      "credits": 0,
+      "category": "field_training",
+      "level_hint": 3,
+      "term_hint": 2,
+      "prerequisites": {
+        "all_of": [],
+        "min_passed_credit_hours": 68
+      },
+      "counts_in_gpa": false,
+      "roles": {
+        "IT": "field_training"
+      },
+      "anomaly_ids": []
+    },
+    {
+      "code": "AIN3206",
+      "name_ar": "تدريب ميداني صيفي",
+      "name_en": "Field Training",
+      "credits": 0,
+      "category": "field_training",
+      "level_hint": 3,
+      "term_hint": 2,
+      "prerequisites": {
+        "all_of": [],
+        "min_passed_credit_hours": 68
+      },
+      "counts_in_gpa": false,
+      "roles": {
+        "AI": "field_training"
+      },
+      "anomaly_ids": []
+    },
+    {
+      "code": "DSC3206",
+      "name_ar": "تدريب ميداني صيفي",
+      "name_en": "Field Training",
+      "credits": 0,
+      "category": "field_training",
+      "level_hint": 3,
+      "term_hint": 2,
+      "prerequisites": {
+        "all_of": [],
+        "min_passed_credit_hours": 68
+      },
+      "counts_in_gpa": false,
+      "roles": {
+        "DS": "field_training"
+      },
+      "anomaly_ids": [
+        "A-CAT-14"
+      ]
+    }
+  ]
+}

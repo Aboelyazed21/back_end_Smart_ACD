@@ -1,0 +1,14 @@
+.git
+.github
+OneDrive
+**/node_modules
+**/dist
+**/coverage
+**/__pycache__
+**/*.pyc
+**/.pytest_cache
+**/.coverage
+**/.env
+**/*.log
+docs
+pytest_out.txt
