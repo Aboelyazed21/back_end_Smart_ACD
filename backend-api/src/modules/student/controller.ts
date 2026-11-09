@@ -47,7 +47,10 @@ export const dashboard = asyncHandler(async (req: Request, res: Response) => {
 
 export const enrollments = asyncHandler(async (req: Request, res: Response) => {
   const student = await currentStudent(req);
-  res.json({ data: await service.enrollmentsFor(student) });
+  // Optional ?term=YYYY-YYYY-season filter, used by the GPA simulator to list
+  // only the courses the student is registered in for that semester.
+  const term = req.query.term ? parseTerm(req.query.term).term : undefined;
+  res.json({ data: await service.enrollmentsFor(student, term) });
 });
 
 export const recommendedPlan = asyncHandler(async (req: Request, res: Response) => {

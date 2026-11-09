@@ -92,15 +92,16 @@ export async function dashboardFor(student: StudentRow, term: Term) {
   };
 }
 
-export async function enrollmentsFor(student: StudentRow) {
+export async function enrollmentsFor(student: StudentRow, term?: string) {
   const rows = await many<EnrollmentRow & { name_en: string; name_ar: string }>(
     `SELECT e.id, e.course_id, c.code, c.name_en, c.name_ar, c.credits, c.level_hint,
             e.term, e.academic_year, e.season, e.grade_letter, e.percentage, e.grade_points,
             e.status, e.attempt_no, e.counts_in_gpa, e.is_repeat
        FROM enrollments e JOIN courses c ON c.id = e.course_id
       WHERE e.student_id = $1
+        AND ($2::text IS NULL OR e.term = $2)
       ORDER BY e.academic_year DESC, e.season DESC, c.code, e.attempt_no`,
-    [student.id],
+    [student.id, term ?? null],
   );
   return rows.map((row) => ({
     id: row.id,
