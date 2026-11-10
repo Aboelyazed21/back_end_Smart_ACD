@@ -479,7 +479,7 @@ async function seedDemo(client: PoolClient) {
   const departments = new Map(deptRows.rows.map((row) => [row.code, row.id]));
 
   const advisorSpecs = [
-    { email: 'advisor1@aidm.bua.edu.eg', name: 'Dr. Hoda Abdelrahman', dept: 'CS' },
+    { email: 'advisor1@aidm.bua.edu.eg', name: 'Seham Samy', dept: 'CS' },
     { email: 'advisor2@aidm.bua.edu.eg', name: 'Dr. Karim El-Sayed', dept: 'IT' },
   ];
   const advisorIds: string[] = [];

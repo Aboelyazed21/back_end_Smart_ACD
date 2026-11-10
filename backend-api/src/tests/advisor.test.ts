@@ -132,7 +132,7 @@ describe('advisor workspace', () => {
     const isolated = await auth(agent.get(`/api/advisor/students/${student!.id}/notes`), session).expect(200);
     expect(
       isolated.body.data.every(
-        (row: { advisor_name: string }) => row.advisor_name === 'Dr. Hoda Abdelrahman',
+        (row: { advisor_name: string }) => row.advisor_name === 'Seham Samy',
       ),
     ).toBe(true);
   });
