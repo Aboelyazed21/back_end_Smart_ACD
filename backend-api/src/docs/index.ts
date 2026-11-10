@@ -53,7 +53,7 @@ const SWAGGER_INIT = `window.addEventListener('load', function () {
     url: '/api/openapi.json',
     dom_id: '#swagger-ui',
     deepLinking: true,
-    docExpansion: 'none',
+    docExpansion: 'list',
     filter: true,
     persistAuthorization: true,
     presets: [SwaggerUIBundle.presets.apis, SwaggerUIStandalonePreset],
