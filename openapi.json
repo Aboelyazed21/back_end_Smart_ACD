@@ -1,0 +1,2261 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "Smart Academic Advisor API",
+    "version": "1.0.0",
+    "description": "REST API for the Smart Academic Advisor platform (Badr University in Assiut, AIDM).\n\n## Authentication\n1. `GET /api/auth/csrf` — issues the `csrf_token` cookie and returns the token.\n2. `POST /api/auth/login` with `{ email, password }` — returns `accessToken` and sets the `refresh_token` cookie.\n3. Send `Authorization: Bearer <accessToken>` on every protected request.\n4. For every unsafe request (`POST`, `PATCH`, `PUT`, `DELETE`) also send the `x-csrf-token` header equal to the `csrf_token` cookie value.\n5. `POST /api/auth/refresh` rotates the refresh cookie and returns a fresh `accessToken`.\n\n### Demo accounts\n| Role | Email | Password |\n| --- | --- | --- |\n| Admin | `admin@bua.edu.eg` | `ChangeMe!2026` |\n| Advisor | `advisor1@aidm.bua.edu.eg` | `ChangeMe!2026` |\n| Student | `student1@aidm.bua.edu.eg` | `ChangeMe!2026` |\n\nAll academic outputs are advisory only (`advisory_only: true`) and never update official grades.",
+    "contact": {
+      "name": "Smart Academic Advisor",
+      "url": "https://github.com/Aboelyazed21/back_end_Smart_ACD"
+    },
+    "license": { "name": "MIT" }
+  },
+  "servers": [
+    { "url": "/", "description": "Current host (recommended)" },
+    { "url": "http://127.0.0.1:4000", "description": "Local development" }
+  ],
+  "tags": [
+    { "name": "Health", "description": "Liveness and readiness probes" },
+    { "name": "Auth", "description": "Sessions, CSRF, passwords" },
+    { "name": "Student", "description": "Student portal endpoints (role: student)" },
+    { "name": "Advisor", "description": "Advisor workspace endpoints (role: advisor)" },
+    { "name": "Admin", "description": "Administration endpoints (role: admin)" },
+    { "name": "Chat", "description": "Regulation assistant chat (all authenticated roles)" }
+  ],
+  "security": [{ "bearerAuth": [] }],
+  "components": {
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT",
+        "description": "Access token returned by POST /api/auth/login."
+      }
+    },
+    "parameters": {
+      "CsrfToken": {
+        "name": "x-csrf-token",
+        "in": "header",
+        "required": true,
+        "description": "Value of the csrf_token cookie issued by GET /api/auth/csrf.",
+        "schema": { "type": "string" }
+      },
+      "Term": {
+        "name": "term",
+        "in": "query",
+        "required": false,
+        "description": "Academic term in the form YYYY-YYYY-season, e.g. 2026-2027-fall.",
+        "schema": { "type": "string", "example": "2026-2027-fall" }
+      },
+      "Page": {
+        "name": "page",
+        "in": "query",
+        "required": false,
+        "schema": { "type": "integer", "minimum": 1, "default": 1 }
+      },
+      "Limit": {
+        "name": "limit",
+        "in": "query",
+        "required": false,
+        "schema": { "type": "integer", "minimum": 1, "maximum": 100, "default": 20 }
+      },
+      "Id": {
+        "name": "id",
+        "in": "path",
+        "required": true,
+        "schema": { "type": "string", "format": "uuid" }
+      },
+      "CourseCode": {
+        "name": "courseCode",
+        "in": "path",
+        "required": true,
+        "schema": { "type": "string", "pattern": "^[A-Z]{3}[0-9]{4}$", "example": "CSB1101" }
+      }
+    },
+    "responses": {
+      "Unauthorized": {
+        "description": "Missing, expired or revoked access token.",
+        "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } }
+      },
+      "Forbidden": {
+        "description": "Authenticated but not allowed (wrong role, missing CSRF, must-change-password).",
+        "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } }
+      },
+      "NotFound": {
+        "description": "Resource not found.",
+        "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } }
+      },
+      "ValidationError": {
+        "description": "Request validation failed.",
+        "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } }
+      },
+      "TooManyRequests": {
+        "description": "Rate limit exceeded.",
+        "headers": { "Retry-After": { "schema": { "type": "integer" } } },
+        "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } }
+      },
+      "ServerError": {
+        "description": "Unexpected server error.",
+        "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } }
+      }
+    },
+    "schemas": {
+      "Error": {
+        "type": "object",
+        "required": ["code", "message"],
+        "properties": {
+          "code": { "type": "string", "example": "VALIDATION_ERROR" },
+          "message": { "type": "string", "example": "Request validation failed" },
+          "details": { "type": "object", "additionalProperties": true },
+          "correlationId": { "type": "string", "format": "uuid" }
+        }
+      },
+      "DataEnvelope": {
+        "type": "object",
+        "required": ["data"],
+        "properties": { "data": { "type": "object", "additionalProperties": true } }
+      },
+      "Pagination": {
+        "type": "object",
+        "properties": {
+          "page": { "type": "integer" },
+          "limit": { "type": "integer" },
+          "total": { "type": "integer" },
+          "pages": { "type": "integer" }
+        }
+      },
+      "CsrfResponse": {
+        "type": "object",
+        "required": ["csrfToken"],
+        "properties": { "csrfToken": { "type": "string" } }
+      },
+      "LoginRequest": {
+        "type": "object",
+        "required": ["email", "password"],
+        "additionalProperties": false,
+        "properties": {
+          "email": { "type": "string", "format": "email", "maxLength": 254 },
+          "password": { "type": "string", "minLength": 1, "maxLength": 128 }
+        }
+      },
+      "AuthSession": {
+        "type": "object",
+        "required": ["accessToken", "expiresIn", "refreshToken"],
+        "properties": {
+          "accessToken": { "type": "string" },
+          "expiresIn": { "type": "integer", "example": 900 },
+          "refreshToken": { "type": "string", "description": "Also stored in the httpOnly refresh_token cookie." }
+        }
+      },
+      "SafeUser": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "email": { "type": "string", "format": "email" },
+          "role": { "type": "string", "enum": ["student", "advisor", "admin"] },
+          "status": { "type": "string", "enum": ["active", "inactive", "suspended"] },
+          "fullName": { "type": "string" },
+          "phone": { "type": "string", "nullable": true },
+          "mustChangePassword": { "type": "boolean" },
+          "isDemo": { "type": "boolean" }
+        }
+      },
+      "MeResponse": {
+        "type": "object",
+        "properties": {
+          "user": { "$ref": "#/components/schemas/SafeUser" },
+          "student": { "type": "object", "nullable": true, "additionalProperties": true },
+          "advisor": { "type": "object", "nullable": true, "additionalProperties": true }
+        }
+      },
+      "Session": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "userAgent": { "type": "string", "nullable": true },
+          "ip": { "type": "string", "nullable": true },
+          "createdAt": { "type": "string", "format": "date-time" },
+          "lastUsedAt": { "type": "string", "format": "date-time", "nullable": true }
+        },
+        "additionalProperties": true
+      },
+      "TermInfo": {
+        "type": "object",
+        "properties": {
+          "value": { "type": "string", "example": "2026-2027-fall" },
+          "season": { "type": "string", "enum": ["fall", "spring", "summer"] },
+          "academicYear": { "type": "string", "example": "2026-2027" }
+        }
+      },
+      "StudentProfile": {
+        "type": "object",
+        "properties": {
+          "student": {
+            "type": "object",
+            "properties": {
+              "id": { "type": "string", "format": "uuid" },
+              "studentCode": { "type": "string", "example": "26000001" },
+              "program": { "type": "string", "enum": ["CS", "IT", "AI", "DS"] },
+              "level": { "type": "integer", "minimum": 1, "maximum": 4 },
+              "admissionTerm": { "type": "string", "nullable": true },
+              "cgpa": { "type": "number" },
+              "passedCredits": { "type": "integer" },
+              "transferCredits": { "type": "integer" },
+              "regularSemestersCompleted": { "type": "integer" },
+              "fullName": { "type": "string" },
+              "email": { "type": "string", "format": "email" },
+              "phone": { "type": "string", "nullable": true }
+            },
+            "additionalProperties": true
+          },
+          "advisor": { "type": "object", "nullable": true, "additionalProperties": true },
+          "department": { "type": "object", "nullable": true, "additionalProperties": true }
+        }
+      },
+      "StudentDashboard": {
+        "type": "object",
+        "properties": {
+          "profile": { "$ref": "#/components/schemas/StudentProfile" },
+          "term": { "$ref": "#/components/schemas/TermInfo" },
+          "standing": { "type": "object", "nullable": true, "additionalProperties": true },
+          "currentCourses": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": { "type": "string", "format": "uuid" },
+                "course_code": { "type": "string" },
+                "name_en": { "type": "string" },
+                "name_ar": { "type": "string" },
+                "credits": { "type": "integer" },
+                "status": { "type": "string" },
+                "term": { "type": "string" }
+              }
+            }
+          },
+          "recentPlans": { "type": "array", "items": { "type": "object", "additionalProperties": true } },
+          "unreadNotifications": { "type": "integer" },
+          "graduation": {
+            "type": "object",
+            "properties": {
+              "requiredCredits": { "type": "integer" },
+              "passedCredits": { "type": "integer" },
+              "remainingCredits": { "type": "integer" }
+            }
+          },
+          "advisoryOnly": { "type": "boolean", "example": true }
+        }
+      },
+      "Enrollment": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "courseCode": { "type": "string", "example": "CSB1101" },
+          "nameEn": { "type": "string" },
+          "nameAr": { "type": "string" },
+          "credits": { "type": "integer" },
+          "term": { "type": "string", "example": "2026-2027-fall" },
+          "academicYear": { "type": "string", "example": "2026-2027" },
+          "season": { "type": "string", "enum": ["fall", "spring", "summer"] },
+          "gradeLetter": { "type": "string", "nullable": true },
+          "percentage": { "type": "number", "nullable": true },
+          "gradePoints": { "type": "number", "nullable": true },
+          "status": { "type": "string", "enum": ["in_progress", "passed", "failed", "withdrawn"] },
+          "attemptNo": { "type": "integer" },
+          "countsInGpa": { "type": "boolean" },
+          "isRepeat": { "type": "boolean" }
+        }
+      },
+      "GpaSimulateRequest": {
+        "type": "object",
+        "required": ["simulated"],
+        "additionalProperties": false,
+        "properties": {
+          "term": { "type": "string", "example": "2026-2027-fall" },
+          "simulated": {
+            "type": "array",
+            "minItems": 1,
+            "maxItems": 30,
+            "items": {
+              "type": "object",
+              "required": ["courseCode"],
+              "additionalProperties": false,
+              "properties": {
+                "courseCode": { "type": "string", "pattern": "^[A-Z]{3}[0-9]{4}$", "example": "CSB1101" },
+                "percentage": { "type": "number", "minimum": 0, "maximum": 100, "nullable": true },
+                "gradeLetter": { "type": "string", "minLength": 1, "maxLength": 2, "nullable": true }
+              },
+              "description": "Provide percentage or gradeLetter (or both)."
+            }
+          },
+          "futureCgpaTarget": { "type": "number", "minimum": 0, "maximum": 4, "nullable": true }
+        }
+      },
+      "GpaCourseResult": {
+        "type": "object",
+        "properties": {
+          "code": { "type": "string" },
+          "credits": { "type": "integer" },
+          "points": { "type": "number" },
+          "percentage": { "type": "number", "nullable": true },
+          "letter": { "type": "string" },
+          "status": { "type": "string" },
+          "counts_in_gpa": { "type": "boolean" },
+          "attempt_no": { "type": "integer" },
+          "is_repeat": { "type": "boolean" }
+        }
+      },
+      "GpaSnapshot": {
+        "type": "object",
+        "properties": {
+          "sgpa": { "type": "number", "example": 3.0 },
+          "cgpa": { "type": "number", "example": 3.0 },
+          "total_credits": { "type": "integer" },
+          "quality_points": { "type": "number" },
+          "sgpa_credits": { "type": "integer" },
+          "sgpa_points": { "type": "number" },
+          "courses": { "type": "array", "items": { "$ref": "#/components/schemas/GpaCourseResult" } },
+          "repeat_cap_applied": { "type": "array", "items": { "type": "string" } },
+          "repeat_cap_pct": { "type": "integer" },
+          "classification": {
+            "oneOf": [
+              { "type": "array", "items": { "type": ["integer", "string"] } },
+              { "type": "string" }
+            ]
+          },
+          "classification_en": { "type": "string" }
+        }
+      },
+      "GpaSimulateResponse": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "object",
+            "properties": {
+              "current": { "$ref": "#/components/schemas/GpaSnapshot" },
+              "projected": { "$ref": "#/components/schemas/GpaSnapshot" },
+              "simulated_courses": { "type": "integer" },
+              "repeat_cap_pct": { "type": "integer" },
+              "target_reachable": { "type": "boolean", "nullable": true },
+              "advisory_only": { "type": "boolean", "example": true }
+            }
+          }
+        }
+      },
+      "Notification": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "title": { "type": "string" },
+          "body": { "type": "string" },
+          "readAt": { "type": "string", "format": "date-time", "nullable": true },
+          "createdAt": { "type": "string", "format": "date-time" }
+        },
+        "additionalProperties": true
+      },
+      "ChatMessageRequest": {
+        "type": "object",
+        "required": ["question"],
+        "additionalProperties": false,
+        "properties": {
+          "question": { "type": "string", "minLength": 2, "maxLength": 1500 },
+          "language": { "type": "string", "enum": ["ar", "en", "auto"] }
+        }
+      }
+    }
+  },
+  "paths": {
+    "/health": {
+      "get": {
+        "tags": ["Health"],
+        "summary": "Service banner",
+        "security": [],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": { "type": "string" },
+                    "service": { "type": "string" }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/health/live": {
+      "get": {
+        "tags": ["Health"],
+        "summary": "Liveness probe",
+        "security": [],
+        "responses": {
+          "200": {
+            "description": "Process is alive",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": { "type": "string" },
+                    "uptimeSeconds": { "type": "integer" },
+                    "version": { "type": "string" }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/health/ready": {
+      "get": {
+        "tags": ["Health"],
+        "summary": "Readiness probe (database + rule engine)",
+        "security": [],
+        "responses": {
+          "200": {
+            "description": "Ready (possibly degraded when the rule engine is down)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": { "type": "string", "enum": ["ok", "degraded", "unavailable"] },
+                    "checks": { "type": "object", "additionalProperties": true },
+                    "timestamp": { "type": "string", "format": "date-time" }
+                  }
+                }
+              }
+            }
+          },
+          "503": { "description": "Database unavailable" }
+        }
+      }
+    },
+    "/api/auth/csrf": {
+      "get": {
+        "tags": ["Auth"],
+        "summary": "Issue a CSRF token (also sets the csrf_token cookie)",
+        "security": [],
+        "responses": {
+          "200": {
+            "description": "CSRF token",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/CsrfResponse" } } }
+          }
+        }
+      }
+    },
+    "/api/auth/login": {
+      "post": {
+        "tags": ["Auth"],
+        "summary": "Sign in and start a session",
+        "security": [],
+        "requestBody": {
+          "required": true,
+          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/LoginRequest" } } }
+        },
+        "responses": {
+          "200": {
+            "description": "Access token (refresh token is set as an httpOnly cookie)",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/AuthSession" } } }
+          },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "422": { "$ref": "#/components/responses/ValidationError" },
+          "429": { "$ref": "#/components/responses/TooManyRequests" }
+        }
+      }
+    },
+    "/api/auth/refresh": {
+      "post": {
+        "tags": ["Auth"],
+        "summary": "Rotate the refresh token and mint a new access token",
+        "security": [],
+        "responses": {
+          "200": {
+            "description": "New session",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/AuthSession" } } }
+          },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "429": { "$ref": "#/components/responses/TooManyRequests" }
+        }
+      }
+    },
+    "/api/auth/logout": {
+      "post": {
+        "tags": ["Auth"],
+        "summary": "Revoke the current session",
+        "parameters": [{ "$ref": "#/components/parameters/CsrfToken" }],
+        "responses": {
+          "204": { "description": "Logged out" },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "403": { "$ref": "#/components/responses/Forbidden" }
+        }
+      }
+    },
+    "/api/auth/logout-all": {
+      "post": {
+        "tags": ["Auth"],
+        "summary": "Revoke every session of the current user",
+        "parameters": [{ "$ref": "#/components/parameters/CsrfToken" }],
+        "responses": {
+          "204": { "description": "All sessions revoked" },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "403": { "$ref": "#/components/responses/Forbidden" }
+        }
+      }
+    },
+    "/api/auth/me": {
+      "get": {
+        "tags": ["Auth"],
+        "summary": "Current user profile",
+        "responses": {
+          "200": {
+            "description": "Authenticated user",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/MeResponse" } } }
+          },
+          "401": { "$ref": "#/components/responses/Unauthorized" }
+        }
+      }
+    },
+    "/api/auth/change-password": {
+      "post": {
+        "tags": ["Auth"],
+        "summary": "Change the current user's password",
+        "parameters": [{ "$ref": "#/components/parameters/CsrfToken" }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["currentPassword", "newPassword"],
+                "additionalProperties": false,
+                "properties": {
+                  "currentPassword": { "type": "string" },
+                  "newPassword": { "type": "string", "minLength": 12, "maxLength": 128, "description": "At least 12 characters with upper-case, lower-case, digit and symbol." }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": { "description": "Password changed" },
+          "400": { "$ref": "#/components/responses/ValidationError" },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "429": { "$ref": "#/components/responses/TooManyRequests" }
+        }
+      }
+    },
+    "/api/auth/forgot-password": {
+      "post": {
+        "tags": ["Auth"],
+        "summary": "Request a password reset link",
+        "parameters": [{ "$ref": "#/components/parameters/CsrfToken" }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["email"],
+                "additionalProperties": false,
+                "properties": { "email": { "type": "string", "format": "email" } }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Always returns a generic message",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": { "message": { "type": "string" } }
+                }
+              }
+            }
+          },
+          "429": { "$ref": "#/components/responses/TooManyRequests" }
+        }
+      }
+    },
+    "/api/auth/reset-password": {
+      "post": {
+        "tags": ["Auth"],
+        "summary": "Complete a password reset with a token",
+        "parameters": [{ "$ref": "#/components/parameters/CsrfToken" }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["token", "newPassword"],
+                "additionalProperties": false,
+                "properties": {
+                  "token": { "type": "string", "minLength": 16, "maxLength": 512 },
+                  "newPassword": { "type": "string", "minLength": 12, "maxLength": 128 }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": { "description": "Password reset" },
+          "400": { "$ref": "#/components/responses/ValidationError" },
+          "429": { "$ref": "#/components/responses/TooManyRequests" }
+        }
+      }
+    },
+    "/api/auth/sessions": {
+      "get": {
+        "tags": ["Auth"],
+        "summary": "List active sessions",
+        "responses": {
+          "200": {
+            "description": "Sessions",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "items": { "type": "array", "items": { "$ref": "#/components/schemas/Session" } }
+                  }
+                }
+              }
+            }
+          },
+          "401": { "$ref": "#/components/responses/Unauthorized" }
+        }
+      }
+    },
+    "/api/auth/sessions/{id}": {
+      "delete": {
+        "tags": ["Auth"],
+        "summary": "Revoke a specific session",
+        "parameters": [
+          { "$ref": "#/components/parameters/Id" },
+          { "$ref": "#/components/parameters/CsrfToken" }
+        ],
+        "responses": {
+          "204": { "description": "Session revoked" },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "404": { "$ref": "#/components/responses/NotFound" }
+        }
+      }
+    },
+
+    "/api/student/profile": {
+      "get": {
+        "tags": ["Student"],
+        "summary": "Student profile, advisor and department",
+        "responses": {
+          "200": {
+            "description": "Profile",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": { "data": { "$ref": "#/components/schemas/StudentProfile" } }
+                }
+              }
+            }
+          },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "403": { "$ref": "#/components/responses/Forbidden" }
+        }
+      }
+    },
+    "/api/student/dashboard": {
+      "get": {
+        "tags": ["Student"],
+        "summary": "Dashboard summary for a term",
+        "parameters": [{ "$ref": "#/components/parameters/Term" }],
+        "responses": {
+          "200": {
+            "description": "Dashboard",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": { "data": { "$ref": "#/components/schemas/StudentDashboard" } }
+                }
+              }
+            }
+          },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "422": { "$ref": "#/components/responses/ValidationError" }
+        }
+      }
+    },
+    "/api/student/enrollments": {
+      "get": {
+        "tags": ["Student"],
+        "summary": "List the student's course enrollments",
+        "description": "Without `term` the full academic record is returned. With `?term=2026-2027-fall` only the courses registered in that semester are returned — this is what the GPA Simulator uses.",
+        "parameters": [{ "$ref": "#/components/parameters/Term" }],
+        "responses": {
+          "200": {
+            "description": "Enrollments",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": { "type": "array", "items": { "$ref": "#/components/schemas/Enrollment" } }
+                  }
+                }
+              }
+            }
+          },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "422": { "$ref": "#/components/responses/ValidationError" }
+        }
+      }
+    },
+    "/api/student/recommended-plan": {
+      "get": {
+        "tags": ["Student"],
+        "summary": "Recommended study plan for a term and level",
+        "parameters": [
+          { "$ref": "#/components/parameters/Term" },
+          { "name": "level", "in": "query", "schema": { "type": "integer", "minimum": 1, "maximum": 4 } }
+        ],
+        "responses": {
+          "200": { "description": "Recommended plan", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/DataEnvelope" } } } },
+          "401": { "$ref": "#/components/responses/Unauthorized" }
+        }
+      }
+    },
+    "/api/student/courses": {
+      "get": {
+        "tags": ["Student"],
+        "summary": "Program information and course catalogue",
+        "responses": {
+          "200": { "description": "Program info", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/DataEnvelope" } } } },
+          "401": { "$ref": "#/components/responses/Unauthorized" }
+        }
+      }
+    },
+    "/api/student/eligibility": {
+      "get": {
+        "tags": ["Student"],
+        "summary": "Registration eligibility for a term",
+        "parameters": [
+          { "$ref": "#/components/parameters/Term" },
+          { "name": "week", "in": "query", "schema": { "type": "integer", "minimum": 0, "maximum": 30 } },
+          { "name": "courseCodes", "in": "query", "description": "Comma-separated course codes", "schema": { "type": "string", "maxLength": 800 } },
+          { "name": "plannedCredits", "in": "query", "schema": { "type": "integer", "minimum": 0, "maximum": 21 } }
+        ],
+        "responses": {
+          "200": { "description": "Eligibility evaluation", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/DataEnvelope" } } } },
+          "401": { "$ref": "#/components/responses/Unauthorized" }
+        }
+      }
+    },
+    "/api/student/eligibility/{courseCode}": {
+      "get": {
+        "tags": ["Student"],
+        "summary": "Eligibility for one course",
+        "parameters": [
+          { "$ref": "#/components/parameters/CourseCode" },
+          { "$ref": "#/components/parameters/Term" },
+          { "name": "week", "in": "query", "schema": { "type": "integer", "minimum": 0, "maximum": 30 } }
+        ],
+        "responses": {
+          "200": { "description": "Course eligibility", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/DataEnvelope" } } } },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "404": { "$ref": "#/components/responses/NotFound" }
+        }
+      }
+    },
+    "/api/student/standing": {
+      "get": {
+        "tags": ["Student"],
+        "summary": "Academic standing (SGPA/CGPA, warnings)",
+        "parameters": [{ "$ref": "#/components/parameters/Term" }],
+        "responses": {
+          "200": { "description": "Standing", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/DataEnvelope" } } } },
+          "401": { "$ref": "#/components/responses/Unauthorized" }
+        }
+      }
+    },
+    "/api/student/early-warning": {
+      "get": {
+        "tags": ["Student"],
+        "summary": "Early-warning indicators",
+        "parameters": [{ "$ref": "#/components/parameters/Term" }],
+        "responses": {
+          "200": { "description": "Indicators", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/DataEnvelope" } } } },
+          "401": { "$ref": "#/components/responses/Unauthorized" }
+        }
+      }
+    },
+    "/api/student/graduation-audit": {
+      "get": {
+        "tags": ["Student"],
+        "summary": "Graduation audit against the study plan",
+        "parameters": [{ "$ref": "#/components/parameters/Term" }],
+        "responses": {
+          "200": { "description": "Audit", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/DataEnvelope" } } } },
+          "401": { "$ref": "#/components/responses/Unauthorized" }
+        }
+      }
+    },
+    "/api/student/gpa/simulate": {
+      "post": {
+        "tags": ["Student"],
+        "summary": "Simulate semester and cumulative GPA",
+        "description": "Advisory only. `current` reflects the record before the simulated grades; `projected` reflects the simulated semester.",
+        "parameters": [{ "$ref": "#/components/parameters/CsrfToken" }],
+        "requestBody": {
+          "required": true,
+          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/GpaSimulateRequest" } } }
+        },
+        "responses": {
+          "200": {
+            "description": "Simulation result",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/GpaSimulateResponse" } } }
+          },
+          "400": { "$ref": "#/components/responses/ValidationError" },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "403": { "$ref": "#/components/responses/Forbidden" },
+          "422": { "$ref": "#/components/responses/ValidationError" }
+        }
+      }
+    },
+    "/api/student/whatif/major-switch": {
+      "post": {
+        "tags": ["Student"],
+        "summary": "What-if analysis for switching major",
+        "parameters": [{ "$ref": "#/components/parameters/CsrfToken" }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["targetProgram"],
+                "additionalProperties": false,
+                "properties": { "targetProgram": { "type": "string", "enum": ["CS", "IT", "AI", "DS"] } }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "What-if result", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/DataEnvelope" } } } },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "422": { "$ref": "#/components/responses/ValidationError" }
+        }
+      }
+    },
+    "/api/student/plans": {
+      "get": {
+        "tags": ["Student"],
+        "summary": "List my study plans",
+        "responses": {
+          "200": { "description": "Plans", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/DataEnvelope" } } } },
+          "401": { "$ref": "#/components/responses/Unauthorized" }
+        }
+      },
+      "post": {
+        "tags": ["Student"],
+        "summary": "Generate a draft study plan",
+        "parameters": [{ "$ref": "#/components/parameters/CsrfToken" }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "term": { "type": "string" },
+                  "week": { "type": "integer", "minimum": 0, "maximum": 30 },
+                  "maxCredits": { "type": "integer", "minimum": 0, "maximum": 21 },
+                  "planningSlot": { "type": "string", "pattern": "^[1-4]-[12]$" },
+                  "preferences": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "properties": {
+                      "avoid_days": { "type": "array", "items": { "type": "string", "enum": ["sat", "sun", "mon", "tue", "wed", "thu", "fri"] } },
+                      "compress_days": { "type": "boolean" },
+                      "prefer_morning": { "type": "boolean" }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": { "description": "Draft plan", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/DataEnvelope" } } } },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "422": { "$ref": "#/components/responses/ValidationError" }
+        }
+      }
+    },
+    "/api/student/plans/{id}": {
+      "get": {
+        "tags": ["Student"],
+        "summary": "Get one of my plans",
+        "parameters": [{ "$ref": "#/components/parameters/Id" }],
+        "responses": {
+          "200": { "description": "Plan", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/DataEnvelope" } } } },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "404": { "$ref": "#/components/responses/NotFound" }
+        }
+      }
+    },
+    "/api/student/plans/{id}/submit": {
+      "post": {
+        "tags": ["Student"],
+        "summary": "Submit a plan to the advisor",
+        "parameters": [
+          { "$ref": "#/components/parameters/Id" },
+          { "$ref": "#/components/parameters/CsrfToken" }
+        ],
+        "responses": {
+          "200": { "description": "Submitted plan", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/DataEnvelope" } } } },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "404": { "$ref": "#/components/responses/NotFound" },
+          "409": { "description": "Plan is not in a submittable state" }
+        }
+      }
+    },
+    "/api/student/plans/{id}/export": {
+      "get": {
+        "tags": ["Student"],
+        "summary": "Export a plan as a PDF",
+        "parameters": [{ "$ref": "#/components/parameters/Id" }],
+        "responses": {
+          "200": {
+            "description": "PDF document",
+            "content": { "application/pdf": { "schema": { "type": "string", "format": "binary" } } }
+          },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "404": { "$ref": "#/components/responses/NotFound" },
+          "429": { "$ref": "#/components/responses/TooManyRequests" }
+        }
+      }
+    },
+    "/api/student/advisor": {
+      "get": {
+        "tags": ["Student"],
+        "summary": "My advisor and office hours",
+        "responses": {
+          "200": { "description": "Advisor details", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/DataEnvelope" } } } },
+          "401": { "$ref": "#/components/responses/Unauthorized" }
+        }
+      }
+    },
+    "/api/student/office-hours/requests": {
+      "get": {
+        "tags": ["Student"],
+        "summary": "My office-hour requests",
+        "responses": {
+          "200": { "description": "Requests", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/DataEnvelope" } } } },
+          "401": { "$ref": "#/components/responses/Unauthorized" }
+        }
+      },
+      "post": {
+        "tags": ["Student"],
+        "summary": "Request an office-hour slot",
+        "parameters": [{ "$ref": "#/components/parameters/CsrfToken" }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["slotId"],
+                "additionalProperties": false,
+                "properties": {
+                  "slotId": { "type": "string", "format": "uuid" },
+                  "reason": { "type": "string", "maxLength": 1000 }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": { "description": "Request created", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/DataEnvelope" } } } },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "409": { "description": "Duplicate active request for the same slot" }
+        }
+      }
+    },
+    "/api/student/notifications": {
+      "get": {
+        "tags": ["Student"],
+        "summary": "List notifications",
+        "parameters": [
+          { "name": "unread", "in": "query", "schema": { "type": "string", "enum": ["true", "false"] } },
+          { "$ref": "#/components/parameters/Page" },
+          { "$ref": "#/components/parameters/Limit" }
+        ],
+        "responses": {
+          "200": {
+            "description": "Notifications",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": { "type": "array", "items": { "$ref": "#/components/schemas/Notification" } },
+                    "pagination": { "$ref": "#/components/schemas/Pagination" }
+                  }
+                }
+              }
+            }
+          },
+          "401": { "$ref": "#/components/responses/Unauthorized" }
+        }
+      }
+    },
+    "/api/student/notifications/{id}/read": {
+      "patch": {
+        "tags": ["Student"],
+        "summary": "Mark one notification as read",
+        "parameters": [
+          { "$ref": "#/components/parameters/Id" },
+          { "$ref": "#/components/parameters/CsrfToken" }
+        ],
+        "responses": {
+          "204": { "description": "Marked as read" },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "404": { "$ref": "#/components/responses/NotFound" }
+        }
+      }
+    },
+    "/api/student/notifications/read-all": {
+      "post": {
+        "tags": ["Student"],
+        "summary": "Mark all notifications as read",
+        "parameters": [{ "$ref": "#/components/parameters/CsrfToken" }],
+        "responses": {
+          "204": { "description": "All marked as read" },
+          "401": { "$ref": "#/components/responses/Unauthorized" }
+        }
+      }
+    },
+
+    "/api/advisor/dashboard": {
+      "get": {
+        "tags": ["Advisor"],
+        "summary": "Advisor dashboard",
+        "responses": {
+          "200": { "description": "Dashboard", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/DataEnvelope" } } } },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "403": { "$ref": "#/components/responses/Forbidden" }
+        }
+      }
+    },
+    "/api/advisor/students": {
+      "get": {
+        "tags": ["Advisor"],
+        "summary": "List my students",
+        "parameters": [
+          { "name": "search", "in": "query", "schema": { "type": "string", "maxLength": 100 } },
+          { "$ref": "#/components/parameters/Page" },
+          { "$ref": "#/components/parameters/Limit" }
+        ],
+        "responses": {
+          "200": {
+            "description": "Students",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": { "type": "array", "items": { "type": "object", "additionalProperties": true } },
+                    "pagination": { "$ref": "#/components/schemas/Pagination" }
+                  }
+                }
+              }
+            }
+          },
+          "401": { "$ref": "#/components/responses/Unauthorized" }
+        }
+      }
+    },
+    "/api/advisor/at-risk": {
+      "get": {
+        "tags": ["Advisor"],
+        "summary": "Students at risk",
+        "responses": {
+          "200": { "description": "At-risk students", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/DataEnvelope" } } } },
+          "401": { "$ref": "#/components/responses/Unauthorized" }
+        }
+      }
+    },
+    "/api/advisor/students/{id}": {
+      "get": {
+        "tags": ["Advisor"],
+        "summary": "Student detail",
+        "parameters": [{ "$ref": "#/components/parameters/Id" }],
+        "responses": {
+          "200": { "description": "Student", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/DataEnvelope" } } } },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "404": { "$ref": "#/components/responses/NotFound" }
+        }
+      }
+    },
+    "/api/advisor/students/{id}/standing": {
+      "get": {
+        "tags": ["Advisor"],
+        "summary": "Student academic standing",
+        "parameters": [
+          { "$ref": "#/components/parameters/Id" },
+          { "$ref": "#/components/parameters/Term" }
+        ],
+        "responses": {
+          "200": { "description": "Standing", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/DataEnvelope" } } } },
+          "401": { "$ref": "#/components/responses/Unauthorized" }
+        }
+      }
+    },
+    "/api/advisor/students/{id}/eligibility": {
+      "get": {
+        "tags": ["Advisor"],
+        "summary": "Student registration eligibility",
+        "parameters": [
+          { "$ref": "#/components/parameters/Id" },
+          { "$ref": "#/components/parameters/Term" },
+          { "name": "courseCodes", "in": "query", "schema": { "type": "string", "maxLength": 800 } }
+        ],
+        "responses": {
+          "200": { "description": "Eligibility", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/DataEnvelope" } } } },
+          "401": { "$ref": "#/components/responses/Unauthorized" }
+        }
+      }
+    },
+    "/api/advisor/students/{id}/graduation-audit": {
+      "get": {
+        "tags": ["Advisor"],
+        "summary": "Student graduation audit",
+        "parameters": [
+          { "$ref": "#/components/parameters/Id" },
+          { "$ref": "#/components/parameters/Term" }
+        ],
+        "responses": {
+          "200": { "description": "Audit", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/DataEnvelope" } } } },
+          "401": { "$ref": "#/components/responses/Unauthorized" }
+        }
+      }
+    },
+    "/api/advisor/students/{id}/early-warning": {
+      "get": {
+        "tags": ["Advisor"],
+        "summary": "Student early-warning indicators",
+        "parameters": [
+          { "$ref": "#/components/parameters/Id" },
+          { "$ref": "#/components/parameters/Term" }
+        ],
+        "responses": {
+          "200": { "description": "Indicators", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/DataEnvelope" } } } },
+          "401": { "$ref": "#/components/responses/Unauthorized" }
+        }
+      }
+    },
+    "/api/advisor/students/{id}/notes": {
+      "get": {
+        "tags": ["Advisor"],
+        "summary": "Advisor notes for a student",
+        "parameters": [{ "$ref": "#/components/parameters/Id" }],
+        "responses": {
+          "200": { "description": "Notes", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/DataEnvelope" } } } },
+          "401": { "$ref": "#/components/responses/Unauthorized" }
+        }
+      },
+      "post": {
+        "tags": ["Advisor"],
+        "summary": "Add an advisor note",
+        "parameters": [
+          { "$ref": "#/components/parameters/Id" },
+          { "$ref": "#/components/parameters/CsrfToken" }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["note"],
+                "additionalProperties": false,
+                "properties": {
+                  "note": { "type": "string", "minLength": 1, "maxLength": 5000 },
+                  "visibility": { "type": "string", "enum": ["advisor_only", "student"], "default": "advisor_only" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": { "description": "Note created", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/DataEnvelope" } } } },
+          "401": { "$ref": "#/components/responses/Unauthorized" }
+        }
+      }
+    },
+    "/api/advisor/plans": {
+      "get": {
+        "tags": ["Advisor"],
+        "summary": "Plans awaiting review",
+        "parameters": [
+          { "name": "status", "in": "query", "schema": { "type": "string", "enum": ["DRAFT", "SUBMITTED", "APPROVED", "MODIFIED", "REJECTED"] } }
+        ],
+        "responses": {
+          "200": { "description": "Plans", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/DataEnvelope" } } } },
+          "401": { "$ref": "#/components/responses/Unauthorized" }
+        }
+      }
+    },
+    "/api/advisor/plans/{id}/review": {
+      "patch": {
+        "tags": ["Advisor"],
+        "summary": "Approve, modify or reject a plan",
+        "parameters": [
+          { "$ref": "#/components/parameters/Id" },
+          { "$ref": "#/components/parameters/CsrfToken" }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["decision", "feedback"],
+                "additionalProperties": false,
+                "properties": {
+                  "decision": { "type": "string", "enum": ["APPROVED", "REJECTED", "MODIFIED"] },
+                  "feedback": { "type": "string", "minLength": 3, "maxLength": 2000 }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Reviewed plan", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/DataEnvelope" } } } },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "404": { "$ref": "#/components/responses/NotFound" }
+        }
+      }
+    },
+    "/api/advisor/office-hours": {
+      "get": {
+        "tags": ["Advisor"],
+        "summary": "My office-hour slots",
+        "responses": {
+          "200": { "description": "Slots", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/DataEnvelope" } } } },
+          "401": { "$ref": "#/components/responses/Unauthorized" }
+        }
+      },
+      "post": {
+        "tags": ["Advisor"],
+        "summary": "Create an office-hour slot",
+        "parameters": [{ "$ref": "#/components/parameters/CsrfToken" }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["weekday", "startTime", "endTime"],
+                "additionalProperties": false,
+                "properties": {
+                  "weekday": { "type": "integer", "minimum": 0, "maximum": 6 },
+                  "startTime": { "type": "string", "pattern": "^([01][0-9]|2[0-3]):[0-5][0-9]$", "example": "10:00" },
+                  "endTime": { "type": "string", "pattern": "^([01][0-9]|2[0-3]):[0-5][0-9]$", "example": "11:00" },
+                  "location": { "type": "string", "maxLength": 200 }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": { "description": "Slot created", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/DataEnvelope" } } } },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "422": { "$ref": "#/components/responses/ValidationError" }
+        }
+      }
+    },
+    "/api/advisor/office-hours/{id}": {
+      "patch": {
+        "tags": ["Advisor"],
+        "summary": "Update an office-hour slot",
+        "parameters": [
+          { "$ref": "#/components/parameters/Id" },
+          { "$ref": "#/components/parameters/CsrfToken" }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "weekday": { "type": "integer", "minimum": 0, "maximum": 6 },
+                  "startTime": { "type": "string" },
+                  "endTime": { "type": "string" },
+                  "location": { "type": "string", "maxLength": 200 },
+                  "active": { "type": "boolean" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Updated slot", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/DataEnvelope" } } } },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "404": { "$ref": "#/components/responses/NotFound" }
+        }
+      },
+      "delete": {
+        "tags": ["Advisor"],
+        "summary": "Delete an office-hour slot",
+        "parameters": [
+          { "$ref": "#/components/parameters/Id" },
+          { "$ref": "#/components/parameters/CsrfToken" }
+        ],
+        "responses": {
+          "204": { "description": "Deleted" },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "404": { "$ref": "#/components/responses/NotFound" }
+        }
+      }
+    },
+    "/api/advisor/office-hour-requests": {
+      "get": {
+        "tags": ["Advisor"],
+        "summary": "Office-hour requests from students",
+        "responses": {
+          "200": { "description": "Requests", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/DataEnvelope" } } } },
+          "401": { "$ref": "#/components/responses/Unauthorized" }
+        }
+      }
+    },
+    "/api/advisor/office-hour-requests/{id}": {
+      "patch": {
+        "tags": ["Advisor"],
+        "summary": "Approve, reject or cancel a request",
+        "parameters": [
+          { "$ref": "#/components/parameters/Id" },
+          { "$ref": "#/components/parameters/CsrfToken" }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["status"],
+                "additionalProperties": false,
+                "properties": { "status": { "type": "string", "enum": ["approved", "rejected", "cancelled"] } }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Updated request", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/DataEnvelope" } } } },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "404": { "$ref": "#/components/responses/NotFound" }
+        }
+      }
+    },
+    "/api/advisor/escalations": {
+      "get": {
+        "tags": ["Advisor"],
+        "summary": "Escalations assigned to me",
+        "parameters": [
+          { "name": "status", "in": "query", "schema": { "type": "string", "enum": ["open", "in_review", "resolved", "closed"] } }
+        ],
+        "responses": {
+          "200": { "description": "Escalations", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/DataEnvelope" } } } },
+          "401": { "$ref": "#/components/responses/Unauthorized" }
+        }
+      }
+    },
+    "/api/advisor/escalations/{id}": {
+      "patch": {
+        "tags": ["Advisor"],
+        "summary": "Update an escalation",
+        "parameters": [
+          { "$ref": "#/components/parameters/Id" },
+          { "$ref": "#/components/parameters/CsrfToken" }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "status": { "type": "string", "enum": ["open", "in_review", "resolved", "closed"] },
+                  "priority": { "type": "string", "enum": ["low", "medium", "high", "critical"] },
+                  "resolution": { "type": "string", "minLength": 3, "maxLength": 5000 }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Updated escalation", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/DataEnvelope" } } } },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "404": { "$ref": "#/components/responses/NotFound" }
+        }
+      }
+    },
+
+    "/api/admin/users": {
+      "get": {
+        "tags": ["Admin"],
+        "summary": "List users",
+        "parameters": [
+          { "name": "role", "in": "query", "schema": { "type": "string", "enum": ["student", "advisor", "admin"] } },
+          { "name": "status", "in": "query", "schema": { "type": "string", "enum": ["active", "inactive", "suspended"] } },
+          { "name": "search", "in": "query", "schema": { "type": "string", "maxLength": 100 } },
+          { "$ref": "#/components/parameters/Page" },
+          { "$ref": "#/components/parameters/Limit" }
+        ],
+        "responses": {
+          "200": { "description": "Users", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/DataEnvelope" } } } },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "403": { "$ref": "#/components/responses/Forbidden" }
+        }
+      },
+      "post": {
+        "tags": ["Admin"],
+        "summary": "Create a user (optionally with a student or advisor profile)",
+        "parameters": [{ "$ref": "#/components/parameters/CsrfToken" }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["email", "fullName", "role"],
+                "additionalProperties": false,
+                "properties": {
+                  "email": { "type": "string", "format": "email" },
+                  "fullName": { "type": "string", "minLength": 2, "maxLength": 200 },
+                  "role": { "type": "string", "enum": ["student", "advisor", "admin"] },
+                  "phone": { "type": "string", "maxLength": 30 },
+                  "password": { "type": "string", "minLength": 12, "maxLength": 128 },
+                  "isDemo": { "type": "boolean" },
+                  "student": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "properties": {
+                      "studentCode": { "type": "string", "pattern": "^[0-9]{6,15}$" },
+                      "program": { "type": "string", "enum": ["CS", "IT", "AI", "DS"] },
+                      "level": { "type": "integer", "minimum": 1, "maximum": 4 },
+                      "advisorId": { "type": "string", "format": "uuid", "nullable": true },
+                      "departmentId": { "type": "string", "format": "uuid", "nullable": true },
+                      "admissionTerm": { "type": "string", "nullable": true },
+                      "cgpa": { "type": "number", "minimum": 0, "maximum": 4 },
+                      "passedCredits": { "type": "integer", "minimum": 0, "maximum": 300 },
+                      "transferCredits": { "type": "integer", "minimum": 0, "maximum": 54 }
+                    }
+                  },
+                  "advisor": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "properties": {
+                      "departmentId": { "type": "string", "format": "uuid", "nullable": true },
+                      "officeLocation": { "type": "string", "nullable": true },
+                      "maxStudents": { "type": "integer", "minimum": 1, "maximum": 500 }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": { "description": "Created user", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/DataEnvelope" } } } },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "409": { "description": "Email or student code already exists" },
+          "422": { "$ref": "#/components/responses/ValidationError" }
+        }
+      }
+    },
+    "/api/admin/users/{id}": {
+      "patch": {
+        "tags": ["Admin"],
+        "summary": "Update a user",
+        "parameters": [
+          { "$ref": "#/components/parameters/Id" },
+          { "$ref": "#/components/parameters/CsrfToken" }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "fullName": { "type": "string", "minLength": 2, "maxLength": 200 },
+                  "phone": { "type": "string", "maxLength": 30 },
+                  "status": { "type": "string", "enum": ["active", "inactive", "suspended"] }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Updated user", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/DataEnvelope" } } } },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "404": { "$ref": "#/components/responses/NotFound" }
+        }
+      },
+      "delete": {
+        "tags": ["Admin"],
+        "summary": "Soft-delete a user",
+        "parameters": [
+          { "$ref": "#/components/parameters/Id" },
+          { "$ref": "#/components/parameters/CsrfToken" }
+        ],
+        "responses": {
+          "204": { "description": "Deleted" },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "404": { "$ref": "#/components/responses/NotFound" }
+        }
+      }
+    },
+    "/api/admin/users/{id}/reset-password": {
+      "post": {
+        "tags": ["Admin"],
+        "summary": "Reset a user's password",
+        "parameters": [
+          { "$ref": "#/components/parameters/Id" },
+          { "$ref": "#/components/parameters/CsrfToken" }
+        ],
+        "responses": {
+          "200": { "description": "Temporary password", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/DataEnvelope" } } } },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "404": { "$ref": "#/components/responses/NotFound" }
+        }
+      }
+    },
+    "/api/admin/advisors": {
+      "get": {
+        "tags": ["Admin"],
+        "summary": "List advisors",
+        "responses": {
+          "200": { "description": "Advisors", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/DataEnvelope" } } } },
+          "401": { "$ref": "#/components/responses/Unauthorized" }
+        }
+      }
+    },
+    "/api/admin/advisors/{id}": {
+      "patch": {
+        "tags": ["Admin"],
+        "summary": "Update an advisor",
+        "parameters": [
+          { "$ref": "#/components/parameters/Id" },
+          { "$ref": "#/components/parameters/CsrfToken" }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "departmentId": { "type": "string", "format": "uuid", "nullable": true },
+                  "officeLocation": { "type": "string", "nullable": true },
+                  "maxStudents": { "type": "integer", "minimum": 1, "maximum": 500 }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Updated advisor", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/DataEnvelope" } } } },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "404": { "$ref": "#/components/responses/NotFound" }
+        }
+      }
+    },
+    "/api/admin/students": {
+      "get": {
+        "tags": ["Admin"],
+        "summary": "List students",
+        "parameters": [
+          { "name": "program", "in": "query", "schema": { "type": "string", "enum": ["CS", "IT", "AI", "DS"] } },
+          { "name": "level", "in": "query", "schema": { "type": "integer", "minimum": 1, "maximum": 4 } },
+          { "name": "search", "in": "query", "schema": { "type": "string", "maxLength": 100 } },
+          { "name": "atRisk", "in": "query", "schema": { "type": "string", "enum": ["true", "false"] } },
+          { "$ref": "#/components/parameters/Page" },
+          { "$ref": "#/components/parameters/Limit" }
+        ],
+        "responses": {
+          "200": { "description": "Students", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/DataEnvelope" } } } },
+          "401": { "$ref": "#/components/responses/Unauthorized" }
+        }
+      }
+    },
+    "/api/admin/students/{id}": {
+      "get": {
+        "tags": ["Admin"],
+        "summary": "Student detail",
+        "parameters": [{ "$ref": "#/components/parameters/Id" }],
+        "responses": {
+          "200": { "description": "Student", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/DataEnvelope" } } } },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "404": { "$ref": "#/components/responses/NotFound" }
+        }
+      },
+      "patch": {
+        "tags": ["Admin"],
+        "summary": "Update a student",
+        "parameters": [
+          { "$ref": "#/components/parameters/Id" },
+          { "$ref": "#/components/parameters/CsrfToken" }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "program": { "type": "string", "enum": ["CS", "IT", "AI", "DS"] },
+                  "level": { "type": "integer", "minimum": 1, "maximum": 4 },
+                  "advisorId": { "type": "string", "format": "uuid", "nullable": true },
+                  "departmentId": { "type": "string", "format": "uuid", "nullable": true },
+                  "admissionTerm": { "type": "string", "nullable": true },
+                  "cgpa": { "type": "number", "minimum": 0, "maximum": 4 },
+                  "passedCredits": { "type": "integer", "minimum": 0, "maximum": 300 },
+                  "transferCredits": { "type": "integer", "minimum": 0, "maximum": 54 },
+                  "regularSemestersCompleted": { "type": "integer", "minimum": 0, "maximum": 40 }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Updated student", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/DataEnvelope" } } } },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "404": { "$ref": "#/components/responses/NotFound" }
+        }
+      }
+    },
+    "/api/admin/departments": {
+      "get": {
+        "tags": ["Admin"],
+        "summary": "List departments",
+        "responses": {
+          "200": { "description": "Departments", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/DataEnvelope" } } } },
+          "401": { "$ref": "#/components/responses/Unauthorized" }
+        }
+      },
+      "post": {
+        "tags": ["Admin"],
+        "summary": "Create a department",
+        "parameters": [{ "$ref": "#/components/parameters/CsrfToken" }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["code", "nameAr", "nameEn"],
+                "additionalProperties": false,
+                "properties": {
+                  "code": { "type": "string", "pattern": "^[A-Z]{2,8}$" },
+                  "nameAr": { "type": "string", "minLength": 2, "maxLength": 200 },
+                  "nameEn": { "type": "string", "minLength": 2, "maxLength": 200 }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": { "description": "Created", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/DataEnvelope" } } } },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "409": { "description": "Department code already exists" }
+        }
+      }
+    },
+    "/api/admin/departments/{id}": {
+      "patch": {
+        "tags": ["Admin"],
+        "summary": "Update a department",
+        "parameters": [
+          { "$ref": "#/components/parameters/Id" },
+          { "$ref": "#/components/parameters/CsrfToken" }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "nameAr": { "type": "string", "minLength": 2, "maxLength": 200 },
+                  "nameEn": { "type": "string", "minLength": 2, "maxLength": 200 }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Updated", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/DataEnvelope" } } } },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "404": { "$ref": "#/components/responses/NotFound" }
+        }
+      }
+    },
+    "/api/admin/courses": {
+      "get": {
+        "tags": ["Admin"],
+        "summary": "List courses",
+        "parameters": [
+          { "name": "search", "in": "query", "schema": { "type": "string", "maxLength": 100 } },
+          { "name": "program", "in": "query", "schema": { "type": "string", "enum": ["CS", "IT", "AI", "DS"] } },
+          { "name": "level", "in": "query", "schema": { "type": "integer", "minimum": 1, "maximum": 4 } },
+          { "name": "active", "in": "query", "schema": { "type": "string", "enum": ["true", "false"] } },
+          { "$ref": "#/components/parameters/Page" },
+          { "$ref": "#/components/parameters/Limit" }
+        ],
+        "responses": {
+          "200": { "description": "Courses", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/DataEnvelope" } } } },
+          "401": { "$ref": "#/components/responses/Unauthorized" }
+        }
+      },
+      "post": {
+        "tags": ["Admin"],
+        "summary": "Create a course",
+        "parameters": [{ "$ref": "#/components/parameters/CsrfToken" }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["code", "nameAr", "nameEn", "credits", "category", "levelHint", "termHint"],
+                "additionalProperties": false,
+                "properties": {
+                  "code": { "type": "string", "pattern": "^[A-Z]{3}[0-9]{4}$" },
+                  "nameAr": { "type": "string", "minLength": 1, "maxLength": 200 },
+                  "nameEn": { "type": "string", "minLength": 1, "maxLength": 200 },
+                  "credits": { "type": "integer", "minimum": 0, "maximum": 12 },
+                  "category": { "type": "string", "minLength": 2, "maxLength": 50 },
+                  "countsInGpa": { "type": "boolean" },
+                  "levelHint": { "type": "integer", "minimum": 1, "maximum": 4 },
+                  "termHint": { "type": "integer", "minimum": 1, "maximum": 2 },
+                  "anomalyIds": { "type": "array", "items": { "type": "string" } },
+                  "prerequisites": { "type": "object", "additionalProperties": true }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": { "description": "Created", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/DataEnvelope" } } } },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "409": { "description": "Course code already exists" }
+        }
+      }
+    },
+    "/api/admin/courses/{id}": {
+      "get": {
+        "tags": ["Admin"],
+        "summary": "Course detail",
+        "parameters": [{ "$ref": "#/components/parameters/Id" }],
+        "responses": {
+          "200": { "description": "Course", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/DataEnvelope" } } } },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "404": { "$ref": "#/components/responses/NotFound" }
+        }
+      },
+      "patch": {
+        "tags": ["Admin"],
+        "summary": "Update a course",
+        "parameters": [
+          { "$ref": "#/components/parameters/Id" },
+          { "$ref": "#/components/parameters/CsrfToken" }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": { "application/json": { "schema": { "type": "object", "additionalProperties": true } } }
+        },
+        "responses": {
+          "200": { "description": "Updated", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/DataEnvelope" } } } },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "404": { "$ref": "#/components/responses/NotFound" }
+        }
+      },
+      "delete": {
+        "tags": ["Admin"],
+        "summary": "Delete a course",
+        "parameters": [
+          { "$ref": "#/components/parameters/Id" },
+          { "$ref": "#/components/parameters/CsrfToken" }
+        ],
+        "responses": {
+          "204": { "description": "Deleted" },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "404": { "$ref": "#/components/responses/NotFound" }
+        }
+      }
+    },
+    "/api/admin/courses/{id}/prerequisites": {
+      "post": {
+        "tags": ["Admin"],
+        "summary": "Add a prerequisite",
+        "parameters": [
+          { "$ref": "#/components/parameters/Id" },
+          { "$ref": "#/components/parameters/CsrfToken" }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": { "application/json": { "schema": { "type": "object", "additionalProperties": true } } }
+        },
+        "responses": {
+          "201": { "description": "Created", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/DataEnvelope" } } } },
+          "401": { "$ref": "#/components/responses/Unauthorized" }
+        }
+      }
+    },
+    "/api/admin/prerequisites/{id}": {
+      "delete": {
+        "tags": ["Admin"],
+        "summary": "Delete a prerequisite",
+        "parameters": [
+          { "$ref": "#/components/parameters/Id" },
+          { "$ref": "#/components/parameters/CsrfToken" }
+        ],
+        "responses": {
+          "204": { "description": "Deleted" },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "404": { "$ref": "#/components/responses/NotFound" }
+        }
+      }
+    },
+    "/api/admin/courses/{id}/offerings": {
+      "post": {
+        "tags": ["Admin"],
+        "summary": "Create a course offering",
+        "parameters": [
+          { "$ref": "#/components/parameters/Id" },
+          { "$ref": "#/components/parameters/CsrfToken" }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": { "application/json": { "schema": { "type": "object", "additionalProperties": true } } }
+        },
+        "responses": {
+          "201": { "description": "Created", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/DataEnvelope" } } } },
+          "401": { "$ref": "#/components/responses/Unauthorized" }
+        }
+      }
+    },
+    "/api/admin/offerings/{id}": {
+      "patch": {
+        "tags": ["Admin"],
+        "summary": "Update an offering",
+        "parameters": [
+          { "$ref": "#/components/parameters/Id" },
+          { "$ref": "#/components/parameters/CsrfToken" }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": { "application/json": { "schema": { "type": "object", "additionalProperties": true } } }
+        },
+        "responses": {
+          "200": { "description": "Updated", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/DataEnvelope" } } } },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "404": { "$ref": "#/components/responses/NotFound" }
+        }
+      },
+      "delete": {
+        "tags": ["Admin"],
+        "summary": "Delete an offering",
+        "parameters": [
+          { "$ref": "#/components/parameters/Id" },
+          { "$ref": "#/components/parameters/CsrfToken" }
+        ],
+        "responses": {
+          "204": { "description": "Deleted" },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "404": { "$ref": "#/components/responses/NotFound" }
+        }
+      }
+    },
+    "/api/admin/anomalies": {
+      "get": {
+        "tags": ["Admin"],
+        "summary": "List data anomalies",
+        "parameters": [
+          { "$ref": "#/components/parameters/Page" },
+          { "$ref": "#/components/parameters/Limit" }
+        ],
+        "responses": {
+          "200": { "description": "Anomalies", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/DataEnvelope" } } } },
+          "401": { "$ref": "#/components/responses/Unauthorized" }
+        }
+      }
+    },
+    "/api/admin/anomalies/{id}": {
+      "get": {
+        "tags": ["Admin"],
+        "summary": "Anomaly detail",
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string", "pattern": "^A-[A-Z]+-[0-9]{2}$" } }
+        ],
+        "responses": {
+          "200": { "description": "Anomaly", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/DataEnvelope" } } } },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "404": { "$ref": "#/components/responses/NotFound" }
+        }
+      }
+    },
+    "/api/admin/anomalies/{id}/resolve": {
+      "patch": {
+        "tags": ["Admin"],
+        "summary": "Resolve an anomaly",
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string", "pattern": "^A-[A-Z]+-[0-9]{2}$" } },
+          { "$ref": "#/components/parameters/CsrfToken" }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": { "application/json": { "schema": { "type": "object", "additionalProperties": true } } }
+        },
+        "responses": {
+          "200": { "description": "Resolved", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/DataEnvelope" } } } },
+          "401": { "$ref": "#/components/responses/Unauthorized" }
+        }
+      }
+    },
+    "/api/admin/anomalies/{id}/reopen": {
+      "post": {
+        "tags": ["Admin"],
+        "summary": "Reopen an anomaly",
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string", "pattern": "^A-[A-Z]+-[0-9]{2}$" } },
+          { "$ref": "#/components/parameters/CsrfToken" }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["reason"],
+                "additionalProperties": false,
+                "properties": { "reason": { "type": "string", "minLength": 3, "maxLength": 2000 } }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Reopened", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/DataEnvelope" } } } },
+          "401": { "$ref": "#/components/responses/Unauthorized" }
+        }
+      }
+    },
+    "/api/admin/regulation/rules": {
+      "get": {
+        "tags": ["Admin"],
+        "summary": "List regulation rules",
+        "parameters": [
+          { "$ref": "#/components/parameters/Page" },
+          { "$ref": "#/components/parameters/Limit" }
+        ],
+        "responses": {
+          "200": { "description": "Rules", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/DataEnvelope" } } } },
+          "401": { "$ref": "#/components/responses/Unauthorized" }
+        }
+      }
+    },
+    "/api/admin/regulation/rules/{code}": {
+      "get": {
+        "tags": ["Admin"],
+        "summary": "Regulation rule detail",
+        "parameters": [
+          { "name": "code", "in": "path", "required": true, "schema": { "type": "string", "minLength": 3, "maxLength": 40 } }
+        ],
+        "responses": {
+          "200": { "description": "Rule", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/DataEnvelope" } } } },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "404": { "$ref": "#/components/responses/NotFound" }
+        }
+      }
+    },
+    "/api/admin/audit-logs": {
+      "get": {
+        "tags": ["Admin"],
+        "summary": "Audit log",
+        "parameters": [
+          { "$ref": "#/components/parameters/Page" },
+          { "$ref": "#/components/parameters/Limit" }
+        ],
+        "responses": {
+          "200": { "description": "Audit entries", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/DataEnvelope" } } } },
+          "401": { "$ref": "#/components/responses/Unauthorized" }
+        }
+      }
+    },
+    "/api/admin/escalations": {
+      "get": {
+        "tags": ["Admin"],
+        "summary": "All escalations",
+        "parameters": [
+          { "name": "status", "in": "query", "schema": { "type": "string", "enum": ["open", "in_review", "resolved", "closed"] } }
+        ],
+        "responses": {
+          "200": { "description": "Escalations", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/DataEnvelope" } } } },
+          "401": { "$ref": "#/components/responses/Unauthorized" }
+        }
+      }
+    },
+    "/api/admin/escalations/{id}": {
+      "patch": {
+        "tags": ["Admin"],
+        "summary": "Update an escalation",
+        "parameters": [
+          { "$ref": "#/components/parameters/Id" },
+          { "$ref": "#/components/parameters/CsrfToken" }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "status": { "type": "string", "enum": ["open", "in_review", "resolved", "closed"] },
+                  "priority": { "type": "string", "enum": ["low", "medium", "high", "critical"] },
+                  "resolution": { "type": "string", "minLength": 3, "maxLength": 5000 }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Updated", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/DataEnvelope" } } } },
+          "401": { "$ref": "#/components/responses/Unauthorized" }
+        }
+      }
+    },
+    "/api/admin/analytics/overview": {
+      "get": {
+        "tags": ["Admin"],
+        "summary": "Analytics overview",
+        "responses": {
+          "200": { "description": "Overview", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/DataEnvelope" } } } },
+          "401": { "$ref": "#/components/responses/Unauthorized" }
+        }
+      }
+    },
+    "/api/admin/analytics/bottlenecks": {
+      "get": {
+        "tags": ["Admin"],
+        "summary": "Course bottlenecks",
+        "parameters": [
+          { "name": "limit", "in": "query", "schema": { "type": "integer", "minimum": 1, "maximum": 100 } }
+        ],
+        "responses": {
+          "200": { "description": "Bottlenecks", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/DataEnvelope" } } } },
+          "401": { "$ref": "#/components/responses/Unauthorized" }
+        }
+      }
+    },
+    "/api/admin/analytics/enrollments": {
+      "get": {
+        "tags": ["Admin"],
+        "summary": "Enrollment statistics per program",
+        "responses": {
+          "200": { "description": "Enrollment stats", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/DataEnvelope" } } } },
+          "401": { "$ref": "#/components/responses/Unauthorized" }
+        }
+      }
+    },
+    "/api/admin/analytics/escalations": {
+      "get": {
+        "tags": ["Admin"],
+        "summary": "Escalation statistics",
+        "responses": {
+          "200": { "description": "Escalation stats", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/DataEnvelope" } } } },
+          "401": { "$ref": "#/components/responses/Unauthorized" }
+        }
+      }
+    },
+    "/api/admin/analytics/plans": {
+      "get": {
+        "tags": ["Admin"],
+        "summary": "Study plan statistics",
+        "responses": {
+          "200": { "description": "Plan stats", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/DataEnvelope" } } } },
+          "401": { "$ref": "#/components/responses/Unauthorized" }
+        }
+      }
+    },
+    "/api/admin/imports/students": {
+      "post": {
+        "tags": ["Admin"],
+        "summary": "Import students from CSV",
+        "parameters": [{ "$ref": "#/components/parameters/CsrfToken" }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "required": ["file"],
+                "properties": { "file": { "type": "string", "format": "binary" } }
+              }
+            }
+          }
+        },
+        "responses": {
+          "202": { "description": "Import job queued", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/DataEnvelope" } } } },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "413": { "description": "File too large" }
+        }
+      }
+    },
+    "/api/admin/imports/transcripts": {
+      "post": {
+        "tags": ["Admin"],
+        "summary": "Import transcripts from CSV",
+        "parameters": [{ "$ref": "#/components/parameters/CsrfToken" }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "required": ["file"],
+                "properties": { "file": { "type": "string", "format": "binary" } }
+              }
+            }
+          }
+        },
+        "responses": {
+          "202": { "description": "Import job queued", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/DataEnvelope" } } } },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "413": { "description": "File too large" }
+        }
+      }
+    },
+    "/api/admin/imports": {
+      "get": {
+        "tags": ["Admin"],
+        "summary": "List import jobs",
+        "parameters": [
+          { "$ref": "#/components/parameters/Page" },
+          { "$ref": "#/components/parameters/Limit" }
+        ],
+        "responses": {
+          "200": { "description": "Import jobs", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/DataEnvelope" } } } },
+          "401": { "$ref": "#/components/responses/Unauthorized" }
+        }
+      }
+    },
+    "/api/admin/imports/{id}": {
+      "get": {
+        "tags": ["Admin"],
+        "summary": "Import job detail",
+        "parameters": [{ "$ref": "#/components/parameters/Id" }],
+        "responses": {
+          "200": { "description": "Import job", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/DataEnvelope" } } } },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "404": { "$ref": "#/components/responses/NotFound" }
+        }
+      }
+    },
+    "/api/admin/imports/{id}/errors": {
+      "get": {
+        "tags": ["Admin"],
+        "summary": "Import job errors",
+        "parameters": [{ "$ref": "#/components/parameters/Id" }],
+        "responses": {
+          "200": { "description": "Errors", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/DataEnvelope" } } } },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "404": { "$ref": "#/components/responses/NotFound" }
+        }
+      }
+    },
+
+    "/api/chat/sessions": {
+      "get": {
+        "tags": ["Chat"],
+        "summary": "List my chat sessions",
+        "responses": {
+          "200": { "description": "Sessions", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/DataEnvelope" } } } },
+          "401": { "$ref": "#/components/responses/Unauthorized" }
+        }
+      },
+      "post": {
+        "tags": ["Chat"],
+        "summary": "Create a chat session",
+        "parameters": [{ "$ref": "#/components/parameters/CsrfToken" }],
+        "requestBody": {
+          "required": false,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": { "title": { "type": "string", "minLength": 1, "maxLength": 120 } }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": { "description": "Session created", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/DataEnvelope" } } } },
+          "401": { "$ref": "#/components/responses/Unauthorized" }
+        }
+      }
+    },
+    "/api/chat/sessions/{id}": {
+      "get": {
+        "tags": ["Chat"],
+        "summary": "Get a chat session with messages",
+        "parameters": [{ "$ref": "#/components/parameters/Id" }],
+        "responses": {
+          "200": { "description": "Session", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/DataEnvelope" } } } },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "404": { "$ref": "#/components/responses/NotFound" }
+        }
+      }
+    },
+    "/api/chat/sessions/{id}/messages": {
+      "post": {
+        "tags": ["Chat"],
+        "summary": "Ask the regulation assistant",
+        "parameters": [
+          { "$ref": "#/components/parameters/Id" },
+          { "$ref": "#/components/parameters/CsrfToken" }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ChatMessageRequest" } } }
+        },
+        "responses": {
+          "200": { "description": "Assistant answer", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/DataEnvelope" } } } },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "404": { "$ref": "#/components/responses/NotFound" },
+          "429": { "$ref": "#/components/responses/TooManyRequests" }
+        }
+      }
+    }
+  }
+}

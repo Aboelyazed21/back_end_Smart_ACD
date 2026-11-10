@@ -13,6 +13,7 @@ import { advisorRouter } from './modules/advisor/routes';
 import { authRouter } from './modules/auth/routes';
 import { chatRouter } from './modules/chat/routes';
 import { studentRouter } from './modules/student/routes';
+import { docsRouter } from './docs';
 import { healthRouter } from './routes/health';
 
 function originAllowed(origin: string | undefined): boolean {
@@ -80,6 +81,8 @@ export function createApp(): Express {
   app.use(csrfProtection);
 
   app.use('/health', healthRouter);
+  // OpenAPI spec (/api/openapi.json) and Swagger UI (/api/docs).
+  app.use('/api', docsRouter);
   app.use('/api/auth', authRouter);
   app.use('/api/student', studentRouter);
   app.use('/api/advisor', advisorRouter);
