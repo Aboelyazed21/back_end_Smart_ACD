@@ -16,11 +16,14 @@ import { studentRouter } from './modules/student/routes';
 import { docsRouter } from './docs';
 import { healthRouter } from './routes/health';
 
+/** Vercel preview/production aliases of the frontend (e.g. `front-end-smart-acadmic-ad-j92r.vercel.app`). */
+const VERCEL_ORIGIN = /^https:\/\/front-end-smart-acadmic-ad-[a-z0-9-]+\.vercel\.app$/;
+
 function originAllowed(origin: string | undefined): boolean {
   // Same-origin / non-browser clients (curl, server-to-server) send no Origin.
   if (!origin) return true;
   if (corsOrigins.includes('*')) return true;
-  return corsOrigins.includes(origin);
+  return corsOrigins.includes(origin) || VERCEL_ORIGIN.test(origin);
 }
 
 export function createApp(): Express {
