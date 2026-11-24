@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useTranslation } from 'react-i18next';
 import { Inbox, MessageSquare, Ticket } from 'lucide-react';
 import { api, errorMessage, qs } from '../../lib/api';
 import type { Escalation } from '../../lib/types';
@@ -19,6 +20,7 @@ import { PageHeader } from '../../components/ui/Page';
 import { useToast } from '../../components/ui/Toast';
 
 export function AdvisorEscalationsPage() {
+  const { t } = useTranslation();
   const toast = useToast();
   const queryClient = useQueryClient();
   const [status, setStatus] = useState('');
@@ -44,13 +46,13 @@ export function AdvisorEscalationsPage() {
         },
       }),
     onSuccess: async () => {
-      toast.success('تم تحديث الحالة');
+      toast.success(t('تم تحديث الحالة'));
       setSelected(null);
       setResolution('');
       await queryClient.invalidateQueries({ queryKey: ['advisor', 'escalations'] });
       await queryClient.invalidateQueries({ queryKey: ['advisor', 'dashboard'] });
     },
-    onError: (error) => toast.error('تعذر تحديث الحالة', errorMessage(error)),
+    onError: (error) => toast.error(t('تعذر تحديث الحالة'), errorMessage(error)),
   });
 
   const rows = query.data?.data ?? [];
@@ -65,21 +67,21 @@ export function AdvisorEscalationsPage() {
   return (
     <div>
       <PageHeader
-        eyebrow="الحالات المحوّلة"
-        title="الحالات الأكاديمية المفتوحة"
-        description="الحالات التي أنشأها محرك القواعد أو الطلاب أو المسؤولون لطلابك. حلّ الحالة يتطلب توثيق الإجراء."
+        eyebrow={t('الحالات المحوّلة')}
+        title={t('الحالات الأكاديمية المفتوحة')}
+        description={t('الحالات التي أنشأها محرك القواعد أو الطلاب أو المسؤولون لطلابك. حلّ الحالة يتطلب توثيق الإجراء.')}
         actions={
           <Select
-            label="الحالة"
+            label={t('الحالة')}
             className="w-44"
             value={status}
             onChange={(event) => setStatus(event.target.value)}
             options={[
-              { value: '', label: 'الكل' },
-              { value: 'open', label: 'مفتوحة' },
-              { value: 'in_review', label: 'قيد المراجعة' },
-              { value: 'resolved', label: 'محلولة' },
-              { value: 'closed', label: 'مغلقة' },
+              { value: '', label: t('الكل') },
+              { value: 'open', label: t('مفتوحة') },
+              { value: 'in_review', label: t('قيد المراجعة') },
+              { value: 'resolved', label: t('محلولة') },
+              { value: 'closed', label: t('مغلقة') },
             ]}
           />
         }
@@ -91,8 +93,8 @@ export function AdvisorEscalationsPage() {
         <ErrorState message={errorMessage(query.error)} onRetry={() => void query.refetch()} />
       ) : rows.length === 0 ? (
         <EmptyState
-          title="لا توجد حالات"
-          description="لا توجد حالات مطابقة للفلتر الحالي."
+          title={t('لا توجد حالات')}
+          description={t('لا توجد حالات مطابقة للفلتر الحالي.')}
           icon={<Inbox className="h-6 w-6" />}
         />
       ) : (
@@ -108,9 +110,9 @@ export function AdvisorEscalationsPage() {
                       <span className="inline-flex items-center gap-1 font-mono text-xs font-bold text-brand-700">
                         <Ticket className="h-3.5 w-3.5" /> {row.ticket_no}
                       </span>
-                      <Badge tone={(statusMeta?.tone as never) ?? 'neutral'}>{statusMeta?.ar ?? row.status}</Badge>
-                      <Badge tone={(priorityMeta?.tone as never) ?? 'neutral'}>{priorityMeta?.ar ?? row.priority}</Badge>
-                      <Badge tone="neutral">{ESCALATION_TYPE_LABELS[row.type] ?? row.type}</Badge>
+                      <Badge tone={(statusMeta?.tone as never) ?? 'neutral'}>{t(statusMeta?.ar ?? row.status)}</Badge>
+                      <Badge tone={(priorityMeta?.tone as never) ?? 'neutral'}>{t(priorityMeta?.ar ?? row.priority)}</Badge>
+                      <Badge tone="neutral">{t(ESCALATION_TYPE_LABELS[row.type] ?? row.type)}</Badge>
                     </div>
                     <p className="mt-2 text-sm font-bold text-ink-900">{row.subject}</p>
                     <p className="mt-1 line-clamp-2 text-xs leading-5 text-ink-600">{row.description}</p>
@@ -134,12 +136,12 @@ export function AdvisorEscalationsPage() {
                     onClick={() => openDetail(row)}
                     icon={<MessageSquare className="h-4 w-4" />}
                   >
-                    تحديث الحالة
+                    {t('تحديث الحالة')}
                   </Button>
                 </div>
                 {row.resolution && (
                   <div className="mt-3 rounded-lg bg-ink-50 p-2.5 text-xs leading-5 text-ink-700">
-                    <span className="font-bold">الحل: </span>
+                    <span className="font-bold">{t('الحل')}: </span>
                     {row.resolution}
                   </div>
                 )}
@@ -152,19 +154,19 @@ export function AdvisorEscalationsPage() {
       <Modal
         open={Boolean(selected)}
         onClose={() => setSelected(null)}
-        title={selected ? `تحديث ${selected.ticket_no}` : 'تحديث الحالة'}
-        description="اختر الحالة والأولوية. عند الحل يجب كتابة ملخص الإجراء (3 أحرف على الأقل)."
+        title={selected ? t('تحديث {{ticket}}', { ticket: selected.ticket_no }) : t('تحديث الحالة')}
+        description={t('اختر الحالة والأولوية. عند الحل يجب كتابة ملخص الإجراء (3 أحرف على الأقل).')}
         footer={
           <>
             <Button variant="ghost" onClick={() => setSelected(null)}>
-              إلغاء
+              {t('إلغاء')}
             </Button>
             <Button
               onClick={() => update.mutate()}
               loading={update.isPending}
               disabled={(nextStatus === 'resolved' || nextStatus === 'closed') && resolution.trim().length < 3}
             >
-              حفظ التحديث
+              {t('حفظ التحديث')}
             </Button>
           </>
         }
@@ -173,36 +175,36 @@ export function AdvisorEscalationsPage() {
           {update.isError && <Alert tone="danger">{errorMessage(update.error)}</Alert>}
           <div className="grid gap-3 sm:grid-cols-2">
             <Select
-              label="الحالة"
+              label={t('الحالة')}
               value={nextStatus}
               onChange={(event) => setNextStatus(event.target.value as typeof nextStatus)}
               options={[
-                { value: 'open', label: 'مفتوحة' },
-                { value: 'in_review', label: 'قيد المراجعة' },
-                { value: 'resolved', label: 'محلولة' },
-                { value: 'closed', label: 'مغلقة' },
+                { value: 'open', label: t('مفتوحة') },
+                { value: 'in_review', label: t('قيد المراجعة') },
+                { value: 'resolved', label: t('محلولة') },
+                { value: 'closed', label: t('مغلقة') },
               ]}
             />
             <Select
-              label="الأولوية"
+              label={t('الأولوية')}
               value={priority}
               onChange={(event) => setPriority(event.target.value as typeof priority)}
               options={[
-                { value: 'low', label: 'منخفضة' },
-                { value: 'medium', label: 'متوسطة' },
-                { value: 'high', label: 'عالية' },
-                { value: 'critical', label: 'حرجة' },
+                { value: 'low', label: t('منخفضة') },
+                { value: 'medium', label: t('متوسطة') },
+                { value: 'high', label: t('عالية') },
+                { value: 'critical', label: t('حرجة') },
               ]}
             />
           </div>
           <Textarea
-            label="ملخص الإجراء / الحل"
+            label={t('ملخص الإجراء / الحل')}
             value={resolution}
             onChange={(event) => setResolution(event.target.value)}
             maxLength={5000}
-            placeholder="ما الذي تم فعله؟ ما القرار؟ ما الخطوات التالية للطالب؟"
+            placeholder={t('ما الذي تم فعله؟ ما القرار؟ ما الخطوات التالية للطالب؟')}
           />
-          <Alert tone="info">كل تحديث يُسجّل في سجل التدقيق مع هوية المنفّذ والوقت.</Alert>
+          <Alert tone="info">{t('كل تحديث يُسجّل في سجل التدقيق مع هوية المنفّذ والوقت.')}</Alert>
         </div>
       </Modal>
     </div>

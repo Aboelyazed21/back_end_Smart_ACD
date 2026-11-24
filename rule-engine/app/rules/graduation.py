@@ -84,7 +84,7 @@ def audit_graduation(
 
     # Elective pools.
     pool_status: list[dict[str, Any]] = []
-    for pool_key, pool_code in data.pool_codes_for_program(student.program).items():
+    for _pool_key, pool_code in data.pool_codes_for_program(student.program).items():
         pool = data.pool(pool_code)
         required = int(pool.get("credits_required", 0))
         completed = [c for c in (pool.get("courses") or []) if c in passed]

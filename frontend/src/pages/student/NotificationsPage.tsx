@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useTranslation } from 'react-i18next';
 import { Bell, CheckCheck } from 'lucide-react';
 import { api, errorMessage, qs } from '../../lib/api';
 import type { NotificationRow, Paginated } from '../../lib/types';
@@ -14,6 +15,7 @@ import { useToast } from '../../components/ui/Toast';
 import { cn } from '../../lib/format';
 
 export function NotificationsPage() {
+  const { t } = useTranslation();
   const toast = useToast();
   const queryClient = useQueryClient();
   const [unreadOnly, setUnreadOnly] = useState(false);
@@ -34,24 +36,24 @@ export function NotificationsPage() {
   const markRead = useMutation({
     mutationFn: (id: string) => api(`/student/notifications/${id}/read`, { method: 'PATCH' }),
     onSuccess: invalidate,
-    onError: (error) => toast.error('تعذر تحديث الإشعار', errorMessage(error)),
+    onError: (error) => toast.error(t('تعذر تحديث الإشعار'), errorMessage(error)),
   });
 
   const markAll = useMutation({
     mutationFn: () => api<{ data: { updated: number } }>('/student/notifications/read-all', { method: 'POST' }),
     onSuccess: async (data) => {
-      toast.success('تم تعليم كل الإشعارات كمقروءة', `${data.data.updated} إشعار.`);
+      toast.success(t('تم تعليم كل الإشعارات كمقروءة'), t('{{n}} إشعار.', { n: data.data.updated }));
       await invalidate();
     },
-    onError: (error) => toast.error('تعذر تحديث الإشعارات', errorMessage(error)),
+    onError: (error) => toast.error(t('تعذر تحديث الإشعارات'), errorMessage(error)),
   });
 
   return (
     <div>
       <PageHeader
-        eyebrow="الإشعارات"
-        title="مركز الإشعارات"
-        description="تحديثات الخطط، حالات المراجعة، وطلبات الساعات المكتبية."
+        eyebrow={t('الإشعارات')}
+        title={t('مركز الإشعارات')}
+        description={t('تحديثات الخطط، حالات المراجعة، وطلبات الساعات المكتبية.')}
         actions={
           <>
             <Button
@@ -62,7 +64,7 @@ export function NotificationsPage() {
                 setPage(1);
               }}
             >
-              غير المقروءة فقط
+              {t('غير المقروءة فقط')}
             </Button>
             <Button
               variant="secondary"
@@ -71,7 +73,7 @@ export function NotificationsPage() {
               loading={markAll.isPending}
               icon={<CheckCheck className="h-4 w-4" />}
             >
-              تعليم الكل كمقروء
+              {t('تعليم الكل كمقروء')}
             </Button>
           </>
         }
@@ -83,8 +85,8 @@ export function NotificationsPage() {
         <ErrorState message={errorMessage(query.error)} onRetry={() => void query.refetch()} />
       ) : query.data?.data.length === 0 ? (
         <EmptyState
-          title="لا توجد إشعارات"
-          description={unreadOnly ? 'كل الإشعارات مقروءة بالفعل.' : 'ستظهر هنا تحديثات الخطط والحالات.'}
+          title={t('لا توجد إشعارات')}
+          description={unreadOnly ? t('كل الإشعارات مقروءة بالفعل.') : t('ستظهر هنا تحديثات الخطط والحالات.')}
           icon={<Bell className="h-6 w-6" />}
         />
       ) : (
@@ -95,13 +97,15 @@ export function NotificationsPage() {
                 key={item.id}
                 className={cn(
                   'flex flex-wrap items-start justify-between gap-3 rounded-xl border p-4',
-                  item.read_at ? 'border-ink-100 bg-white' : 'border-brand-200 bg-brand-50/40',
+                  item.read_at ? 'border-ink-100 bg-surface' : 'border-brand-200 bg-brand-50/40',
                 )}
               >
                 <div className="min-w-0">
                   <div className="flex flex-wrap items-center gap-2">
                     <p className="text-sm font-bold text-ink-900">{item.title}</p>
-                    <Badge tone={item.read_at ? 'neutral' : 'brand'}>{item.read_at ? 'مقروء' : 'جديد'}</Badge>
+                    <Badge tone={item.read_at ? 'neutral' : 'brand'}>
+                      {item.read_at ? t('مقروء') : t('جديد')}
+                    </Badge>
                     <Badge tone="neutral">{item.type}</Badge>
                   </div>
                   <p className="mt-1 text-sm leading-6 text-ink-600">{item.body}</p>
@@ -114,7 +118,7 @@ export function NotificationsPage() {
                     onClick={() => markRead.mutate(item.id)}
                     loading={markRead.isPending}
                   >
-                    تعليم كمقروء
+                    {t('تعليم كمقروء')}
                   </Button>
                 )}
               </div>

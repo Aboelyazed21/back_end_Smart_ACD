@@ -70,18 +70,36 @@ export function StatCard({
     neutral: 'bg-ink-100 text-ink-600',
     success: 'bg-emerald-50 text-emerald-700',
   };
+  const bars = {
+    brand: 'bg-brand-500',
+    gold: 'bg-gold-300',
+    danger: 'bg-red-500',
+    info: 'bg-sky-500',
+    neutral: 'bg-ink-300',
+    success: 'bg-emerald-500',
+  };
   return (
-    <Card className="p-5">
+    <Card className="relative overflow-hidden p-5">
+      <span aria-hidden="true" className={cn('absolute inset-y-0 start-0 w-1', bars[tone])} />
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
           <p className="text-sm font-medium text-ink-500">{label}</p>
-          <p className="mt-2 font-display text-2xl font-extrabold tabular-nums text-ink-950">
+          <p
+            className={cn(
+              'mt-1.5 font-display font-extrabold tabular-nums text-ink-950',
+              typeof value === 'number' ? 'text-3xl leading-none' : 'text-xl leading-tight',
+            )}
+          >
             {typeof value === 'number' ? formatNumber(value, 0) : value}
           </p>
-          {hint && <p className="mt-1 text-xs leading-5 text-ink-500">{hint}</p>}
+          {hint && <p className="mt-2 text-[11px] leading-5 text-ink-500">{hint}</p>}
           {trend && <div className="mt-2">{trend}</div>}
         </div>
-        {icon && <div className={cn('flex h-11 w-11 shrink-0 items-center justify-center rounded-xl', tones[tone])}>{icon}</div>}
+        {icon && (
+          <div className={cn('flex h-9 w-9 shrink-0 items-center justify-center rounded-lg', tones[tone])}>
+            {icon}
+          </div>
+        )}
       </div>
     </Card>
   );
@@ -136,7 +154,7 @@ export function JsonBlock({ value, className }: { value: unknown; className?: st
   return (
     <pre
       className={cn(
-        'max-h-72 overflow-auto rounded-xl bg-ink-950 p-4 text-xs leading-5 text-ink-100',
+        'max-h-72 overflow-auto rounded-xl bg-code p-4 text-xs leading-5 text-code-fg',
         className,
       )}
       dir="ltr"

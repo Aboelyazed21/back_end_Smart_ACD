@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useTranslation } from 'react-i18next';
 import { CheckCircle2, ClipboardCheck, ExternalLink, PencilLine, XCircle } from 'lucide-react';
 import { api, errorMessage, qs } from '../../lib/api';
 import type { StudyPlanListRow } from '../../lib/types';
@@ -25,6 +26,7 @@ const DECISION_META: Record<Decision, { label: string; description: string }> = 
 };
 
 export function AdvisorPlansPage() {
+  const { t } = useTranslation();
   const toast = useToast();
   const queryClient = useQueryClient();
   const [status, setStatus] = useState('');
@@ -45,13 +47,13 @@ export function AdvisorPlansPage() {
         body: { decision, feedback: feedback.trim() },
       }),
     onSuccess: async () => {
-      toast.success('تم حفظ قرار المراجعة', DECISION_META[decision].label);
+      toast.success(t('تم حفظ قرار المراجعة'), t(DECISION_META[decision].label));
       setSelected(null);
       setFeedback('');
       await queryClient.invalidateQueries({ queryKey: ['advisor', 'plans'] });
       await queryClient.invalidateQueries({ queryKey: ['advisor', 'dashboard'] });
     },
-    onError: (error) => toast.error('تعذر حفظ المراجعة', errorMessage(error)),
+    onError: (error) => toast.error(t('تعذر حفظ المراجعة'), errorMessage(error)),
   });
 
   const rows = query.data?.data ?? [];
@@ -59,29 +61,31 @@ export function AdvisorPlansPage() {
   return (
     <div>
       <PageHeader
-        eyebrow="مراجعة الخطط"
-        title="الخطط المنتظرة للمراجعة"
-        description="راجع الخطط المقدّمة من طلابك. الاعتماد استشاري ولا يعني تسجيل المقررات. كل قرار يُسجّل في سجل التدقيق."
+        eyebrow={t('مراجعة الخطط')}
+        title={t('الخطط المنتظرة للمراجعة')}
+        description={t(
+          'راجع الخطط المقدّمة من طلابك. الاعتماد استشاري ولا يعني تسجيل المقررات. كل قرار يُسجّل في سجل التدقيق.',
+        )}
         actions={
           <Select
-            label="الحالة"
+            label={t('الحالة')}
             className="w-44"
             value={status}
             onChange={(event) => setStatus(event.target.value)}
             options={[
-              { value: '', label: 'بانتظار المراجعة' },
-              { value: 'SUBMITTED', label: 'مقدّمة' },
-              { value: 'MODIFIED', label: 'معدّلة' },
-              { value: 'APPROVED', label: 'معتمدة' },
-              { value: 'REJECTED', label: 'مرفوضة' },
-              { value: 'DRAFT', label: 'مسودة' },
+              { value: '', label: t('بانتظار المراجعة') },
+              { value: 'SUBMITTED', label: t('مقدّمة') },
+              { value: 'MODIFIED', label: t('معدّلة') },
+              { value: 'APPROVED', label: t('معتمدة') },
+              { value: 'REJECTED', label: t('مرفوضة') },
+              { value: 'DRAFT', label: t('مسودة') },
             ]}
           />
         }
       />
 
-      <Alert tone="info" className="mb-4" title="سياسة المراجعة">
-        لا يمكن اعتماد خطة بدون ملاحظة مكتوبة (3 أحرف على الأقل). سبب الاعتماد أو الرفض يساعد الطالب واللجنة الأكاديمية.
+      <Alert tone="info" className="mb-4" title={t('سياسة المراجعة')}>
+        {t('لا يمكن اعتماد خطة بدون ملاحظة مكتوبة (3 أحرف على الأقل). سبب الاعتماد أو الرفض يساعد الطالب واللجنة الأكاديمية.')}
       </Alert>
 
       {query.isLoading ? (
@@ -90,8 +94,8 @@ export function AdvisorPlansPage() {
         <ErrorState message={errorMessage(query.error)} onRetry={() => void query.refetch()} />
       ) : rows.length === 0 ? (
         <EmptyState
-          title="لا توجد خطط بانتظار المراجعة"
-          description="ستظهر الخطط هنا بعد تقديم الطلاب لها."
+          title={t('لا توجد خطط بانتظار المراجعة')}
+          description={t('ستظهر الخطط هنا بعد تقديم الطلاب لها.')}
           icon={<ClipboardCheck className="h-6 w-6" />}
         />
       ) : (
@@ -101,13 +105,13 @@ export function AdvisorPlansPage() {
               <Table>
                 <THead>
                   <Tr>
-                    <Th>الطالب</Th>
-                    <Th>البرنامج</Th>
-                    <Th>الفصل</Th>
-                    <Th>الساعات</Th>
-                    <Th>الحالة</Th>
-                    <Th>تاريخ التقديم</Th>
-                    <Th>إجراءات</Th>
+                    <Th>{t('الطالب')}</Th>
+                    <Th>{t('البرنامج')}</Th>
+                    <Th>{t('الفصل')}</Th>
+                    <Th>{t('الساعات')}</Th>
+                    <Th>{t('الحالة')}</Th>
+                    <Th>{t('تاريخ التقديم')}</Th>
+                    <Th>{t('إجراءات')}</Th>
                   </Tr>
                 </THead>
                 <TBody>
@@ -138,12 +142,12 @@ export function AdvisorPlansPage() {
                             }}
                             icon={<ClipboardCheck className="h-4 w-4" />}
                           >
-                            مراجعة
+                            {t('مراجعة')}
                           </Button>
                           {plan.student_id && (
                             <Link to={`/advisor/students/${plan.student_id}`}>
                               <Button size="sm" variant="ghost" icon={<ExternalLink className="h-4 w-4" />}>
-                                ملف الطالب
+                                {t('ملف الطالب')}
                               </Button>
                             </Link>
                           )}
@@ -161,16 +165,20 @@ export function AdvisorPlansPage() {
       <Modal
         open={Boolean(selected)}
         onClose={() => setSelected(null)}
-        title="مراجعة الخطة"
+        title={t('مراجعة الخطة')}
         description={
           selected
-            ? `${selected.full_name ?? ''} · ${formatTerm(selected.term)} · ${formatInt(selected.total_credits)} ساعة`
+            ? t('{{name}} · {{term}} · {{credits}} ساعة', {
+                name: selected.full_name ?? '',
+                term: formatTerm(selected.term),
+                credits: formatInt(selected.total_credits),
+              })
             : undefined
         }
         footer={
           <>
             <Button variant="ghost" onClick={() => setSelected(null)}>
-              إلغاء
+              {t('إلغاء')}
             </Button>
             <Button
               onClick={() => review.mutate()}
@@ -178,7 +186,7 @@ export function AdvisorPlansPage() {
               disabled={feedback.trim().length < 3}
               variant={decision === 'REJECTED' ? 'danger' : decision === 'MODIFIED' ? 'gold' : 'primary'}
             >
-              {DECISION_META[decision].label}
+              {t(DECISION_META[decision].label)}
             </Button>
           </>
         }
@@ -207,26 +215,26 @@ export function AdvisorPlansPage() {
                     ) : (
                       <PencilLine className="h-4 w-4 text-gold-600" />
                     )}
-                    {meta.label}
+                    {t(meta.label)}
                   </span>
-                  <span className="mt-1 block text-[11px] leading-4 text-ink-500">{meta.description}</span>
+                  <span className="mt-1 block text-[11px] leading-4 text-ink-500">{t(meta.description)}</span>
                 </button>
               );
             })}
           </div>
 
           <Textarea
-            label="ملاحظات المرشد"
+            label={t('ملاحظات المرشد')}
             value={feedback}
             onChange={(event) => setFeedback(event.target.value)}
             maxLength={2000}
             required
-            placeholder="اشرح سبب القرار، وأي تعديل مطلوب على المقررات أو العبء…"
-            hint="3 أحرف على الأقل. تُرسل الملاحظة للطالب وتُحفظ في سجل المراجعة."
+            placeholder={t('اشرح سبب القرار، وأي تعديل مطلوب على المقررات أو العبء…')}
+            hint={t('3 أحرف على الأقل. تُرسل الملاحظة للطالب وتُحفظ في سجل المراجعة.')}
           />
 
           {selected?.feedback && (
-            <Alert tone="neutral" title="ملاحظات سابقة">
+            <Alert tone="neutral" title={t('ملاحظات سابقة')}>
               {selected.feedback}
             </Alert>
           )}

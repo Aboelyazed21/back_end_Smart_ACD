@@ -4,7 +4,7 @@ import { env } from '../../config/env';
 import { requireAuth } from '../../middlewares/auth';
 import { requireRole } from '../../middlewares/rbac';
 import { validate } from '../../middlewares/validate';
-import { importLimiter } from '../../middlewares/rateLimit';
+import { importLimiter, exportLimiter } from '../../middlewares/rateLimit';
 import * as controller from './controller';
 import {
   advisorUpdateSchema,
@@ -13,9 +13,12 @@ import {
   anomalyListQuerySchema,
   anomalyReopenSchema,
   anomalyResolveSchema,
+  auditExportQuerySchema,
   auditQuerySchema,
+  broadcastSchema,
   courseIdParamSchema,
   courseListQuerySchema,
+  createAdvisorSchema,
   createCourseSchema,
   createUserSchema,
   departmentSchema,
@@ -63,6 +66,7 @@ adminRouter.post(
 );
 
 adminRouter.get('/advisors', controller.advisorsList);
+adminRouter.post('/advisors', validate({ body: createAdvisorSchema }), controller.createAdvisor);
 adminRouter.patch(
   '/advisors/:id',
   validate({ params: idParamSchema, body: advisorUpdateSchema }),
@@ -133,6 +137,18 @@ adminRouter.get('/regulation/rules', validate({ query: ruleListQuerySchema }), c
 adminRouter.get('/regulation/rules/:code', validate({ params: ruleCodeParamSchema }), controller.rule);
 
 adminRouter.get('/audit-logs', validate({ query: auditQuerySchema }), controller.auditLogs);
+adminRouter.get(
+  '/audit-logs/export',
+  exportLimiter,
+  validate({ query: auditExportQuerySchema }),
+  controller.exportAuditLogs,
+);
+adminRouter.post(
+  '/notifications/broadcast',
+  validate({ body: broadcastSchema }),
+  controller.broadcastNotification,
+);
+adminRouter.get('/notifications/broadcasts', controller.broadcastHistory);
 adminRouter.get('/escalations', validate({ query: escalationQuerySchema }), controller.escalations);
 adminRouter.patch(
   '/escalations/:id',

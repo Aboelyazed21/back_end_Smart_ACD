@@ -20,9 +20,9 @@ describe('formatNumber', () => {
     expect(formatNumber('')).toBe('—');
   });
 
-  it('formats numeric strings and numbers', () => {
-    expect(formatInt(12)).toBe('١٢');
-    expect(formatNumber('3.5', 1)).toBe('٣٫٥');
+  it('formats numeric strings and numbers with Latin digits', () => {
+    expect(formatInt(12)).toBe('12');
+    expect(formatNumber('3.5', 1)).toBe('3.5');
   });
 
   it('returns raw text for non-finite input', () => {
@@ -32,14 +32,14 @@ describe('formatNumber', () => {
 
 describe('formatPercent', () => {
   it('appends the Arabic percent sign', () => {
-    expect(formatPercent(75)).toBe('٧٥٫٠٪');
+    expect(formatPercent(75)).toBe('75.0٪');
     expect(formatPercent(null)).toBe('—');
   });
 });
 
 describe('formatDate', () => {
   it('formats valid dates and rejects junk', () => {
-    expect(formatDate('2026-10-01T00:00:00.000Z')).toContain('٢٠٢٦');
+    expect(formatDate('2026-10-01T00:00:00.000Z')).toContain('2026');
     expect(formatDate('nope')).toBe('—');
     expect(formatDate(null)).toBe('—');
   });

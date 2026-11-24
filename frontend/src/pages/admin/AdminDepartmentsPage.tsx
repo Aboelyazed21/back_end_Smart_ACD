@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useTranslation } from 'react-i18next';
 import { Building2, Pencil, Plus } from 'lucide-react';
 import { api, errorMessage } from '../../lib/api';
 import type { Department } from '../../lib/types';
@@ -14,6 +15,7 @@ import { Table, TableEmpty, TableWrap, TBody, Td, Th, THead, Tr } from '../../co
 import { useToast } from '../../components/ui/Toast';
 
 export function AdminDepartmentsPage() {
+  const { t } = useTranslation();
   const toast = useToast();
   const queryClient = useQueryClient();
   const [open, setOpen] = useState(false);
@@ -38,14 +40,14 @@ export function AdminDepartmentsPage() {
         body: { code: code.trim().toUpperCase(), nameAr: nameAr.trim(), nameEn: nameEn.trim() },
       }),
     onSuccess: async () => {
-      toast.success('تمت إضافة القسم');
+      toast.success(t('تمت إضافة القسم'));
       setOpen(false);
       setCode('');
       setNameAr('');
       setNameEn('');
       await invalidate();
     },
-    onError: (error) => toast.error('تعذر إضافة القسم', errorMessage(error)),
+    onError: (error) => toast.error(t('تعذر إضافة القسم'), errorMessage(error)),
   });
 
   const update = useMutation({
@@ -55,11 +57,11 @@ export function AdminDepartmentsPage() {
         body: { nameAr: nameAr.trim(), nameEn: nameEn.trim() },
       }),
     onSuccess: async () => {
-      toast.success('تم تحديث القسم');
+      toast.success(t('تم تحديث القسم'));
       setEditing(null);
       await invalidate();
     },
-    onError: (error) => toast.error('تعذر تحديث القسم', errorMessage(error)),
+    onError: (error) => toast.error(t('تعذر تحديث القسم'), errorMessage(error)),
   });
 
   const rows = query.data?.data ?? [];
@@ -67,12 +69,14 @@ export function AdminDepartmentsPage() {
   return (
     <div>
       <PageHeader
-        eyebrow="الأقسام"
-        title="أقسام الكلية"
-        description="الأقسام تُستخدم في إسناد الطلاب والمرشدين. رمز القسم بحرفين إلى ثمانية أحرف لاتينية كبيرة."
+        eyebrow={t('الأقسام')}
+        title={t('أقسام الكلية')}
+        description={t(
+          'الأقسام تُستخدم في إسناد الطلاب والمرشدين. رمز القسم بحرفين إلى ثمانية أحرف لاتينية كبيرة.',
+        )}
         actions={
           <Button onClick={() => setOpen(true)} icon={<Plus className="h-4 w-4" />}>
-            إضافة قسم
+            {t('إضافة قسم')}
           </Button>
         }
       />
@@ -82,7 +86,11 @@ export function AdminDepartmentsPage() {
       ) : query.isError ? (
         <ErrorState message={errorMessage(query.error)} onRetry={() => void query.refetch()} />
       ) : rows.length === 0 ? (
-        <EmptyState title="لا توجد أقسام" description="أضف أول قسم للكلية." icon={<Building2 className="h-6 w-6" />} />
+        <EmptyState
+          title={t('لا توجد أقسام')}
+          description={t('أضف أول قسم للكلية.')}
+          icon={<Building2 className="h-6 w-6" />}
+        />
       ) : (
         <Card>
           <CardContent>
@@ -90,16 +98,16 @@ export function AdminDepartmentsPage() {
               <Table>
                 <THead>
                   <Tr>
-                    <Th>الرمز</Th>
-                    <Th>الاسم العربي</Th>
-                    <Th>الاسم الإنجليزي</Th>
-                    <Th>عدد الطلاب</Th>
+                    <Th>{t('الرمز')}</Th>
+                    <Th>{t('الاسم العربي')}</Th>
+                    <Th>{t('الاسم الإنجليزي')}</Th>
+                    <Th>{t('عدد الطلاب')}</Th>
                     <Th />
                   </Tr>
                 </THead>
                 <TBody>
                   {rows.length === 0 ? (
-                    <TableEmpty colSpan={5} message="لا توجد بيانات." />
+                    <TableEmpty colSpan={5} message={t('لا توجد بيانات.')} />
                   ) : (
                     rows.map((item) => (
                       <Tr key={item.id}>
@@ -132,18 +140,18 @@ export function AdminDepartmentsPage() {
       <Modal
         open={open}
         onClose={() => setOpen(false)}
-        title="إضافة قسم"
+        title={t('إضافة قسم')}
         footer={
           <>
             <Button variant="ghost" onClick={() => setOpen(false)}>
-              إلغاء
+              {t('إلغاء')}
             </Button>
             <Button
               onClick={() => create.mutate()}
               loading={create.isPending}
               disabled={!code.trim() || nameAr.trim().length < 2 || nameEn.trim().length < 2}
             >
-              إضافة
+              {t('إضافة')}
             </Button>
           </>
         }
@@ -151,18 +159,23 @@ export function AdminDepartmentsPage() {
         <div className="space-y-3">
           {create.isError && <Alert tone="danger">{errorMessage(create.error)}</Alert>}
           <Input
-            label="رمز القسم"
+            label={t('رمز القسم')}
             dir="ltr"
             value={code}
             onChange={(event) => setCode(event.target.value.toUpperCase())}
             placeholder="CS"
             maxLength={8}
             required
-            hint="حروف لاتينية كبيرة فقط."
+            hint={t('حروف لاتينية كبيرة فقط.')}
           />
-          <Input label="الاسم العربي" value={nameAr} onChange={(event) => setNameAr(event.target.value)} required />
           <Input
-            label="الاسم الإنجليزي"
+            label={t('الاسم العربي')}
+            value={nameAr}
+            onChange={(event) => setNameAr(event.target.value)}
+            required
+          />
+          <Input
+            label={t('الاسم الإنجليزي')}
             dir="ltr"
             value={nameEn}
             onChange={(event) => setNameEn(event.target.value)}
@@ -174,28 +187,37 @@ export function AdminDepartmentsPage() {
       <Modal
         open={Boolean(editing)}
         onClose={() => setEditing(null)}
-        title="تعديل القسم"
-        description={editing ? `${editing.code} · ${formatInt(editing.student_count ?? 0)} طالب` : undefined}
+        title={t('تعديل القسم')}
+        description={
+          editing
+            ? t('{{code}} · {{n}} طالب', { code: editing.code, n: formatInt(editing.student_count ?? 0) })
+            : undefined
+        }
         footer={
           <>
             <Button variant="ghost" onClick={() => setEditing(null)}>
-              إلغاء
+              {t('إلغاء')}
             </Button>
             <Button
               onClick={() => update.mutate()}
               loading={update.isPending}
               disabled={nameAr.trim().length < 2 || nameEn.trim().length < 2}
             >
-              حفظ
+              {t('حفظ')}
             </Button>
           </>
         }
       >
         <div className="space-y-3">
           {update.isError && <Alert tone="danger">{errorMessage(update.error)}</Alert>}
-          <Input label="الاسم العربي" value={nameAr} onChange={(event) => setNameAr(event.target.value)} required />
           <Input
-            label="الاسم الإنجليزي"
+            label={t('الاسم العربي')}
+            value={nameAr}
+            onChange={(event) => setNameAr(event.target.value)}
+            required
+          />
+          <Input
+            label={t('الاسم الإنجليزي')}
             dir="ltr"
             value={nameEn}
             onChange={(event) => setNameEn(event.target.value)}

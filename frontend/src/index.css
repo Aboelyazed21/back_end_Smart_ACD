@@ -4,9 +4,182 @@
 @tailwind components;
 @tailwind utilities;
 
+/* --------------------------------------------------------------------------
+   Design tokens (light theme is the default)
+   Referenced by tailwind.config.js as rgb(var(--x) / <alpha-value>).
+   -------------------------------------------------------------------------- */
 @layer base {
   :root {
     color-scheme: light;
+
+    /* Neutrals — canvas, surfaces, hairlines, text */
+    --canvas: 244 247 250; /* #f4f7fa page background */
+    --surface: 255 255 255; /* #ffffff cards, panels, inputs */
+    --ink-50: 244 247 250;
+    --ink-100: 230 237 244;
+    --ink-200: 201 216 230;
+    --ink-300: 161 185 208;
+    --ink-400: 114 148 180;
+    --ink-500: 82 118 153;
+    --ink-600: 63 94 126;
+    --ink-700: 52 76 102;
+    --ink-800: 44 63 84;
+    --ink-900: 29 44 59;
+    --ink-950: 17 27 37;
+
+    /* Brand blue — BUA LMS palette (#5899e2 primary, #003a75 navy) */
+    --brand-50: 238 245 252;
+    --brand-100: 222 235 249;
+    --brand-200: 205 224 246;
+    --brand-300: 163 199 239;
+    --brand-400: 121 173 232;
+    --brand-500: 88 153 226;
+    --brand-600: 53 92 136;
+    --brand-700: 44 77 113;
+    --brand-800: 29 57 113;
+    --brand-900: 26 46 68;
+    --brand-950: 13 27 42;
+
+    /* Accent gold */
+    --gold-50: 253 249 237;
+    --gold-100: 249 239 201;
+    --gold-200: 243 221 146;
+    --gold-300: 236 198 90;
+    --gold-600: 176 109 22;
+    --gold-700: 141 79 21;
+    --gold-800: 117 63 24;
+
+    /* Semantic status */
+    --danger: 180 35 24; /* #b42318 */
+    --success: 6 118 71; /* #067647 */
+    --warning: 181 71 8; /* #b54708 */
+
+    /* Solid brand action (light: BUA navy + white text) */
+    --primary: 0 58 117;
+    --on-primary: 255 255 255;
+
+    /* Code / payload panels (always dark so data stays legible) */
+    --code-bg: 17 27 37;
+    --code-fg: 230 237 244;
+
+    /* Stock semantic scales — tints + text tones flip in dark mode */
+    --red-50: 254 242 242;
+    --red-100: 254 226 226;
+    --red-200: 254 202 202;
+    --red-700: 185 28 28;
+    --red-800: 153 27 27;
+    --red-900: 127 29 29;
+    --red-950: 69 10 10;
+    --emerald-50: 236 253 245;
+    --emerald-100: 209 250 229;
+    --emerald-200: 167 243 208;
+    --emerald-700: 4 120 87;
+    --emerald-800: 6 95 70;
+    --emerald-900: 6 78 59;
+    --emerald-950: 2 44 34;
+    --amber-50: 255 251 235;
+    --amber-100: 254 243 199;
+    --amber-200: 253 230 138;
+    --amber-700: 180 83 9;
+    --amber-800: 146 64 14;
+    --amber-900: 120 53 15;
+    --amber-950: 69 26 3;
+    --sky-50: 240 249 255;
+    --sky-100: 224 242 254;
+    --sky-200: 186 230 253;
+    --sky-700: 3 105 161;
+    --sky-800: 7 89 133;
+    --sky-900: 12 74 110;
+    --sky-950: 8 47 73;
+
+    --shadow-tint: 16 24 40;
+  }
+
+  [data-theme='dark'] {
+    color-scheme: dark;
+
+    /* Neutrals — spec: bg #09090B, secondary #111113, cards #18181B,
+       borders #27272A, primary text #FAFAFA, secondary text #A1A1AA */
+    --canvas: 9 9 11; /* #09090b */
+    --surface: 24 24 27; /* #18181b */
+    --ink-50: 17 17 19; /* #111113 subtle inset / secondary surface */
+    --ink-100: 39 39 42; /* #27272a hairline borders, raised hover */
+    --ink-200: 63 63 70; /* #3f3f46 stronger borders */
+    --ink-300: 82 82 91;
+    --ink-400: 113 113 122; /* placeholders */
+    --ink-500: 161 161 170; /* #a1a1aa secondary text */
+    --ink-600: 196 196 199;
+    --ink-700: 212 212 216;
+    --ink-800: 228 228 231;
+    --ink-900: 250 250 250; /* #fafafa primary text */
+    --ink-950: 250 250 250; /* headings */
+
+    /* Brand blue — tints darken, text/borders brighten */
+    --brand-50: 10 26 43;
+    --brand-100: 16 38 60;
+    --brand-200: 22 52 79;
+    --brand-300: 121 173 232;
+    --brand-400: 88 153 226;
+    --brand-500: 88 153 226;
+    --brand-600: 142 194 242;
+    --brand-700: 168 210 247; /* labels/links on dark */
+    --brand-800: 205 224 246;
+    --brand-900: 222 235 249;
+    --brand-950: 238 245 252;
+
+    /* Accent gold — tints darken, text brightens */
+    --gold-50: 26 21 8;
+    --gold-100: 36 29 10;
+    --gold-200: 58 48 19;
+    --gold-300: 243 221 146;
+    --gold-600: 236 220 122;
+    --gold-700: 243 221 146;
+    --gold-800: 249 239 201;
+
+    /* Semantic status — brightened for dark backgrounds */
+    --danger: 255 92 77;
+    --success: 52 211 153;
+    --warning: 251 191 36;
+
+    /* Solid brand action — bright BUA blue + dark text reads premium in dark */
+    --primary: 111 179 242;
+    --on-primary: 4 18 38;
+
+    /* Code panels stay dark in both themes */
+    --code-bg: 17 17 19;
+    --code-fg: 228 228 231;
+
+    /* Stock semantic scales inverted (tint ↔ text) for correct contrast */
+    --red-50: 69 10 10;
+    --red-100: 127 29 29;
+    --red-200: 153 27 27;
+    --red-700: 252 165 165;
+    --red-800: 254 202 202;
+    --red-900: 254 226 226;
+    --red-950: 254 242 242;
+    --emerald-50: 2 44 34;
+    --emerald-100: 6 78 59;
+    --emerald-200: 6 95 70;
+    --emerald-700: 110 231 183;
+    --emerald-800: 167 243 208;
+    --emerald-900: 209 250 229;
+    --emerald-950: 236 253 245;
+    --amber-50: 69 26 3;
+    --amber-100: 120 53 15;
+    --amber-200: 146 64 14;
+    --amber-700: 252 211 77;
+    --amber-800: 253 230 138;
+    --amber-900: 254 243 199;
+    --amber-950: 255 251 235;
+    --sky-50: 8 47 73;
+    --sky-100: 12 74 110;
+    --sky-200: 7 89 133;
+    --sky-700: 125 211 252;
+    --sky-800: 186 230 253;
+    --sky-900: 224 242 254;
+    --sky-950: 240 249 255;
+
+    --shadow-tint: 0 0 0;
   }
 
   html {
@@ -14,7 +187,28 @@
   }
 
   body {
-    @apply bg-ink-50 font-sans text-ink-900 antialiased;
+    @apply bg-canvas font-sans text-ink-900 antialiased;
+  }
+
+  /* Soft brand glow behind the page in dark mode so the canvas does not read
+     as a flat black sheet. Fixed so it does not scroll with the content. */
+  [data-theme='dark'] body {
+    background-image:
+      radial-gradient(70rem 34rem at 8% -12%, rgb(16 52 79 / 0.55), transparent 62%),
+      radial-gradient(55rem 30rem at 104% 0%, rgb(58 48 19 / 0.3), transparent 58%);
+    background-attachment: fixed;
+    background-repeat: no-repeat;
+  }
+
+  /* Subtle, theme-aware colour transitions (skipped for reduced motion). */
+  html.theme-anim,
+  html.theme-anim *,
+  html.theme-anim *::before,
+  html.theme-anim *::after {
+    transition-property: background-color, border-color, color, fill, stroke,
+      box-shadow, outline-color;
+    transition-duration: 180ms;
+    transition-timing-function: ease-out;
   }
 
   ::selection {
@@ -23,7 +217,7 @@
 
   * {
     scrollbar-width: thin;
-    scrollbar-color: #a1b9d0 transparent;
+    scrollbar-color: rgb(var(--ink-300)) transparent;
   }
 
   *::-webkit-scrollbar {
@@ -32,7 +226,8 @@
   }
 
   *::-webkit-scrollbar-thumb {
-    @apply rounded-full bg-ink-300;
+    @apply rounded-full;
+    background: rgb(var(--ink-300));
   }
 
   *::-webkit-scrollbar-track {
@@ -52,21 +247,183 @@
   :focus-visible {
     @apply outline-none;
   }
+
+  @media (prefers-reduced-motion: reduce) {
+    html.theme-anim,
+    html.theme-anim *,
+    html.theme-anim *::before,
+    html.theme-anim *::after {
+      transition-duration: 0.01ms !important;
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      scroll-behavior: auto !important;
+    }
+  }
 }
 
-@layer utilities {
-  .text-balance {
-    text-wrap: balance;
+@layer components {
+  .sr-only-focusable:focus:not(:focus-visible) {
+    @apply sr-only;
   }
 
-  .paper-grid {
-    background-image:
-      linear-gradient(to right, rgba(22, 71, 65, 0.05) 1px, transparent 1px),
-      linear-gradient(to bottom, rgba(22, 71, 65, 0.05) 1px, transparent 1px);
-    background-size: 28px 28px;
+  /* Skip link */
+  .skip-link {
+    @apply sr-only focus:not-sr-only focus:fixed focus:start-4 focus:top-4 focus:z-50 focus:rounded-lg focus:bg-brand-700 focus:px-4 focus:py-2 focus:text-sm focus:font-bold focus:text-white;
   }
 
-  .tabular-nums {
-    font-variant-numeric: tabular-nums;
+  /* ------------------------------------------------------------------------
+     Segmented control (language / interface theme in the header and auth
+     screens). A single indicator slides to the active option, so the control
+     reads as one piece instead of several loose buttons. Sizes shrink on
+     narrow screens to keep the header from overflowing.
+     ------------------------------------------------------------------------ */
+  .segmented {
+    --seg-w: 2rem;
+    --seg-pad: 0.25rem;
+  }
+
+  .segmented-item {
+    width: var(--seg-w);
+  }
+
+  .segmented-indicator {
+    width: var(--seg-w);
+    transition: inset-inline-start 200ms ease;
+  }
+
+  .segmented-indicator[data-index='0'] {
+    inset-inline-start: var(--seg-pad);
+  }
+
+  .segmented-indicator[data-index='1'] {
+    inset-inline-start: calc(var(--seg-pad) + var(--seg-w));
+  }
+
+  .segmented-indicator[data-index='2'] {
+    inset-inline-start: calc(var(--seg-pad) + 2 * var(--seg-w));
+  }
+
+  @media (max-width: 639.98px) {
+    .segmented {
+      --seg-w: 1.75rem;
+      --seg-pad: 0.1875rem;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .segmented-indicator {
+      transition: none;
+    }
+  }
+}
+
+/* --------------------------------------------------------------------------
+   App sidebar / mobile drawer
+   The panel is anchored with `inset-inline-start`, so it sits on the correct
+   side in both LTR and RTL. When closed it must slide *outward* (away from the
+   viewport); the previous `translate-x-full` moved it inward in LTR and left
+   the drawer parked on top of the page.
+   -------------------------------------------------------------------------- */
+.app-sidebar {
+  transition: transform 200ms ease;
+}
+
+@media (max-width: 1023.98px) {
+  .app-sidebar[data-open='false'] {
+    transform: translateX(-100%);
+  }
+
+  html[dir='rtl'] .app-sidebar[data-open='false'] {
+    transform: translateX(100%);
+  }
+
+  .app-sidebar[data-open='true'] {
+    transform: translateX(0);
+  }
+}
+
+@media (min-width: 1024px) {
+  .app-sidebar {
+    transform: translateX(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .app-sidebar {
+    transition: none;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   Global floating assistant (waving robot + pulse rings)
+   -------------------------------------------------------------------------- */
+@keyframes aidm-wave {
+  0%,
+  100% {
+    transform: rotate(-7deg);
+  }
+  50% {
+    transform: rotate(9deg);
+  }
+}
+
+@keyframes aidm-ring {
+  0% {
+    transform: scale(1);
+    opacity: 0.6;
+  }
+  70% {
+    opacity: 0.08;
+  }
+  100% {
+    transform: scale(1.75);
+    opacity: 0;
+  }
+}
+
+@keyframes aidm-pop {
+  from {
+    opacity: 0;
+    transform: translateY(6px) scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes aidm-sheen {
+  from {
+    transform: translateX(160%);
+  }
+  to {
+    transform: translateX(-260%);
+  }
+}
+
+.aidm-wave {
+  transform-box: view-box;
+  transform-origin: 48px 42px;
+  animation: aidm-wave 2.4s ease-in-out infinite;
+}
+
+.aidm-ring {
+  animation: aidm-ring 2.6s ease-out infinite;
+}
+
+.aidm-pop {
+  animation: aidm-pop 0.18s ease-out;
+}
+
+.aidm-sheen {
+  animation: aidm-sheen 3.5s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .aidm-wave,
+  .aidm-ring,
+  .aidm-pop,
+  .aidm-sheen {
+    animation: none !important;
   }
 }

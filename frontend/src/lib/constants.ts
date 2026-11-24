@@ -1,4 +1,4 @@
-import type { DecisionStatus, Program, Season, Role } from './types';
+﻿import type { DecisionStatus, Program, Season, Role } from './types';
 
 export const PROGRAM_LABELS: Record<Program, { ar: string; en: string; short: string }> = {
   CS: { ar: 'علوم الحاسب', en: 'Computer Science', short: 'CS' },
@@ -96,40 +96,41 @@ export const GRADE_STATUS_LABELS: Record<string, string> = {
 
 export const NAV_GROUPS = {
   student: [
-    { to: '/student', label: 'لوحة المتابعة', icon: 'LayoutDashboard' },
-    { to: '/student/eligibility', label: 'أهلية التسجيل', icon: 'ShieldCheck' },
-    { to: '/student/plans', label: 'الخطط الدراسية', icon: 'ListChecks' },
-    { to: '/student/standing', label: 'الموقف الأكاديمي', icon: 'Gauge' },
-    { to: '/student/early-warning', label: 'الإنذار المبكر', icon: 'TriangleAlert' },
+    { to: '/student', label: 'لوحة المتابعة', icon: 'PanelsTopLeft' },
+    { to: '/student/eligibility', label: 'أهلية التسجيل', icon: 'BadgeCheck' },
+    { to: '/student/plans', label: 'الخطط الدراسية', icon: 'ClipboardList' },
+    { to: '/student/standing', label: 'الموقف الأكاديمي', icon: 'Activity' },
+    { to: '/student/early-warning', label: 'الإنذار المبكر', icon: 'Siren' },
     { to: '/student/graduation', label: 'تدقيق التخرج', icon: 'GraduationCap' },
     { to: '/student/gpa', label: 'محاكاة المعدل', icon: 'Calculator' },
-    { to: '/student/what-if', label: 'تغيير التخصص', icon: 'Shuffle' },
-    { to: '/student/courses', label: 'سجلي الأكاديمي', icon: 'BookOpen' },
-    { to: '/student/advisor', label: 'مرشدي والساعات', icon: 'UserRound' },
-    { to: '/student/chat', label: 'مساعد اللائحة', icon: 'MessagesSquare' },
-    { to: '/student/notifications', label: 'الإشعارات', icon: 'Bell' },
+    { to: '/student/what-if', label: 'تغيير التخصص', icon: 'GitCompareArrows' },
+    { to: '/student/courses', label: 'سجلي الأكاديمي', icon: 'Library' },
+    { to: '/student/advisor', label: 'مرشدي والساعات', icon: 'Contact' },
+    { to: '/student/chat', label: 'مساعد اللائحة', icon: 'BotMessageSquare' },
+    { to: '/student/notifications', label: 'الإشعارات', icon: 'BellRing' },
   ],
   advisor: [
-    { to: '/advisor', label: 'لوحة المرشد', icon: 'LayoutDashboard' },
-    { to: '/advisor/students', label: 'طلابي', icon: 'Users' },
-    { to: '/advisor/at-risk', label: 'الطلاب المعرضون للخطر', icon: 'TriangleAlert' },
+    { to: '/advisor', label: 'لوحة المرشد', icon: 'PanelsTopLeft' },
+    { to: '/advisor/students', label: 'طلابي', icon: 'UsersRound' },
+    { to: '/advisor/at-risk', label: 'الطلاب المعرضون للخطر', icon: 'Siren' },
     { to: '/advisor/plans', label: 'مراجعة الخطط', icon: 'ClipboardCheck' },
     { to: '/advisor/office-hours', label: 'الساعات المكتبية', icon: 'CalendarClock' },
     { to: '/advisor/escalations', label: 'الحالات المحوّلة', icon: 'Inbox' },
   ],
   admin: [
-    { to: '/admin', label: 'نظرة عامة', icon: 'LayoutDashboard' },
-    { to: '/admin/users', label: 'المستخدمون', icon: 'Users' },
+    { to: '/admin', label: 'نظرة عامة', icon: 'PanelsTopLeft' },
+    { to: '/admin/users', label: 'المستخدمون', icon: 'UsersRound' },
     { to: '/admin/students', label: 'الطلاب', icon: 'GraduationCap' },
     { to: '/admin/advisors', label: 'المرشدون', icon: 'UserCog' },
+    { to: '/admin/notifications', label: 'الإعلانات', icon: 'Megaphone' },
     { to: '/admin/departments', label: 'الأقسام', icon: 'Building2' },
-    { to: '/admin/courses', label: 'المقررات', icon: 'BookOpen' },
-    { to: '/admin/anomalies', label: 'تعارضات البيانات', icon: 'TriangleAlert' },
+    { to: '/admin/courses', label: 'المقررات', icon: 'Library' },
+    { to: '/admin/anomalies', label: 'تعارضات البيانات', icon: 'FileWarning' },
     { to: '/admin/rules', label: 'قواعد اللائحة', icon: 'Scale' },
     { to: '/admin/escalations', label: 'الحالات المحوّلة', icon: 'Inbox' },
     { to: '/admin/audit', label: 'سجل التدقيق', icon: 'ScrollText' },
     { to: '/admin/analytics', label: 'التحليلات', icon: 'ChartColumn' },
-    { to: '/admin/imports', label: 'استيراد البيانات', icon: 'Upload' },
+    { to: '/admin/imports', label: 'استيراد البيانات', icon: 'FileUp' },
   ],
 } as const;
 

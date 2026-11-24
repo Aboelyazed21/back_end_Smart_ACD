@@ -205,7 +205,7 @@ def generate_plan(data: RegulationData, request: PlanRequest) -> dict[str, Any]:
         try_add(code, 3, "recommended_plan")
 
     # (4) electives to fill pool credits (mandatory UNI1204 first for A-REG-05).
-    for pool_key, pool_code in data.pool_codes_for_program(student.program).items():
+    for _pool_key, pool_code in data.pool_codes_for_program(student.program).items():
         pool = data.pool(pool_code)
         required = int(pool.get("credits_required", 0))
         earned = sum(

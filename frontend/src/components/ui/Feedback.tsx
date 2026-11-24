@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react';
 import { AlertCircle, Inbox, Loader2, RefreshCw } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { cn } from '../../lib/format';
 import { Button } from './Button';
 
@@ -7,11 +8,12 @@ export function Spinner({ className }: { className?: string }) {
   return <Loader2 className={cn('h-5 w-5 animate-spin text-brand-600', className)} aria-hidden />;
 }
 
-export function LoadingBlock({ label = 'جارٍ التحميل…', className }: { label?: string; className?: string }) {
+export function LoadingBlock({ label, className }: { label?: string; className?: string }) {
+  const { t } = useTranslation();
   return (
     <div className={cn('flex items-center justify-center gap-3 py-12 text-sm text-ink-500', className)}>
       <Spinner />
-      <span>{label}</span>
+      <span>{label ?? t('جارٍ التحميل…')}</span>
     </div>
   );
 }
@@ -56,7 +58,7 @@ export function EmptyState({
 }) {
   return (
     <div className={cn('flex flex-col items-center justify-center rounded-2xl border border-dashed border-ink-200 bg-ink-50/40 px-6 py-12 text-center', className)}>
-      <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-white text-ink-400 shadow-sm">
+      <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-surface text-ink-400 shadow-sm">
         {icon ?? <Inbox className="h-6 w-6" />}
       </div>
       <h3 className="font-display text-base font-bold text-ink-800">{title}</h3>
@@ -75,15 +77,16 @@ export function ErrorState({
   onRetry?: () => void;
   className?: string;
 }) {
+  const { t } = useTranslation();
   return (
     <div className={cn('flex flex-col items-center justify-center rounded-2xl border border-red-100 bg-red-50/60 px-6 py-10 text-center', className)}>
-      <div className="mb-3 flex h-11 w-11 items-center justify-center rounded-full bg-white text-danger shadow-sm">
+      <div className="mb-3 flex h-11 w-11 items-center justify-center rounded-full bg-surface text-danger shadow-sm">
         <AlertCircle className="h-5 w-5" />
       </div>
       <p className="max-w-lg text-sm leading-6 text-red-800">{message}</p>
       {onRetry && (
         <Button variant="outline" size="sm" className="mt-4" onClick={onRetry} icon={<RefreshCw className="h-4 w-4" />}>
-          إعادة المحاولة
+          {t('إعادة المحاولة')}
         </Button>
       )}
     </div>

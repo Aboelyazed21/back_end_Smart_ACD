@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useTranslation } from 'react-i18next';
 import { Inbox, Settings2, Ticket } from 'lucide-react';
 import { api, errorMessage, qs } from '../../lib/api';
 import type { Escalation, Paginated, User } from '../../lib/types';
@@ -25,6 +26,7 @@ type Status = 'open' | 'in_review' | 'resolved' | 'closed';
 type Priority = 'low' | 'medium' | 'high' | 'critical';
 
 export function AdminEscalationsPage() {
+  const { t } = useTranslation();
   const toast = useToast();
   const queryClient = useQueryClient();
   const [status, setStatus] = useState('');
@@ -64,17 +66,17 @@ export function AdminEscalationsPage() {
 
   const assigneeOptions = useMemo(
     () => [
-      { value: 'none', label: 'بدون إسناد' },
+      { value: 'none', label: t('بدون إسناد') },
       ...(advisors.data?.data ?? []).map((user) => ({
         value: user.id,
-        label: `${user.fullName} — ${ROLE_LABELS[user.role]}`,
+        label: `${user.fullName} — ${t(ROLE_LABELS[user.role])}`,
       })),
       ...(admins.data?.data ?? []).map((user) => ({
         value: user.id,
-        label: `${user.fullName} — ${ROLE_LABELS[user.role]}`,
+        label: `${user.fullName} — ${t(ROLE_LABELS[user.role])}`,
       })),
     ],
-    [advisors.data, admins.data],
+    [advisors.data, admins.data, t],
   );
 
   const update = useMutation({
@@ -89,13 +91,13 @@ export function AdminEscalationsPage() {
         },
       }),
     onSuccess: async () => {
-      toast.success('تم تحديث الحالة');
+      toast.success(t('تم تحديث الحالة'));
       setSelected(null);
       setResolution('');
       await queryClient.invalidateQueries({ queryKey: ['admin', 'escalations'] });
       await queryClient.invalidateQueries({ queryKey: ['admin', 'analytics'] });
     },
-    onError: (error) => toast.error('تعذر تحديث الحالة', errorMessage(error)),
+    onError: (error) => toast.error(t('تعذر تحديث الحالة'), errorMessage(error)),
   });
 
   const openDetail = (row: Escalation) => {
@@ -112,54 +114,56 @@ export function AdminEscalationsPage() {
   return (
     <div>
       <PageHeader
-        eyebrow="الحالات المحوّلة"
-        title="إدارة الحالات الأكاديمية"
-        description="الحالات الناتجة عن محرك القواعد، مراجعة الخطط، التعارضات، أو طلبات الطلاب. الإسناد والحل موثّقان في سجل التدقيق."
+        eyebrow={t('الحالات المحوّلة')}
+        title={t('إدارة الحالات الأكاديمية')}
+        description={t(
+          'الحالات الناتجة عن محرك القواعد، مراجعة الخطط، التعارضات، أو طلبات الطلاب. الإسناد والحل موثّقان في سجل التدقيق.',
+        )}
       />
 
       <Card className="mb-4">
         <CardContent>
           <div className="grid gap-3 sm:grid-cols-3">
             <Select
-              label="الحالة"
+              label={t('الحالة')}
               value={status}
               onChange={(event) => {
                 setStatus(event.target.value);
                 setPage(1);
               }}
               options={[
-                { value: '', label: 'الكل' },
-                { value: 'open', label: 'مفتوحة' },
-                { value: 'in_review', label: 'قيد المراجعة' },
-                { value: 'resolved', label: 'محلولة' },
-                { value: 'closed', label: 'مغلقة' },
+                { value: '', label: t('الكل') },
+                { value: 'open', label: t('مفتوحة') },
+                { value: 'in_review', label: t('قيد المراجعة') },
+                { value: 'resolved', label: t('محلولة') },
+                { value: 'closed', label: t('مغلقة') },
               ]}
             />
             <Select
-              label="النوع"
+              label={t('النوع')}
               value={type}
               onChange={(event) => {
                 setType(event.target.value);
                 setPage(1);
               }}
               options={[
-                { value: '', label: 'كل الأنواع' },
-                ...Object.entries(ESCALATION_TYPE_LABELS).map(([value, label]) => ({ value, label })),
+                { value: '', label: t('كل الأنواع') },
+                ...Object.entries(ESCALATION_TYPE_LABELS).map(([value, label]) => ({ value, label: t(label) })),
               ]}
             />
             <Select
-              label="الأولوية"
+              label={t('الأولوية')}
               value={priority}
               onChange={(event) => {
                 setPriority(event.target.value);
                 setPage(1);
               }}
               options={[
-                { value: '', label: 'كل الأولويات' },
-                { value: 'low', label: 'منخفضة' },
-                { value: 'medium', label: 'متوسطة' },
-                { value: 'high', label: 'عالية' },
-                { value: 'critical', label: 'حرجة' },
+                { value: '', label: t('كل الأولويات') },
+                { value: 'low', label: t('منخفضة') },
+                { value: 'medium', label: t('متوسطة') },
+                { value: 'high', label: t('عالية') },
+                { value: 'critical', label: t('حرجة') },
               ]}
             />
           </div>
@@ -172,8 +176,8 @@ export function AdminEscalationsPage() {
         <ErrorState message={errorMessage(query.error)} onRetry={() => void query.refetch()} />
       ) : rows.length === 0 ? (
         <EmptyState
-          title="لا توجد حالات"
-          description="لا توجد حالات مطابقة لعوامل التصفية."
+          title={t('لا توجد حالات')}
+          description={t('لا توجد حالات مطابقة لعوامل التصفية.')}
           icon={<Inbox className="h-6 w-6" />}
         />
       ) : (
@@ -189,13 +193,17 @@ export function AdminEscalationsPage() {
                       <span className="inline-flex items-center gap-1 font-mono text-xs font-bold text-brand-700">
                         <Ticket className="h-3.5 w-3.5" /> {row.ticket_no}
                       </span>
-                      <Badge tone={(statusMeta?.tone as never) ?? 'neutral'}>{statusMeta?.ar ?? row.status}</Badge>
-                      <Badge tone={(priorityMeta?.tone as never) ?? 'neutral'}>{priorityMeta?.ar ?? row.priority}</Badge>
-                      <Badge tone="neutral">{ESCALATION_TYPE_LABELS[row.type] ?? row.type}</Badge>
+                      <Badge tone={(statusMeta?.tone as never) ?? 'neutral'}>
+                        {t(statusMeta?.ar ?? row.status)}
+                      </Badge>
+                      <Badge tone={(priorityMeta?.tone as never) ?? 'neutral'}>
+                        {t(priorityMeta?.ar ?? row.priority)}
+                      </Badge>
+                      <Badge tone="neutral">{t(ESCALATION_TYPE_LABELS[row.type] ?? row.type)}</Badge>
                       {row.assigned_to ? (
-                        <Badge tone="info">{row.assignee_name ?? 'مسند'}</Badge>
+                        <Badge tone="info">{row.assignee_name ?? t('مسند')}</Badge>
                       ) : (
-                        <Badge tone="warning">غير مسند</Badge>
+                        <Badge tone="warning">{t('غير مسند')}</Badge>
                       )}
                     </div>
                     <p className="mt-2 text-sm font-bold text-ink-900">{row.subject}</p>
@@ -224,7 +232,7 @@ export function AdminEscalationsPage() {
                     )}
                     {row.resolution && (
                       <div className="mt-2 rounded-lg bg-ink-50 p-2.5 text-xs leading-5 text-ink-700">
-                        <span className="font-bold">الحل: </span>
+                        <span className="font-bold">{t('الحل:')} </span>
                         {row.resolution}
                       </div>
                     )}
@@ -235,7 +243,7 @@ export function AdminEscalationsPage() {
                     onClick={() => openDetail(row)}
                     icon={<Settings2 className="h-4 w-4" />}
                   >
-                    إدارة الحالة
+                    {t('إدارة الحالة')}
                   </Button>
                 </div>
               </Card>
@@ -249,15 +257,17 @@ export function AdminEscalationsPage() {
       <Modal
         open={Boolean(selected)}
         onClose={() => setSelected(null)}
-        title={selected ? `إدارة ${selected.ticket_no}` : 'إدارة الحالة'}
-        description="الإسناد متاح للمرشدين والمسؤولين النشطين فقط. الحل أو الإغلاق يتطلب ملخصًا مكتوبًا."
+        title={
+          selected ? t('إدارة {{ticket}}', { ticket: selected.ticket_no }) : t('إدارة الحالة')
+        }
+        description={t('الإسناد متاح للمرشدين والمسؤولين النشطين فقط. الحل أو الإغلاق يتطلب ملخصًا مكتوبًا.')}
         footer={
           <>
             <Button variant="ghost" onClick={() => setSelected(null)}>
-              إلغاء
+              {t('إلغاء')}
             </Button>
             <Button onClick={() => update.mutate()} loading={update.isPending} disabled={requiresResolution}>
-              حفظ التحديث
+              {t('حفظ التحديث')}
             </Button>
           </>
         }
@@ -266,52 +276,56 @@ export function AdminEscalationsPage() {
           {update.isError && <Alert tone="danger">{errorMessage(update.error)}</Alert>}
           <div className="grid gap-3 sm:grid-cols-2">
             <Select
-              label="الحالة"
+              label={t('الحالة')}
               value={nextStatus}
               onChange={(event) => setNextStatus(event.target.value as Status)}
               options={[
-                { value: 'open', label: 'مفتوحة' },
-                { value: 'in_review', label: 'قيد المراجعة' },
-                { value: 'resolved', label: 'محلولة' },
-                { value: 'closed', label: 'مغلقة' },
+                { value: 'open', label: t('مفتوحة') },
+                { value: 'in_review', label: t('قيد المراجعة') },
+                { value: 'resolved', label: t('محلولة') },
+                { value: 'closed', label: t('مغلقة') },
               ]}
             />
             <Select
-              label="الأولوية"
+              label={t('الأولوية')}
               value={nextPriority}
               onChange={(event) => setNextPriority(event.target.value as Priority)}
               options={[
-                { value: 'low', label: 'منخفضة' },
-                { value: 'medium', label: 'متوسطة' },
-                { value: 'high', label: 'عالية' },
-                { value: 'critical', label: 'حرجة' },
+                { value: 'low', label: t('منخفضة') },
+                { value: 'medium', label: t('متوسطة') },
+                { value: 'high', label: t('عالية') },
+                { value: 'critical', label: t('حرجة') },
               ]}
             />
           </div>
           <Select
-            label="الإسناد"
+            label={t('الإسناد')}
             value={assignee}
             onChange={(event) => setAssignee(event.target.value)}
             options={assigneeOptions}
           />
           <Textarea
-            label="ملخص الإجراء / الحل"
+            label={t('ملخص الإجراء / الحل')}
             value={resolution}
             onChange={(event) => setResolution(event.target.value)}
             maxLength={5000}
-            placeholder="ما الذي تم فعله؟ ما القرار؟ ما الخطوات التالية؟"
-            error={requiresResolution ? 'الحل أو الإغلاق يتطلب 3 أحرف على الأقل' : undefined}
+            placeholder={t('ما الذي تم فعله؟ ما القرار؟ ما الخطوات التالية؟')}
+            error={
+              requiresResolution ? t('الحل أو الإغلاق يتطلب 3 أحرف على الأقل') : undefined
+            }
           />
           {selected && (
             <div className="rounded-xl bg-ink-50 p-3 text-xs leading-5 text-ink-600">
               <p className="font-bold text-ink-800">{selected.subject}</p>
               <p className="mt-1">{selected.description}</p>
               {selected.related_plan_id && (
-                <p className="mt-1 font-mono text-[10px] text-ink-400">خطة: {selected.related_plan_id}</p>
+                <p className="mt-1 font-mono text-[10px] text-ink-400">
+                  {t('خطة:')} {selected.related_plan_id}
+                </p>
               )}
             </div>
           )}
-          <Alert tone="info">كل تحديث يُسجّل في سجل التدقيق مع هوية المنفّذ والوقت.</Alert>
+          <Alert tone="info">{t('كل تحديث يُسجّل في سجل التدقيق مع هوية المنفّذ والوقت.')}</Alert>
         </div>
       </Modal>
     </div>

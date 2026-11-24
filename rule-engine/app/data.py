@@ -278,7 +278,7 @@ class RegulationData:
         role = course.roles.get(program) or course.roles.get("ALL")
         if role:
             return role
-        for pool_key, pool_code in self.pool_codes_for_program(program).items():
+        for _pool_key, pool_code in self.pool_codes_for_program(program).items():
             if code in (self.pool(pool_code).get("courses") or []):
                 return f"elective:{pool_code}"
         return None

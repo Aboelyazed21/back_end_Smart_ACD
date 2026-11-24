@@ -1,5 +1,5 @@
 import { createApp } from '../app';
-import { many } from '../config/db';
+import { many, one } from '../config/db';
 import {
   ADVISOR1_EMAIL,
   ADVISOR2_EMAIL,
@@ -130,10 +130,14 @@ describe('advisor workspace', () => {
       .send({ note: 'not allowed', visibility: 'student' })
       .expect(201);
     const isolated = await auth(agent.get(`/api/advisor/students/${student!.id}/notes`), session).expect(200);
+    const ownAdvisor = await one<{ full_name: string }>(
+      `SELECT u.full_name FROM advisors a JOIN users u ON u.id = a.user_id
+        WHERE u.email = $1`,
+      [ADVISOR1_EMAIL],
+    );
+    expect(ownAdvisor).toBeTruthy();
     expect(
-      isolated.body.data.every(
-        (row: { advisor_name: string }) => row.advisor_name === 'Seham Samy',
-      ),
+      isolated.body.data.every((row: { advisor_name: string }) => row.advisor_name === ownAdvisor!.full_name),
     ).toBe(true);
   });
 

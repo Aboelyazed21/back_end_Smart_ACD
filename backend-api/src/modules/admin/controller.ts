@@ -9,7 +9,9 @@ import * as anomalyService from './anomaliesService';
 import * as analytics from './analyticsService';
 import * as imports from './importsService';
 import * as audit from './auditService';
+import * as broadcasts from './notificationsService';
 import { createNotification } from '../../services/notifications';
+import { toCsv } from '../../utils/csv';
 
 function context(req: Request) {
   return { ip: req.ip ?? null, correlationId: req.correlationId };
@@ -55,6 +57,12 @@ export const resetUserPassword = asyncHandler(async (req: Request, res: Response
 
 export const advisorsList = asyncHandler(async (_req: Request, res: Response) => {
   res.json({ data: await users.listAdvisors() });
+});
+
+/** Create a regular (non-admin) advisor from an email address. */
+export const createAdvisor = asyncHandler(async (req: Request, res: Response) => {
+  if (!req.user) throw AppError.unauthorized();
+  res.status(201).json({ data: await users.createAdvisorByEmail(req.body, req.user.id, context(req)) });
 });
 
 export const updateAdvisor = asyncHandler(async (req: Request, res: Response) => {
@@ -223,6 +231,58 @@ export const auditLogs = asyncHandler(async (req: Request, res: Response) => {
     offset: page.offset,
   });
   res.json(paginated(result.rows, result.total, page));
+});
+
+/** CSV export of the audit trail with the same filters as the paged view. */
+export const exportAuditLogs = asyncHandler(async (req: Request, res: Response) => {
+  const rows = await audit.exportAuditLogs({
+    actorId: req.query.actorId as string | undefined,
+    entityType: req.query.entityType as string | undefined,
+    entityId: req.query.entityId as string | undefined,
+    action: req.query.action as string | undefined,
+    from: req.query.from as string | undefined,
+    to: req.query.to as string | undefined,
+  });
+  const csv = toCsv(
+    [
+      'created_at',
+      'actor_name',
+      'actor_id',
+      'action',
+      'entity_type',
+      'entity_id',
+      'ip',
+      'correlation_id',
+      'before',
+      'after',
+    ],
+    rows.map((row) => [
+      new Date(row.created_at).toISOString(),
+      row.actor_name,
+      row.actor_id,
+      row.action,
+      row.entity_type,
+      row.entity_id,
+      row.ip,
+      row.correlation_id,
+      row.before,
+      row.after,
+    ]),
+  );
+  const stamp = new Date().toISOString().slice(0, 10);
+  res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+  res.setHeader('Content-Disposition', `attachment; filename="audit-log-${stamp}.csv"`);
+  res.send(csv);
+});
+
+/** Send one in-app (optionally email) announcement to a whole audience. */
+export const broadcastNotification = asyncHandler(async (req: Request, res: Response) => {
+  if (!req.user) throw AppError.unauthorized();
+  res.status(201).json({ data: await broadcasts.broadcast(req.body, req.user.id, context(req)) });
+});
+
+export const broadcastHistory = asyncHandler(async (_req: Request, res: Response) => {
+  res.json({ data: await broadcasts.recentBroadcasts() });
 });
 
 export const escalations = asyncHandler(async (req: Request, res: Response) => {

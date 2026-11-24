@@ -206,7 +206,7 @@ def compute_gpa(
         term_best = _select_best(term_list)
         sgpa_points = 0.0
         sgpa_credits = 0
-        for code, row in sorted(term_best.items()):
+        for _code, row in sorted(term_best.items()):
             if not row["counts_in_gpa"] or row["credits"] <= 0:
                 continue
             sgpa_credits += row["credits"]

@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
+import { useTranslation } from 'react-i18next';
 import { Award, CheckCircle2, GraduationCap, XCircle } from 'lucide-react';
 import { api, errorMessage, qs } from '../../lib/api';
 import type { GraduationResult } from '../../lib/types';
@@ -13,6 +14,7 @@ import { Table, TableEmpty, TableWrap, TBody, Td, Th, THead, Tr } from '../../co
 import { TermSelect } from '../../components/ui/PaginationBar';
 
 export function GraduationPage() {
+  const { t } = useTranslation();
   const [term, setTerm] = useState(currentTermValue());
   const query = useQuery({
     queryKey: ['student', 'graduation', term],
@@ -22,10 +24,12 @@ export function GraduationPage() {
   return (
     <div>
       <PageHeader
-        eyebrow="تدقيق التخرج"
-        title="متطلبات التخرج"
-        description="قائمة كاملة بكل متطلب غير مستوفى: الساعات، المعدل، التدريب الميداني، مشروع التخرج، المجموعات الاختيارية، والمدة النظامية."
-        actions={<TermSelect value={term} onChange={setTerm} label="الفصل" className="w-48" />}
+        eyebrow={t('تدقيق التخرج')}
+        title={t('متطلبات التخرج')}
+        description={t(
+          'قائمة كاملة بكل متطلب غير مستوفى: الساعات، المعدل، التدريب الميداني، مشروع التخرج، المجموعات الاختيارية، والمدة النظامية.',
+        )}
+        actions={<TermSelect value={term} onChange={setTerm} label={t('الفصل')} className="w-48" />}
       />
 
       {query.isLoading ? (
@@ -40,28 +44,29 @@ export function GraduationPage() {
 }
 
 function GraduationContent({ data }: { data: GraduationResult }) {
+  const { t } = useTranslation();
   return (
     <div className="space-y-4">
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <StatCard
-          label="حالة التخرج"
-          value={data.eligible_to_graduate ? 'مستوفى' : `${formatInt(data.missing.length)} متطلب`}
-          hint={data.eligible_to_graduate ? 'كل المتطلبات مستوفاة' : 'متطلبات متبقية'}
+          label={t('حالة التخرج')}
+          value={data.eligible_to_graduate ? t('مستوفى') : t('{{n}} متطلب', { n: formatInt(data.missing.length) })}
+          hint={data.eligible_to_graduate ? t('كل المتطلبات مستوفاة') : t('متطلبات متبقية')}
           icon={<GraduationCap className="h-5 w-5" />}
           tone={data.eligible_to_graduate ? 'success' : 'gold'}
         />
         <StatCard
-          label="الساعات المجتازة"
+          label={t('الساعات المجتازة')}
           value={formatInt(data.passed_credits)}
-          hint={`من ${formatInt(data.required_credits)}`}
+          hint={t('من {{n}}', { n: formatInt(data.required_credits) })}
           icon={<CheckCircle2 className="h-5 w-5" />}
           tone="brand"
         />
-        <StatCard label="المعدل التراكمي" value={formatNumber(data.cgpa, 2)} icon={<Award className="h-5 w-5" />} />
+        <StatCard label={t('المعدل التراكمي')} value={formatNumber(data.cgpa, 2)} icon={<Award className="h-5 w-5" />} />
         <StatCard
-          label="مرتبة الشرف"
-          value={data.honors ? 'مستوفية' : 'غير مستوفية'}
-          hint="CGPA ≥ 3.00، ≤ 8 فصول، بلا رسوب"
+          label={t('مرتبة الشرف')}
+          value={data.honors ? t('مستوفية') : t('غير مستوفية')}
+          hint={t('CGPA ≥ 3.00، ≤ 8 فصول، بلا رسوب')}
           icon={<Award className="h-5 w-5" />}
           tone={data.honors ? 'gold' : 'neutral'}
         />
@@ -72,36 +77,36 @@ function GraduationContent({ data }: { data: GraduationResult }) {
           <CardTitle
             action={
               <Badge tone={data.eligible_to_graduate ? 'success' : 'warning'}>
-                {data.eligible_to_graduate ? 'مؤهل للتخرج' : 'غير مؤهل بعد'}
+                {data.eligible_to_graduate ? t('مؤهل للتخرج') : t('غير مؤهل بعد')}
               </Badge>
             }
           >
-            قرار التخرج
+            {t('قرار التخرج')}
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-3">
           <ProgressBar
             value={data.passed_credits}
             max={data.required_credits}
-            label="التقدم في الساعات المعتمدة"
+            label={t('التقدم في الساعات المعتمدة')}
             tone={data.eligible_to_graduate ? 'success' : 'brand'}
           />
           <DecisionCard decision={data.decision} />
-          <DecisionCard decision={data.honors_decision} title="مرتبة الشرف (المادة 16.4)" compact />
+          <DecisionCard decision={data.honors_decision} title={t('مرتبة الشرف (المادة 16.4)')} compact />
         </CardContent>
       </Card>
 
       <Card>
         <CardHeader>
-          <CardTitle action={<span className="text-xs text-ink-500">{formatInt(data.missing.length)} متطلب</span>}>
-            المتطلبات المتبقية
+          <CardTitle action={<span className="text-xs text-ink-500">{t('{{n}} متطلب', { n: formatInt(data.missing.length) })}</span>}>
+            {t('المتطلبات المتبقية')}
           </CardTitle>
         </CardHeader>
         <CardContent>
           {data.missing.length === 0 ? (
             <div className="flex items-center gap-3 rounded-xl bg-emerald-50 p-4 text-sm text-emerald-800">
               <CheckCircle2 className="h-5 w-5" />
-              لا توجد متطلبات متبقية وفق البيانات الحالية. يبقى الاعتماد النهائي لمجلس الكلية.
+              {t('لا توجد متطلبات متبقية وفق البيانات الحالية. يبقى الاعتماد النهائي لمجلس الكلية.')}
             </div>
           ) : (
             <div className="space-y-2">
@@ -112,7 +117,7 @@ function GraduationContent({ data }: { data: GraduationResult }) {
                       <p className="text-sm font-semibold text-ink-900">{item.message_ar}</p>
                       <p className="mt-0.5 text-xs text-ink-500">{item.message_en}</p>
                       <p className="mt-1 font-mono text-[11px] text-ink-400">
-                        {item.requirement} · {item.rule_code} · مادة {item.article} · ص {item.page}
+                        {item.requirement} · {item.rule_code} · {t('مادة {{n}}', { n: item.article })} · {t('ص {{n}}', { n: item.page })}
                       </p>
                     </div>
                     <div className="flex flex-wrap gap-1">
@@ -133,23 +138,23 @@ function GraduationContent({ data }: { data: GraduationResult }) {
 
       <Card>
         <CardHeader>
-          <CardTitle>المجموعات الاختيارية</CardTitle>
+          <CardTitle>{t('المجموعات الاختيارية')}</CardTitle>
         </CardHeader>
         <CardContent>
           <TableWrap>
             <Table>
               <THead>
                 <Tr>
-                  <Th>المجموعة</Th>
-                  <Th>المطلوب</Th>
-                  <Th>المكتسب</Th>
-                  <Th>الحالة</Th>
-                  <Th>إجباري ناقص</Th>
+                  <Th>{t('المجموعة')}</Th>
+                  <Th>{t('المطلوب')}</Th>
+                  <Th>{t('المكتسب')}</Th>
+                  <Th>{t('الحالة')}</Th>
+                  <Th>{t('إجباري ناقص')}</Th>
                 </Tr>
               </THead>
               <TBody>
                 {data.elective_pools.length === 0 ? (
-                  <TableEmpty colSpan={5} message="لا توجد مجموعات اختيارية مسجلة لهذا البرنامج." />
+                  <TableEmpty colSpan={5} message={t('لا توجد مجموعات اختيارية مسجلة لهذا البرنامج.')} />
                 ) : (
                   data.elective_pools.map((pool) => (
                     <Tr key={pool.pool}>
@@ -157,7 +162,9 @@ function GraduationContent({ data }: { data: GraduationResult }) {
                       <Td>{formatInt(pool.required_credits)}</Td>
                       <Td>{formatInt(pool.earned_credits)}</Td>
                       <Td>
-                        <Badge tone={pool.satisfied ? 'success' : 'warning'}>{pool.satisfied ? 'مستوفاة' : 'ناقصة'}</Badge>
+                        <Badge tone={pool.satisfied ? 'success' : 'warning'}>
+                          {pool.satisfied ? t('مستوفاة') : t('ناقصة')}
+                        </Badge>
                       </Td>
                       <Td className="text-xs">{pool.mandatory_missing.join(', ') || '—'}</Td>
                     </Tr>
@@ -169,9 +176,10 @@ function GraduationContent({ data }: { data: GraduationResult }) {
         </CardContent>
       </Card>
 
-      <Alert tone="neutral" title="تنبيه">
-        التدقيق يعتمد على البيانات المسجلة في النظام. أي مقرر غير مسجل أو قيد الاستيراد لن يظهر. راجع مرشدك قبل التقديم
-        النهائي للتخرج.
+      <Alert tone="neutral" title={t('تنبيه')}>
+        {t(
+          'التدقيق يعتمد على البيانات المسجلة في النظام. أي مقرر غير مسجل أو قيد الاستيراد لن يظهر. راجع مرشدك قبل التقديم النهائي للتخرج.',
+        )}
       </Alert>
     </div>
   );

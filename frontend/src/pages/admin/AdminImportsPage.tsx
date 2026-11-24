@@ -1,6 +1,7 @@
 import { useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useTranslation } from 'react-i18next';
 import { ExternalLink, FileSpreadsheet, Upload } from 'lucide-react';
 import { api, errorMessage, qs } from '../../lib/api';
 import type { ImportJob, Paginated } from '../../lib/types';
@@ -23,6 +24,7 @@ const JOB_STATUS: Record<string, { ar: string; tone: 'success' | 'warning' | 'da
 };
 
 export function AdminImportsPage() {
+  const { t } = useTranslation();
   const toast = useToast();
   const queryClient = useQueryClient();
   const studentsInput = useRef<HTMLInputElement>(null);
@@ -49,10 +51,10 @@ export function AdminImportsPage() {
     },
     onSuccess: async (payload) => {
       toast.success(
-        'بدأت المعالجة',
+        t('بدأت المعالجة'),
         payload.data.status === 'completed'
-          ? 'اكتمل الاستيراد. راجع التقرير لتفاصيل الأخطاء.'
-          : 'ستظهر النتائج في جدول العمليات.',
+          ? t('اكتمل الاستيراد. راجع التقرير لتفاصيل الأخطاء.')
+          : t('ستظهر النتائج في جدول العمليات.'),
       );
       setStudentsFile(null);
       setTranscriptsFile(null);
@@ -60,7 +62,7 @@ export function AdminImportsPage() {
       if (transcriptsInput.current) transcriptsInput.current.value = '';
       await queryClient.invalidateQueries({ queryKey: ['admin', 'imports'] });
     },
-    onError: (error) => toast.error('تعذر رفع الملف', errorMessage(error)),
+    onError: (error) => toast.error(t('تعذر رفع الملف'), errorMessage(error)),
   });
 
   const rows = query.data?.data ?? [];
@@ -68,20 +70,26 @@ export function AdminImportsPage() {
   return (
     <div>
       <PageHeader
-        eyebrow="استيراد البيانات"
-        title="رفع ملفات الطلاب وكشوف الدرجات"
-        description="الملفات CSV فقط. كل صف يُتحقق منه مستقلًا؛ الصفوف الفاشلة تُسجّل بأرقامها وأسبابها ولا تُسقط بقية الملف. الاستيراد يخضع لحد معدل."
+        eyebrow={t('استيراد البيانات')}
+        title={t('رفع ملفات الطلاب وكشوف الدرجات')}
+        description={t(
+          'الملفات CSV فقط. كل صف يُتحقق منه مستقلًا؛ الصفوف الفاشلة تُسجّل بأرقامها وأسبابها ولا تُسقط بقية الملف. الاستيراد يخضع لحد معدل.',
+        )}
       />
 
       <div className="mb-4 grid gap-4 lg:grid-cols-2">
         <Card>
           <CardHeader>
-            <CardTitle action={<Badge tone="brand">CSV</Badge>}>ملف الطلاب</CardTitle>
+            <CardTitle action={<Badge tone="brand">CSV</Badge>}>{t('ملف الطلاب')}</CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
             <p className="text-xs leading-6 text-ink-600">
-              الأعمدة المطلوبة: <code className="rounded bg-ink-50 px-1 font-mono" dir="ltr">email, full_name, student_code, program, level, cgpa, passed_credits</code>
-              . اختياري: <code className="rounded bg-ink-50 px-1 font-mono" dir="ltr">transfer_credits, advisor_email</code>.
+              {t('الأعمدة المطلوبة:')}{' '}
+              <code className="rounded bg-ink-50 px-1 font-mono" dir="ltr">
+                email, full_name, student_code, program, level, cgpa, passed_credits
+              </code>
+              {t('. اختياري:')}{' '}
+              <code className="rounded bg-ink-50 px-1 font-mono" dir="ltr">transfer_credits, advisor_email</code>.
             </p>
             <input
               ref={studentsInput}
@@ -97,23 +105,29 @@ export function AdminImportsPage() {
               icon={<Upload className="h-4 w-4" />}
               className="w-full"
             >
-              رفع ملف الطلاب
+              {t('رفع ملف الطلاب')}
             </Button>
             <Alert tone="warning">
-              الحسابات المستوردة تُنشأ بكلمة مرور غير معلنة ويجب على الطالب استخدام «نسيت كلمة المرور» قبل الدخول.
+              {t(
+                'الحسابات المستوردة تُنشأ بكلمة مرور غير معلنة ويجب على الطالب استخدام «نسيت كلمة المرور» قبل الدخول.',
+              )}
             </Alert>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader>
-            <CardTitle action={<Badge tone="gold">CSV</Badge>}>ملف كشوف الدرجات</CardTitle>
+            <CardTitle action={<Badge tone="gold">CSV</Badge>}>{t('ملف كشوف الدرجات')}</CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
             <p className="text-xs leading-6 text-ink-600">
-              الأعمدة المطلوبة: <code className="rounded bg-ink-50 px-1 font-mono" dir="ltr">student_code, course_code, academic_year, season</code>
-              . مع <code className="rounded bg-ink-50 px-1 font-mono" dir="ltr">grade_letter</code> أو{' '}
-              <code className="rounded bg-ink-50 px-1 font-mono" dir="ltr">percentage</code>. اختياري:{' '}
+              {t('الأعمدة المطلوبة:')}{' '}
+              <code className="rounded bg-ink-50 px-1 font-mono" dir="ltr">
+                student_code, course_code, academic_year, season
+              </code>
+              {t('. مع')} <code className="rounded bg-ink-50 px-1 font-mono" dir="ltr">grade_letter</code> {t('أو')}{' '}
+              <code className="rounded bg-ink-50 px-1 font-mono" dir="ltr">percentage</code>
+              {t('. اختياري:')}{' '}
               <code className="rounded bg-ink-50 px-1 font-mono" dir="ltr">status, attempt_no, term</code>.
             </p>
             <input
@@ -130,17 +144,17 @@ export function AdminImportsPage() {
               icon={<Upload className="h-4 w-4" />}
               className="w-full"
             >
-              رفع كشف الدرجات
+              {t('رفع كشف الدرجات')}
             </Button>
             <Alert tone="info">
-              إعادة رفع نفس الصف تُحدّث السجل (student + course + term + attempt) بدل تكراره.
+              {t('إعادة رفع نفس الصف تُحدّث السجل (student + course + term + attempt) بدل تكراره.')}
             </Alert>
           </CardContent>
         </Card>
       </div>
 
       <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
-        <h2 className="font-display text-lg font-bold text-ink-900">عمليات الاستيراد</h2>
+        <h2 className="font-display text-lg font-bold text-ink-900">{t('عمليات الاستيراد')}</h2>
         <div className="flex flex-wrap gap-2">
           <Select
             value={type}
@@ -150,9 +164,9 @@ export function AdminImportsPage() {
             }}
             className="w-40"
             options={[
-              { value: '', label: 'كل الأنواع' },
-              { value: 'students', label: 'طلاب' },
-              { value: 'transcripts', label: 'كشوف درجات' },
+              { value: '', label: t('كل الأنواع') },
+              { value: 'students', label: t('طلاب') },
+              { value: 'transcripts', label: t('كشوف درجات') },
             ]}
           />
           <Select
@@ -163,11 +177,11 @@ export function AdminImportsPage() {
             }}
             className="w-40"
             options={[
-              { value: '', label: 'كل الحالات' },
-              { value: 'pending', label: 'بانتظار' },
-              { value: 'processing', label: 'قيد المعالجة' },
-              { value: 'completed', label: 'مكتملة' },
-              { value: 'failed', label: 'فاشلة' },
+              { value: '', label: t('كل الحالات') },
+              { value: 'pending', label: t('بانتظار') },
+              { value: 'processing', label: t('قيد المعالجة') },
+              { value: 'completed', label: t('مكتملة') },
+              { value: 'failed', label: t('فاشلة') },
             ]}
           />
         </div>
@@ -179,8 +193,8 @@ export function AdminImportsPage() {
         <ErrorState message={errorMessage(query.error)} onRetry={() => void query.refetch()} />
       ) : rows.length === 0 ? (
         <EmptyState
-          title="لا توجد عمليات استيراد"
-          description="ارفع أول ملف CSV لبدء العملية."
+          title={t('لا توجد عمليات استيراد')}
+          description={t('ارفع أول ملف CSV لبدء العملية.')}
           icon={<FileSpreadsheet className="h-6 w-6" />}
         />
       ) : (
@@ -190,13 +204,13 @@ export function AdminImportsPage() {
               <Table>
                 <THead>
                   <Tr>
-                    <Th>الملف</Th>
-                    <Th>النوع</Th>
-                    <Th>الحالة</Th>
-                    <Th>الصفوف</Th>
-                    <Th>نجح</Th>
-                    <Th>فشل</Th>
-                    <Th>أُنشئت</Th>
+                    <Th>{t('الملف')}</Th>
+                    <Th>{t('النوع')}</Th>
+                    <Th>{t('الحالة')}</Th>
+                    <Th>{t('الصفوف')}</Th>
+                    <Th>{t('نجح')}</Th>
+                    <Th>{t('فشل')}</Th>
+                    <Th>{t('أُنشئت')}</Th>
                     <Th />
                   </Tr>
                 </THead>
@@ -215,11 +229,11 @@ export function AdminImportsPage() {
                         </Td>
                         <Td>
                           <Badge tone={job.type === 'students' ? 'brand' : 'gold'}>
-                            {job.type === 'students' ? 'طلاب' : 'كشف درجات'}
+                            {job.type === 'students' ? t('طلاب') : t('كشف درجات')}
                           </Badge>
                         </Td>
                         <Td>
-                          <Badge tone={meta.tone}>{meta.ar}</Badge>
+                          <Badge tone={meta.tone}>{t(meta.ar)}</Badge>
                         </Td>
                         <Td>{formatInt(job.total_rows)}</Td>
                         <Td className="font-semibold text-emerald-700">{formatInt(job.success_rows)}</Td>
@@ -228,7 +242,7 @@ export function AdminImportsPage() {
                         <Td>
                           <Link to={`/admin/imports/${job.id}`}>
                             <Button size="sm" variant="outline" icon={<ExternalLink className="h-4 w-4" />}>
-                              التقرير
+                              {t('التقرير')}
                             </Button>
                           </Link>
                         </Td>

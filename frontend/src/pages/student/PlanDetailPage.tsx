@@ -1,5 +1,6 @@
 import { Link, useParams } from 'react-router-dom';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useTranslation } from 'react-i18next';
 import { ArrowRight, Download, FileText, Send, ShieldCheck } from 'lucide-react';
 import { api, apiBlob, errorMessage } from '../../lib/api';
 import type { StudyPlanDetail } from '../../lib/types';
@@ -15,6 +16,7 @@ import { useToast } from '../../components/ui/Toast';
 import { RuleCitation } from '../../components/ui/Decision';
 
 export function PlanDetailPage() {
+  const { t } = useTranslation();
   const { id = '' } = useParams();
   const toast = useToast();
   const queryClient = useQueryClient();
@@ -28,11 +30,11 @@ export function PlanDetailPage() {
   const submit = useMutation({
     mutationFn: () => api(`/student/plans/${id}/submit`, { method: 'POST' }),
     onSuccess: async () => {
-      toast.success('تم تقديم الخطة', 'ستظهر للمرشد الأكاديمي لمراجعتها.');
+      toast.success(t('تم تقديم الخطة'), t('ستظهر للمرشد الأكاديمي لمراجعتها.'));
       await queryClient.invalidateQueries({ queryKey: ['student', 'plan', id] });
       await queryClient.invalidateQueries({ queryKey: ['student', 'plans'] });
     },
-    onError: (error) => toast.error('تعذر تقديم الخطة', errorMessage(error)),
+    onError: (error) => toast.error(t('تعذر تقديم الخطة'), errorMessage(error)),
   });
 
   const download = async () => {
@@ -46,13 +48,13 @@ export function PlanDetailPage() {
       anchor.click();
       anchor.remove();
       URL.revokeObjectURL(url);
-      toast.success('تم تنزيل الخطة', 'الملف موقّع برمز QR للتحقق.');
+      toast.success(t('تم تنزيل الخطة'), t('الملف موقّع برمز QR للتحقق.'));
     } catch (error) {
-      toast.error('تعذر تصدير الخطة', errorMessage(error));
+      toast.error(t('تعذر تصدير الخطة'), errorMessage(error));
     }
   };
 
-  if (plan.isLoading) return <LoadingBlock label="جارٍ تحميل الخطة…" />;
+  if (plan.isLoading) return <LoadingBlock label={t('جارٍ تحميل الخطة…')} />;
   if (plan.isError || !plan.data) {
     return <ErrorState message={errorMessage(plan.error)} onRetry={() => void plan.refetch()} />;
   }
@@ -68,16 +70,16 @@ export function PlanDetailPage() {
   return (
     <div>
       <Link to="/student/plans" className="mb-4 inline-flex items-center gap-1 text-sm font-semibold text-brand-700 hover:underline">
-        <ArrowRight className="h-4 w-4" /> كل الخطط
+        <ArrowRight className="h-4 w-4" /> {t('كل الخطط')}
       </Link>
       <PageHeader
-        eyebrow="خطة استشارية"
+        eyebrow={t('خطة استشارية')}
         title={formatTerm(record.term)}
-        description="مسودة خطة مولّدة من محرك القواعد. راجع كل مقرر ومرجعه قبل التقديم للمرشد."
+        description={t('مسودة خطة مولّدة من محرك القواعد. راجع كل مقرر ومرجعه قبل التقديم للمرشد.')}
         actions={
           <>
             <Button variant="outline" onClick={() => void download()} icon={<Download className="h-4 w-4" />}>
-              تصدير PDF
+              {t('تصدير PDF')}
             </Button>
             {record.status === 'DRAFT' && (
               <Button
@@ -85,7 +87,7 @@ export function PlanDetailPage() {
                 loading={submit.isPending}
                 icon={<Send className="h-4 w-4" />}
               >
-                تقديم للمرشد
+                {t('تقديم للمرشد')}
               </Button>
             )}
           </>
@@ -95,21 +97,24 @@ export function PlanDetailPage() {
       <div className="mb-4 grid gap-4 lg:grid-cols-3">
         <Card className="lg:col-span-2">
           <CardHeader>
-            <CardTitle action={<Badge tone={(status?.tone as never) ?? 'neutral'}>{status?.ar ?? record.status}</Badge>}>
-              بيانات الخطة
+            <CardTitle action={<Badge tone={(status?.tone as never) ?? 'neutral'}>{status ? t(status.ar) : record.status}</Badge>}>
+              {t('بيانات الخطة')}
             </CardTitle>
           </CardHeader>
           <CardContent>
             <dl className="grid gap-x-8 sm:grid-cols-2">
-              <KeyValue label="الفصل" value={formatTerm(record.term)} />
-              <KeyValue label="إجمالي الساعات" value={`${formatInt(total)} ساعة`} />
-              <KeyValue label="تاريخ الإنشاء" value={formatDate(record.created_at, true)} />
-              <KeyValue label="الخانة" value={record.planning_slot ?? 'تلقائي'} />
-              <KeyValue label="إصدار المحرك" value={<span className="font-mono text-xs">{record.engine_version}</span>} />
-              <KeyValue label="مراجعة المرشد" value={record.reviewed_at ? formatDate(record.reviewed_at, true) : 'لم تُراجع بعد'} />
+              <KeyValue label={t('الفصل')} value={formatTerm(record.term)} />
+              <KeyValue label={t('إجمالي الساعات')} value={t('{{n}} ساعة', { n: formatInt(total) })} />
+              <KeyValue label={t('تاريخ الإنشاء')} value={formatDate(record.created_at, true)} />
+              <KeyValue label={t('الخانة')} value={record.planning_slot ?? t('تلقائي')} />
+              <KeyValue label={t('إصدار المحرك')} value={<span className="font-mono text-xs">{record.engine_version}</span>} />
+              <KeyValue
+                label={t('مراجعة المرشد')}
+                value={record.reviewed_at ? formatDate(record.reviewed_at, true) : t('لم تُراجع بعد')}
+              />
             </dl>
             {record.feedback && (
-              <Alert tone="info" className="mt-4" title="ملاحظات المرشد">
+              <Alert tone="info" className="mt-4" title={t('ملاحظات المرشد')}>
                 {record.feedback}
               </Alert>
             )}
@@ -127,7 +132,7 @@ export function PlanDetailPage() {
 
         <Card>
           <CardHeader>
-            <CardTitle>قرار العبء</CardTitle>
+            <CardTitle>{t('قرار العبء')}</CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
             {loadDecision ? (
@@ -136,10 +141,10 @@ export function PlanDetailPage() {
                 <RuleCitation ruleCode={loadDecision.rule_code} article={loadDecision.article} page={loadDecision.page} />
               </>
             ) : (
-              <p className="text-sm text-ink-500">لا يوجد قرار عبء محفوظ لهذه الخطة.</p>
+              <p className="text-sm text-ink-500">{t('لا يوجد قرار عبء محفوظ لهذه الخطة.')}</p>
             )}
             <Alert tone="neutral" icon={<ShieldCheck className="h-4 w-4" />}>
-              هذه الخطة لا تُسجل المقررات. التقديم يعني طلب مراجعة أكاديمية فقط.
+              {t('هذه الخطة لا تُسجل المقررات. التقديم يعني طلب مراجعة أكاديمية فقط.')}
             </Alert>
           </CardContent>
         </Card>
@@ -147,8 +152,8 @@ export function PlanDetailPage() {
 
       <Card>
         <CardHeader>
-          <CardTitle action={<span className="text-xs text-ink-500">{formatInt(items.length)} مقرر</span>}>
-            مقررات الخطة
+          <CardTitle action={<span className="text-xs text-ink-500">{t('{{n}} مقرر', { n: formatInt(items.length) })}</span>}>
+            {t('مقررات الخطة')}
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -157,16 +162,16 @@ export function PlanDetailPage() {
               <THead>
                 <Tr>
                   <Th>#</Th>
-                  <Th>المقرر</Th>
-                  <Th>الساعات</Th>
-                  <Th>الحالة</Th>
-                  <Th>المرجع</Th>
-                  <Th>الأسباب</Th>
+                  <Th>{t('المقرر')}</Th>
+                  <Th>{t('الساعات')}</Th>
+                  <Th>{t('الحالة')}</Th>
+                  <Th>{t('المرجع')}</Th>
+                  <Th>{t('الأسباب')}</Th>
                 </Tr>
               </THead>
               <TBody>
                 {items.length === 0 ? (
-                  <TableEmpty colSpan={6} message="لم يتضمن المحرك أي مقرر مؤهل لهذه الخطة." />
+                  <TableEmpty colSpan={6} message={t('لم يتضمن المحرك أي مقرر مؤهل لهذه الخطة.')} />
                 ) : (
                   items.map((item) => (
                     <Tr key={item.id}>
@@ -207,7 +212,7 @@ export function PlanDetailPage() {
       {excluded.length > 0 && (
         <Card className="mt-4">
           <CardHeader>
-            <CardTitle>مقررات استُبعدت</CardTitle>
+            <CardTitle>{t('مقررات استُبعدت')}</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="grid gap-2 sm:grid-cols-2">
@@ -226,10 +231,10 @@ export function PlanDetailPage() {
         </Card>
       )}
 
-      <div className="mt-4 flex items-center justify-between gap-2 rounded-xl border border-ink-100 bg-white p-4 text-xs text-ink-500">
+      <div className="mt-4 flex items-center justify-between gap-2 rounded-xl border border-ink-100 bg-surface p-4 text-xs text-ink-500">
         <span className="inline-flex items-center gap-2">
           <FileText className="h-4 w-4 text-brand-600" />
-          نسخة PDF تحمل رمز QR موقّعًا للتحقق من سلامة المستند.
+          {t('نسخة PDF تحمل رمز QR موقّعًا للتحقق من سلامة المستند.')}
         </span>
         <span className="font-mono">{record.id.slice(0, 8)}</span>
       </div>

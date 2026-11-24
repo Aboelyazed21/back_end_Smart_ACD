@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useTranslation } from 'react-i18next';
 import { ArrowRight, RotateCcw, ShieldCheck, TriangleAlert } from 'lucide-react';
 import { api, errorMessage } from '../../lib/api';
 import type { DataAnomaly } from '../../lib/types';
@@ -24,6 +25,7 @@ interface ResolveResult {
 }
 
 export function AdminAnomalyDetailPage() {
+  const { t } = useTranslation();
   const { id = '' } = useParams();
   const toast = useToast();
   const queryClient = useQueryClient();
@@ -58,10 +60,13 @@ export function AdminAnomalyDetailPage() {
     onSuccess: async (payload) => {
       setResult(payload.data);
       setResolveOpen(false);
-      toast.success('تم حل التعارض', `${payload.data.autoResolved} قرار أُعيد تقييمه وحُوّل إلى نتيجة نهائية.`);
+      toast.success(
+        t('تم حل التعارض'),
+        t('{{n}} قرار أُعيد تقييمه وحُوّل إلى نتيجة نهائية.', { n: payload.data.autoResolved }),
+      );
       await invalidate();
     },
-    onError: (error) => toast.error('تعذر حل التعارض', errorMessage(error)),
+    onError: (error) => toast.error(t('تعذر حل التعارض'), errorMessage(error)),
   });
 
   const reopen = useMutation({
@@ -74,13 +79,13 @@ export function AdminAnomalyDetailPage() {
       setReopenOpen(false);
       setReason('');
       setResult(null);
-      toast.success('أُعيد فتح التعارض', 'ستعود القرارات المتأثرة إلى REVIEW_REQUIRED.');
+      toast.success(t('أُعيد فتح التعارض'), t('ستعود القرارات المتأثرة إلى REVIEW_REQUIRED.'));
       await invalidate();
     },
-    onError: (error) => toast.error('تعذر إعادة الفتح', errorMessage(error)),
+    onError: (error) => toast.error(t('تعذر إعادة الفتح'), errorMessage(error)),
   });
 
-  if (query.isLoading) return <LoadingBlock label="جارٍ تحميل التعارض…" />;
+  if (query.isLoading) return <LoadingBlock label={t('جارٍ تحميل التعارض…')} />;
   if (query.isError || !query.data) {
     return <ErrorState message={errorMessage(query.error)} onRetry={() => void query.refetch()} />;
   }
@@ -94,7 +99,7 @@ export function AdminAnomalyDetailPage() {
         to="/admin/anomalies"
         className="mb-4 inline-flex items-center gap-1 text-sm font-semibold text-brand-700 hover:underline"
       >
-        <ArrowRight className="h-4 w-4" /> كل التعارضات
+        <ArrowRight className="h-4 w-4" /> {t('كل التعارضات')}
       </Link>
 
       <div className="mb-6 flex flex-wrap items-start justify-between gap-4">
@@ -110,9 +115,11 @@ export function AdminAnomalyDetailPage() {
           )}
         </div>
         <div className="flex flex-wrap items-center gap-2">
-          <Badge tone={(severityMeta?.tone as never) ?? 'neutral'}>{severityMeta?.ar ?? anomaly.severity}</Badge>
+          <Badge tone={(severityMeta?.tone as never) ?? 'neutral'}>
+            {t(severityMeta?.ar ?? anomaly.severity)}
+          </Badge>
           <Badge tone={anomaly.status === 'open' ? 'warning' : 'success'}>
-            {anomaly.status === 'open' ? 'مفتوح' : 'محلول'}
+            {anomaly.status === 'open' ? t('مفتوح') : t('محلول')}
           </Badge>
           <Badge tone="neutral" className="font-mono text-[10px]">
             {anomaly.type}
@@ -125,7 +132,7 @@ export function AdminAnomalyDetailPage() {
               }}
               icon={<ShieldCheck className="h-4 w-4" />}
             >
-              حل التعارض
+              {t('حل التعارض')}
             </Button>
           ) : (
             <Button
@@ -136,7 +143,7 @@ export function AdminAnomalyDetailPage() {
               }}
               icon={<RotateCcw className="h-4 w-4" />}
             >
-              إعادة الفتح
+              {t('إعادة الفتح')}
             </Button>
           )}
         </div>
@@ -146,24 +153,34 @@ export function AdminAnomalyDetailPage() {
         <Alert
           tone={result.errors.length > 0 ? 'warning' : 'success'}
           className="mb-4"
-          title="نتيجة إعادة التقييم"
+          title={t('نتيجة إعادة التقييم')}
         >
-          أُعيد تقييم {result.reEvaluated} قرارًا — حُوّل {result.autoResolved} إلى نتيجة نهائية، ولا يزال{' '}
-          {result.stillReview} بانتظار المراجعة.
-          {result.errors.length > 0 && <span className="block">أخطاء: {result.errors.join(' · ')}</span>}
+          {t(
+            'أُعيد تقييم {{reEvaluated}} قرارًا — حُوّل {{autoResolved}} إلى نتيجة نهائية، ولا يزال {{stillReview}} بانتظار المراجعة.',
+            {
+              reEvaluated: result.reEvaluated,
+              autoResolved: result.autoResolved,
+              stillReview: result.stillReview,
+            },
+          )}
+          {result.errors.length > 0 && (
+            <span className="block">{t('أخطاء: {{errors}}', { errors: result.errors.join(' · ') })}</span>
+          )}
         </Alert>
       )}
 
       {anomaly.severity === 'blocking' && anomaly.status === 'open' && (
         <Alert tone="danger" className="mb-4" icon={<TriangleAlert className="h-4 w-4" />}>
-          هذا تعارض مانع: كل قرار مرتبط به يُعاد كـ REVIEW_REQUIRED وتُنشأ حالة محوّلة للمرشد. لا يمكن تجاوز القاعدة.
+          {t(
+            'هذا تعارض مانع: كل قرار مرتبط به يُعاد كـ REVIEW_REQUIRED وتُنشأ حالة محوّلة للمرشد. لا يمكن تجاوز القاعدة.',
+          )}
         </Alert>
       )}
 
       <div className="grid gap-4 lg:grid-cols-3">
         <Card className="lg:col-span-2">
           <CardHeader>
-            <CardTitle>الوصف</CardTitle>
+            <CardTitle>{t('الوصف')}</CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
             <p className="whitespace-pre-wrap text-sm leading-7 text-ink-700">{anomaly.description_ar}</p>
@@ -173,7 +190,7 @@ export function AdminAnomalyDetailPage() {
               </p>
             )}
             {anomaly.suggested_resolution && (
-              <Alert tone="info" title="حل مقترح">
+              <Alert tone="info" title={t('حل مقترح')}>
                 {anomaly.suggested_resolution}
               </Alert>
             )}
@@ -182,39 +199,39 @@ export function AdminAnomalyDetailPage() {
 
         <Card>
           <CardHeader>
-            <CardTitle>البيانات</CardTitle>
+            <CardTitle>{t('البيانات')}</CardTitle>
           </CardHeader>
           <CardContent>
             <dl>
-              <KeyValue label="الحالة" value={anomaly.status === 'open' ? 'مفتوح' : 'محلول'} />
-              <KeyValue label="الخطورة" value={severityMeta?.ar ?? anomaly.severity} />
-              <KeyValue label="النوع" value={anomaly.type} />
-              <KeyValue label="أُنشئ" value={formatDate(anomaly.created_at, true)} />
-              <KeyValue label="آخر تحديث" value={formatDate(anomaly.updated_at, true)} />
-              {anomaly.resolved_at && <KeyValue label="حُلّ في" value={formatDate(anomaly.resolved_at, true)} />}
+              <KeyValue label={t('الحالة')} value={anomaly.status === 'open' ? t('مفتوح') : t('محلول')} />
+              <KeyValue label={t('الخطورة')} value={t(severityMeta?.ar ?? anomaly.severity)} />
+              <KeyValue label={t('النوع')} value={anomaly.type} />
+              <KeyValue label={t('أُنشئ')} value={formatDate(anomaly.created_at, true)} />
+              <KeyValue label={t('آخر تحديث')} value={formatDate(anomaly.updated_at, true)} />
+              {anomaly.resolved_at && <KeyValue label={t('حُلّ في')} value={formatDate(anomaly.resolved_at, true)} />}
             </dl>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader>
-            <CardTitle>القيم</CardTitle>
+            <CardTitle>{t('القيم')}</CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
             <div>
-              <p className="text-xs font-bold text-ink-500">القيمة العاملة</p>
+              <p className="text-xs font-bold text-ink-500">{t('القيمة العاملة')}</p>
               <p className="mt-1 whitespace-pre-wrap rounded-lg bg-ink-50 p-2.5 text-sm text-ink-800">
                 {anomaly.working_value ?? '—'}
               </p>
             </div>
             <div>
-              <p className="text-xs font-bold text-ink-500">القيمة المحلولة</p>
+              <p className="text-xs font-bold text-ink-500">{t('القيمة المحلولة')}</p>
               <p className="mt-1 whitespace-pre-wrap rounded-lg bg-emerald-50 p-2.5 text-sm text-emerald-900">
                 {anomaly.resolved_value ?? '—'}
               </p>
             </div>
             <div>
-              <p className="text-xs font-bold text-ink-500">سلوك المحرك</p>
+              <p className="text-xs font-bold text-ink-500">{t('سلوك المحرك')}</p>
               <p className="mt-1 whitespace-pre-wrap text-sm leading-6 text-ink-700">
                 {anomaly.engine_behavior ?? '—'}
               </p>
@@ -224,11 +241,11 @@ export function AdminAnomalyDetailPage() {
 
         <Card>
           <CardHeader>
-            <CardTitle>التأثير</CardTitle>
+            <CardTitle>{t('التأثير')}</CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
             <div>
-              <p className="mb-1 text-xs font-bold text-ink-500">المقررات</p>
+              <p className="mb-1 text-xs font-bold text-ink-500">{t('المقررات')}</p>
               {anomaly.affected_courses.length === 0 ? (
                 <p className="text-sm text-ink-400">—</p>
               ) : (
@@ -242,7 +259,7 @@ export function AdminAnomalyDetailPage() {
               )}
             </div>
             <div>
-              <p className="mb-1 text-xs font-bold text-ink-500">القواعد</p>
+              <p className="mb-1 text-xs font-bold text-ink-500">{t('القواعد')}</p>
               {anomaly.affected_rules.length === 0 ? (
                 <p className="text-sm text-ink-400">—</p>
               ) : (
@@ -262,7 +279,7 @@ export function AdminAnomalyDetailPage() {
 
         <Card className="lg:col-span-2">
           <CardHeader>
-            <CardTitle>المصادر الأصلية</CardTitle>
+            <CardTitle>{t('المصادر الأصلية')}</CardTitle>
           </CardHeader>
           <CardContent>
             <JsonBlock value={anomaly.sources} />
@@ -273,19 +290,19 @@ export function AdminAnomalyDetailPage() {
       <Modal
         open={resolveOpen}
         onClose={() => setResolveOpen(false)}
-        title="حل التعارض"
-        description="اكتب القيمة المعتمدة بعد مراجعة اللائحة. سيُعاد تقييم كل القرارات المتأثرة تلقائيًا."
+        title={t('حل التعارض')}
+        description={t('اكتب القيمة المعتمدة بعد مراجعة اللائحة. سيُعاد تقييم كل القرارات المتأثرة تلقائيًا.')}
         footer={
           <>
             <Button variant="ghost" onClick={() => setResolveOpen(false)}>
-              إلغاء
+              {t('إلغاء')}
             </Button>
             <Button
               onClick={() => resolve.mutate()}
               loading={resolve.isPending}
               disabled={resolvedValue.trim().length < 2}
             >
-              حل وإعادة التقييم
+              {t('حل وإعادة التقييم')}
             </Button>
           </>
         }
@@ -293,22 +310,24 @@ export function AdminAnomalyDetailPage() {
         <div className="space-y-3">
           {resolve.isError && <Alert tone="danger">{errorMessage(resolve.error)}</Alert>}
           <Textarea
-            label="القيمة المحلولة"
+            label={t('القيمة المحلولة')}
             value={resolvedValue}
             onChange={(event) => setResolvedValue(event.target.value)}
             maxLength={5000}
             required
-            placeholder="القيمة المعتمدة من اللائحة، مثل: 3 ساعات معتمدة"
+            placeholder={t('القيمة المعتمدة من اللائحة، مثل: 3 ساعات معتمدة')}
           />
           <Textarea
-            label="ملاحظة المراجعة (اختياري)"
+            label={t('ملاحظة المراجعة (اختياري)')}
             value={note}
             onChange={(event) => setNote(event.target.value)}
             maxLength={2000}
-            placeholder="مرجع المراجعة أو سبب اعتماد القيمة…"
+            placeholder={t('مرجع المراجعة أو سبب اعتماد القيمة…')}
           />
           <Alert tone="warning">
-            الحل يُسجّل في سجل التدقيق ويحتفظ بالقيمة العاملة الأصلية والمصادر. لا يمكن التراجع دون إعادة فتح موثّقة.
+            {t(
+              'الحل يُسجّل في سجل التدقيق ويحتفظ بالقيمة العاملة الأصلية والمصادر. لا يمكن التراجع دون إعادة فتح موثّقة.',
+            )}
           </Alert>
         </div>
       </Modal>
@@ -316,12 +335,12 @@ export function AdminAnomalyDetailPage() {
       <Modal
         open={reopenOpen}
         onClose={() => setReopenOpen(false)}
-        title="إعادة فتح التعارض"
-        description="إعادة الفتح تعيد القرارات المرتبطة إلى REVIEW_REQUIRED. وثّق السبب."
+        title={t('إعادة فتح التعارض')}
+        description={t('إعادة الفتح تعيد القرارات المرتبطة إلى REVIEW_REQUIRED. وثّق السبب.')}
         footer={
           <>
             <Button variant="ghost" onClick={() => setReopenOpen(false)}>
-              إلغاء
+              {t('إلغاء')}
             </Button>
             <Button
               variant="danger"
@@ -329,7 +348,7 @@ export function AdminAnomalyDetailPage() {
               loading={reopen.isPending}
               disabled={reason.trim().length < 3}
             >
-              إعادة الفتح
+              {t('إعادة الفتح')}
             </Button>
           </>
         }
@@ -337,12 +356,12 @@ export function AdminAnomalyDetailPage() {
         <div className="space-y-3">
           {reopen.isError && <Alert tone="danger">{errorMessage(reopen.error)}</Alert>}
           <Textarea
-            label="سبب إعادة الفتح"
+            label={t('سبب إعادة الفتح')}
             value={reason}
             onChange={(event) => setReason(event.target.value)}
             maxLength={2000}
             required
-            placeholder="ظهرت بيانات جديدة تخالف الحل السابق…"
+            placeholder={t('ظهرت بيانات جديدة تخالف الحل السابق…')}
           />
         </div>
       </Modal>

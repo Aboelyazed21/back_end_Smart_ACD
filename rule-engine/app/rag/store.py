@@ -60,6 +60,7 @@ class PolicyStore:
             if get_settings().database_url:
                 try:
                     self._ensure_db_chunks()
+                    self._sync_embedding_version()
                     chunks = self._load_db()
                     self._db = True
                 except Exception as exc:  # pragma: no cover - infra dependent
@@ -151,6 +152,40 @@ class PolicyStore:
                     )
             conn.commit()
         logger.info("ingested %s policy chunks into pgvector", len(chunks))
+
+    def _sync_embedding_version(self) -> None:
+        """Re-embeds stored chunks when the Arabic normaliser changed."""
+        from .embeddings import EMBEDDING_VERSION
+
+        try:
+            with self._connect() as conn:
+                with conn.cursor() as cur:
+                    cur.execute("SELECT value FROM engine_metadata WHERE key = 'embedding_version'")
+                    row = cur.fetchone()
+                    if row and row[0] == EMBEDDING_VERSION:
+                        return
+                    cur.execute("SELECT id, text FROM policy_chunks")
+                    rows = cur.fetchall()
+                    for chunk_id, text in rows:
+                        cur.execute(
+                            "UPDATE policy_chunks SET embedding = %s::vector WHERE id = %s",
+                            (str(embed(text, get_settings().embedding_dim)), chunk_id),
+                        )
+                    cur.execute(
+                        """
+                        INSERT INTO engine_metadata (key, value) VALUES ('embedding_version', %s)
+                        ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value
+                        """,
+                        (EMBEDDING_VERSION,),
+                    )
+                conn.commit()
+            logger.info(
+                "re-embedded %s policy chunks for embedding version %s",
+                len(rows),
+                EMBEDDING_VERSION,
+            )
+        except Exception as exc:  # pragma: no cover - infra dependent
+            logger.warning("could not verify the embedding version: %s", exc)
 
     # ---------------------------------------------------------------- search
     def search(self, query: str, top_k: int = 5) -> list[tuple[PolicyChunk, float]]:

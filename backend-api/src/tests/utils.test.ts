@@ -1,4 +1,6 @@
 import { z } from 'zod';
+import { toCsv } from '../utils/csv';
+import { shapeArabic } from '../utils/arabic';
 import {
   hashRefreshToken,
   hmacSignature,
@@ -381,5 +383,42 @@ describe('academic term parsing', () => {
       week: 4,
       is_first_semester: true,
     });
+  });
+});
+
+describe('Arabic PDF shaping', () => {
+  it('returns an empty string for empty input and leaves Latin alone', () => {
+    expect(shapeArabic('')).toBe('');
+    expect(shapeArabic('CSC3101')).toBe('CSC3101');
+  });
+
+  it('converts Arabic to presentation forms in visual order', () => {
+    const shaped = shapeArabic('\u0627\u0644\u0645\u0633\u062A\u0648\u0649');
+    expect(shaped).not.toBe('\u0627\u0644\u0645\u0633\u062A\u0648\u0649');
+    expect(
+      [...shaped].some((char) => {
+        const code = char.codePointAt(0) ?? 0;
+        return code >= 0xfe70 && code <= 0xfeff;
+      }),
+    ).toBe(true);
+  });
+
+  it('keeps embedded numbers readable and to the left of Arabic text', () => {
+    const shaped = shapeArabic('\u0627\u0644\u0645\u0633\u062A\u0648\u0649 12');
+    expect(shaped.startsWith('12')).toBe(true);
+  });
+});
+
+describe('CSV export', () => {
+  it('adds a UTF-8 BOM and escapes quotes and newlines', () => {
+    const csv = toCsv(['a', 'b'], [['say "hi"', 'line1\nline2']]);
+    expect(csv.startsWith('\uFEFFa,b')).toBe(true);
+    expect(csv).toContain('"say ""hi"""');
+    expect(csv).toContain('"line1\nline2"');
+  });
+
+  it('renders null and objects predictably', () => {
+    const csv = toCsv(['a', 'b'], [[null, { ok: true }]]);
+    expect(csv).toContain(',"{""ok"":true}"');
   });
 });

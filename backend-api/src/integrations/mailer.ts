@@ -3,16 +3,24 @@ import { env, isTest } from '../config/env';
 import { logger } from '../config/logger';
 
 let transporter: Transporter | null = null;
+let warnedAboutMissingHost = false;
 
 function getTransporter(): Transporter {
   if (transporter) return transporter;
-  if (isTest) {
+  if (isTest || !env.SMTP_HOST) {
+    if (!isTest && !warnedAboutMissingHost) {
+      warnedAboutMissingHost = true;
+      logger.warn(
+        'SMTP_HOST is not configured; emails are serialized to the log instead of being delivered. ' +
+          'Set SMTP_HOST/SMTP_PORT (and SMTP_USER/SMTP_PASSWORD) for real delivery.',
+      );
+    }
     transporter = nodemailer.createTransport({ jsonTransport: true });
   } else {
     transporter = nodemailer.createTransport({
       host: env.SMTP_HOST,
       port: env.SMTP_PORT,
-      secure: false,
+      secure: env.SMTP_SECURE,
       ignoreTLS: env.NODE_ENV !== 'production',
       auth:
         process.env.SMTP_USER && process.env.SMTP_PASSWORD
@@ -55,6 +63,9 @@ export const mailer = {
       `Your account was created. Sign in and change the temporary password immediately.\n` +
         `Temporary password: ${temporaryPassword}`,
     ),
+  sendAnnouncement: (to: string, title: string, body: string) =>
+    send(to, `Smart Academic Advisor - ${title}`, body),
+  isConfigured: () => Boolean(env.SMTP_HOST) || isTest,
   _setTransport: (value: Transporter | null) => {
     transporter = value;
   },

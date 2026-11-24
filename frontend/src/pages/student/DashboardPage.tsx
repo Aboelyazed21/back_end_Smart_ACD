@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
+import { useTranslation } from 'react-i18next';
 import {
   ArrowLeft,
   Bell,
@@ -8,12 +9,12 @@ import {
   CalendarDays,
   GraduationCap,
   ShieldAlert,
-  Sparkles,
+  Target,
   TriangleAlert,
   UserRound,
 } from 'lucide-react';
 import { api, errorMessage, qs } from '../../lib/api';
-import { PROGRAM_LABELS, PLAN_STATUS_LABELS } from '../../lib/constants';
+import { PLAN_STATUS_LABELS } from '../../lib/constants';
 import { formatInt, formatNumber, formatTerm } from '../../lib/format';
 import type { StudentDashboard } from '../../lib/types';
 import { Badge } from '../../components/ui/Badge';
@@ -25,13 +26,14 @@ import { TermSelect } from '../../components/ui/PaginationBar';
 import { currentTermValue } from '../../lib/format';
 
 export function StudentDashboardPage() {
+  const { t } = useTranslation();
   const [term, setTerm] = useState(currentTermValue());
   const query = useQuery({
     queryKey: ['student', 'dashboard', term],
     queryFn: () => api<{ data: StudentDashboard }>(`/student/dashboard${qs({ term })}`),
   });
 
-  if (query.isLoading) return <LoadingBlock label="جارٍ تحميل لوحة المتابعة…" />;
+  if (query.isLoading) return <LoadingBlock label={t('جارٍ تحميل لوحة المتابعة…')} />;
   if (query.isError || !query.data) {
     return <ErrorState message={errorMessage(query.error)} onRetry={() => void query.refetch()} />;
   }
@@ -44,38 +46,43 @@ export function StudentDashboardPage() {
   return (
     <div>
       <PageHeader
-        eyebrow="لوحة الطالب"
-        title={`أهلًا، ${profile.student.program ? PROGRAM_LABELS[profile.student.program].ar : ''} — ${data.term.value ? formatTerm(data.term.value) : ''}`}
-        description="ملخص موقفك الأكاديمي، مقرراتك الحالية، وآخر الخطط الاستشارية. جميع القرارات مرتبطة بنصوص اللائحة."
-        actions={<TermSelect value={term} onChange={setTerm} label="الفصل" className="w-48" />}
+        eyebrow={t('لوحة الطالب')}
+        title={t('أهلًا، {{name}} — {{term}}', {
+          name: student.fullName ?? '',
+          term: data.term.value ? formatTerm(data.term.value) : '',
+        })}
+        description={t(
+          'ملخص موقفك الأكاديمي، مقرراتك الحالية، وآخر الخطط الاستشارية. جميع القرارات مرتبطة بنصوص اللائحة.',
+        )}
+        actions={<TermSelect value={term} onChange={setTerm} label={t('الفصل')} className="w-48" />}
       />
 
       <div className="mb-4 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <StatCard
-          label="المعدل التراكمي"
+          label={t('المعدل التراكمي')}
           value={formatNumber(cgpa, 2)}
-          hint={cgpa >= 2 ? 'موقف أكاديمي سليم' : 'أقل من حد 2.00 — يحتاج متابعة'}
+          hint={cgpa >= 2 ? t('موقف أكاديمي سليم') : t('أقل من حد 2.00 — يحتاج متابعة')}
           icon={<GraduationCap className="h-5 w-5" />}
           tone={cgpa >= 2 ? 'brand' : 'danger'}
         />
         <StatCard
-          label="الساعات المجتازة"
+          label={t('الساعات المجتازة')}
           value={formatInt(graduation.passedCredits)}
-          hint={`من ${formatInt(graduation.requiredCredits)} ساعة مطلوبة`}
+          hint={t('من {{n}} ساعة مطلوبة', { n: formatInt(graduation.requiredCredits) })}
           icon={<BookOpen className="h-5 w-5" />}
           tone="info"
         />
         <StatCard
-          label="المتبقي للتخرج"
+          label={t('المتبقي للتخرج')}
           value={formatInt(graduation.remainingCredits)}
-          hint="وفق الحد الأدنى للساعات"
-          icon={<Sparkles className="h-5 w-5" />}
+          hint={t('وفق الحد الأدنى للساعات')}
+          icon={<Target className="h-5 w-5" />}
           tone="gold"
         />
         <StatCard
-          label="الإشعارات غير المقروءة"
+          label={t('الإشعارات غير المقروءة')}
           value={formatInt(data.unreadNotifications)}
-          hint={data.unreadNotifications ? 'لديك تحديثات جديدة' : 'لا توجد إشعارات جديدة'}
+          hint={data.unreadNotifications ? t('لديك تحديثات جديدة') : t('لا توجد إشعارات جديدة')}
           icon={<Bell className="h-5 w-5" />}
           tone="neutral"
         />
@@ -85,11 +92,11 @@ export function StudentDashboardPage() {
         <Alert
           tone="warning"
           className="mb-4"
-          title="الطالب تحت الملاحظة الأكاديمية"
+          title={t('الطالب تحت الملاحظة الأكاديمية')}
           icon={<ShieldAlert className="h-5 w-5" />}
         >
-          المعدل التراكمي أقل من 2.00 بعد فصل منظم. راجع مرشدك الأكاديمي واطلع على خطة الإنذار المبكر.
-          {standing.dismissal_risk && ' هناك خطر فصل يحتاج قرار مجلس الكلية.'}
+          {t('المعدل التراكمي أقل من 2.00 بعد فصل منظم. راجع مرشدك الأكاديمي واطلع على خطة الإنذار المبكر.')}
+          {standing.dismissal_risk && t(' هناك خطر فصل يحتاج قرار مجلس الكلية.')}
         </Alert>
       )}
 
@@ -99,21 +106,21 @@ export function StudentDashboardPage() {
             <CardTitle
               action={
                 <Link to="/student/plans" className="text-xs font-bold text-brand-700 hover:underline">
-                  كل الخطط
+                  {t('كل الخطط')}
                 </Link>
               }
             >
-              آخر الخطط الدراسية
+              {t('آخر الخطط الدراسية')}
             </CardTitle>
           </CardHeader>
           <CardContent>
             {data.recentPlans.length === 0 ? (
               <EmptyState
-                title="لا توجد خطط بعد"
-                description="أنشئ خطة استشارية للفصل القادم من صفحة الخطط الدراسية."
+                title={t('لا توجد خطط بعد')}
+                description={t('أنشئ خطة استشارية للفصل القادم من صفحة الخطط الدراسية.')}
                 action={
                   <Link to="/student/plans">
-                    <Button size="sm">إنشاء خطة</Button>
+                    <Button size="sm">{t('إنشاء خطة')}</Button>
                   </Link>
                 }
                 icon={<CalendarDays className="h-6 w-6" />}
@@ -135,12 +142,14 @@ export function StudentDashboardPage() {
                         <div>
                           <p className="text-sm font-bold text-ink-900">{formatTerm(plan.term)}</p>
                           <p className="text-xs text-ink-500">
-                            {formatInt(plan.total_credits)} ساعة · {formatTerm(plan.term)}
+                            {t('{{n}} ساعة · {{term}}', { n: formatInt(plan.total_credits), term: formatTerm(plan.term) })}
                           </p>
                         </div>
                       </div>
                       <div className="flex items-center gap-2">
-                        <Badge tone={(status?.tone as never) ?? 'neutral'}>{status?.ar ?? plan.status}</Badge>
+                        <Badge tone={(status?.tone as never) ?? 'neutral'}>
+                          {status ? t(status.ar) : plan.status}
+                        </Badge>
                         <ArrowLeft className="h-4 w-4 text-ink-400" />
                       </div>
                     </Link>
@@ -153,31 +162,31 @@ export function StudentDashboardPage() {
 
         <Card>
           <CardHeader>
-            <CardTitle>التقدم نحو التخرج</CardTitle>
+            <CardTitle>{t('التقدم نحو التخرج')}</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <ProgressBar
               value={graduation.passedCredits}
               max={graduation.requiredCredits}
-              label="الساعات المجتازة"
+              label={t('الساعات المجتازة')}
             />
             <dl className="space-y-2 text-sm">
               <div className="flex justify-between">
-                <dt className="text-ink-500">المطلوب</dt>
-                <dd className="font-bold">{formatInt(graduation.requiredCredits)} ساعة</dd>
+                <dt className="text-ink-500">{t('المطلوب')}</dt>
+                <dd className="font-bold">{t('{{n}} ساعة', { n: formatInt(graduation.requiredCredits) })}</dd>
               </div>
               <div className="flex justify-between">
-                <dt className="text-ink-500">المجتاز</dt>
-                <dd className="font-bold">{formatInt(graduation.passedCredits)} ساعة</dd>
+                <dt className="text-ink-500">{t('المجتاز')}</dt>
+                <dd className="font-bold">{t('{{n}} ساعة', { n: formatInt(graduation.passedCredits) })}</dd>
               </div>
               <div className="flex justify-between">
-                <dt className="text-ink-500">المتبقي</dt>
-                <dd className="font-bold text-gold-700">{formatInt(graduation.remainingCredits)} ساعة</dd>
+                <dt className="text-ink-500">{t('المتبقي')}</dt>
+                <dd className="font-bold text-gold-700">{t('{{n}} ساعة', { n: formatInt(graduation.remainingCredits) })}</dd>
               </div>
             </dl>
             <Link to="/student/graduation">
               <Button variant="outline" size="sm" className="w-full">
-                تدقيق التخرج التفصيلي
+                {t('تدقيق التخرج التفصيلي')}
               </Button>
             </Link>
           </CardContent>
@@ -185,11 +194,11 @@ export function StudentDashboardPage() {
 
         <Card className="lg:col-span-2">
           <CardHeader>
-            <CardTitle>المقررات الحالية</CardTitle>
+            <CardTitle>{t('المقررات الحالية')}</CardTitle>
           </CardHeader>
           <CardContent>
             {data.currentCourses.length === 0 ? (
-              <p className="text-sm text-ink-500">لا توجد مقررات قيد الدراسة مسجلة حاليًا.</p>
+              <p className="text-sm text-ink-500">{t('لا توجد مقررات قيد الدراسة مسجلة حاليًا.')}</p>
             ) : (
               <div className="grid gap-2 sm:grid-cols-2">
                 {data.currentCourses.map((course) => (
@@ -197,7 +206,7 @@ export function StudentDashboardPage() {
                     <p className="text-xs font-mono font-bold text-brand-700">{course.course_code}</p>
                     <p className="mt-0.5 text-sm font-semibold text-ink-900">{course.name_ar}</p>
                     <p className="text-xs text-ink-500">
-                      {course.name_en} · {formatInt(course.credits)} ساعة
+                      {course.name_en} · {t('{{n}} ساعة', { n: formatInt(course.credits) })}
                     </p>
                   </div>
                 ))}
@@ -208,7 +217,7 @@ export function StudentDashboardPage() {
 
         <Card>
           <CardHeader>
-            <CardTitle>المرشد الأكاديمي</CardTitle>
+            <CardTitle>{t('المرشد الأكاديمي')}</CardTitle>
           </CardHeader>
           <CardContent>
             {profile.advisor ? (
@@ -224,23 +233,23 @@ export function StudentDashboardPage() {
                 </div>
                 <dl className="space-y-1 text-xs">
                   <div className="flex justify-between">
-                    <dt className="text-ink-500">المكتب</dt>
+                    <dt className="text-ink-500">{t('المكتب')}</dt>
                     <dd className="font-semibold">{profile.advisor.office_location ?? '—'}</dd>
                   </div>
                   <div className="flex justify-between">
-                    <dt className="text-ink-500">القسم</dt>
+                    <dt className="text-ink-500">{t('القسم')}</dt>
                     <dd className="font-semibold">{profile.department?.name_ar ?? '—'}</dd>
                   </div>
                 </dl>
                 <Link to="/student/advisor">
                   <Button variant="outline" size="sm" className="w-full">
-                    حجز ساعة مكتبية
+                    {t('حجز ساعة مكتبية')}
                   </Button>
                 </Link>
               </div>
             ) : (
               <div className="text-sm text-ink-500">
-                لم يُسند مرشد بعد.
+                {t('لم يُسند مرشد بعد.')}
                 <TriangleAlert className="mt-2 h-5 w-5 text-amber-500" />
               </div>
             )}
@@ -249,17 +258,17 @@ export function StudentDashboardPage() {
       </div>
 
       <div className="mt-4 grid gap-3 sm:grid-cols-3">
-        <Link to="/student/eligibility" className="rounded-xl border border-ink-100 bg-white p-4 shadow-card transition hover:border-brand-300">
-          <p className="text-sm font-bold text-ink-900">تحقق من أهلية مقرر</p>
-          <p className="mt-1 text-xs text-ink-500">قرار فوري مع المادة والصفحة ورقم القاعدة.</p>
+        <Link to="/student/eligibility" className="rounded-xl border border-ink-100 bg-surface p-4 shadow-card transition hover:border-brand-300">
+          <p className="text-sm font-bold text-ink-900">{t('تحقق من أهلية مقرر')}</p>
+          <p className="mt-1 text-xs text-ink-500">{t('قرار فوري مع المادة والصفحة ورقم القاعدة.')}</p>
         </Link>
-        <Link to="/student/chat" className="rounded-xl border border-ink-100 bg-white p-4 shadow-card transition hover:border-brand-300">
-          <p className="text-sm font-bold text-ink-900">اسأل عن اللائحة</p>
-          <p className="mt-1 text-xs text-ink-500">إجابات مستخرجة من النص الرسمي مع الاستشهاد.</p>
+        <Link to="/student/chat" className="rounded-xl border border-ink-100 bg-surface p-4 shadow-card transition hover:border-brand-300">
+          <p className="text-sm font-bold text-ink-900">{t('اسأل عن اللائحة')}</p>
+          <p className="mt-1 text-xs text-ink-500">{t('إجابات مستخرجة من النص الرسمي مع الاستشهاد.')}</p>
         </Link>
-        <Link to="/student/what-if" className="rounded-xl border border-ink-100 bg-white p-4 shadow-card transition hover:border-brand-300">
-          <p className="text-sm font-bold text-ink-900">محاكاة تغيير التخصص</p>
-          <p className="mt-1 text-xs text-ink-500">المقررات المتكافئة والمتبقية قبل القرار.</p>
+        <Link to="/student/what-if" className="rounded-xl border border-ink-100 bg-surface p-4 shadow-card transition hover:border-brand-300">
+          <p className="text-sm font-bold text-ink-900">{t('محاكاة تغيير التخصص')}</p>
+          <p className="mt-1 text-xs text-ink-500">{t('المقررات المتكافئة والمتبقية قبل القرار.')}</p>
         </Link>
       </div>
     </div>

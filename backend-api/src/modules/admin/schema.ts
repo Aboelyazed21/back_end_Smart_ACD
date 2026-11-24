@@ -267,6 +267,37 @@ export const auditQuerySchema = z
   })
   .strict();
 
+export const auditExportQuerySchema = z
+  .object({
+    actorId: uuid.optional(),
+    entityType: z.string().max(60).optional(),
+    entityId: z.string().max(100).optional(),
+    action: z.string().max(100).optional(),
+    from: z.string().datetime({ offset: true }).optional(),
+    to: z.string().datetime({ offset: true }).optional(),
+  })
+  .strict();
+
+export const createAdvisorSchema = z
+  .object({
+    email: z.string().email().max(254),
+    fullName: z.string().min(2).max(200).optional(),
+    phone: z.string().max(30).optional(),
+    departmentId: uuid.nullish(),
+    officeLocation: z.string().max(200).optional(),
+    maxStudents: z.number().int().min(1).max(500).optional(),
+  })
+  .strict();
+
+export const broadcastSchema = z
+  .object({
+    audience: z.enum(['all', 'students', 'advisors', 'admins']),
+    title: z.string().min(3).max(200),
+    body: z.string().min(3).max(2000),
+    sendEmail: z.boolean().optional(),
+  })
+  .strict();
+
 export const importListQuerySchema = z
   .object({
     type: z.enum(['students', 'transcripts']).optional(),

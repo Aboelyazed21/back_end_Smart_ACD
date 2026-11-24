@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { CalendarDays, ListChecks, Plus, Sparkles } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
+import { CalendarDays, ListChecks, Plus } from 'lucide-react';
 import { api, errorMessage } from '../../lib/api';
 import type { GeneratedPlan, StudyPlanListRow } from '../../lib/types';
 import { PLAN_STATUS_LABELS } from '../../lib/constants';
@@ -25,6 +26,7 @@ const DAY_OPTIONS = [
 ];
 
 export function PlansPage() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const toast = useToast();
   const queryClient = useQueryClient();
@@ -61,30 +63,36 @@ export function PlansPage() {
         },
       }),
     onSuccess: async (result) => {
-      toast.success('تم إنشاء مسودة الخطة', `${formatInt(result.data.total_credits)} ساعة معتمدة — بانتظار تقديمها للمرشد.`);
+      toast.success(
+        t('تم إنشاء مسودة الخطة'),
+        t('{{n}} ساعة معتمدة — بانتظار تقديمها للمرشد.', { n: formatInt(result.data.total_credits) }),
+      );
       await queryClient.invalidateQueries({ queryKey: ['student', 'plans'] });
       setOpen(false);
       navigate(`/student/plans/${result.data.id}`);
     },
-    onError: (error) => toast.error('تعذر إنشاء الخطة', errorMessage(error)),
+    onError: (error) => toast.error(t('تعذر إنشاء الخطة'), errorMessage(error)),
   });
 
   return (
     <div>
       <PageHeader
-        eyebrow="الخطط الدراسية"
-        title="خطط الفصل الاستشارية"
-        description="ينشئ محرك القواعد مسودة خطة (DRAFT) لا تتضمن إلا المقررات المؤهلة. تقديم الخطة للمرشد لا يعني تسجيلها."
+        eyebrow={t('الخطط الدراسية')}
+        title={t('خطط الفصل الاستشارية')}
+        description={t(
+          'ينشئ محرك القواعد مسودة خطة (DRAFT) لا تتضمن إلا المقررات المؤهلة. تقديم الخطة للمرشد لا يعني تسجيلها.',
+        )}
         actions={
           <Button onClick={() => setOpen(true)} icon={<Plus className="h-4 w-4" />}>
-            إنشاء خطة جديدة
+            {t('إنشاء خطة جديدة')}
           </Button>
         }
       />
 
-      <Alert tone="info" className="mb-4" title="ما معنى مسودة؟" icon={<Sparkles className="h-5 w-5" />}>
-        الخطة استشارية فقط. لا يوجد في النظام أي نقطة تسجيل مقررات. يعتمد المرشد الخطة أو يعدّلها، ثم تكتمل إجراءات
-        التسجيل الرسمية خارج المنصة.
+      <Alert tone="info" className="mb-4" title={t('ما معنى مسودة؟')}>
+        {t(
+          'الخطة استشارية فقط. لا يوجد في النظام أي نقطة تسجيل مقررات. يعتمد المرشد الخطة أو يعدّلها، ثم تكتمل إجراءات التسجيل الرسمية خارج المنصة.',
+        )}
       </Alert>
 
       {plans.isLoading ? (
@@ -93,12 +101,12 @@ export function PlansPage() {
         <ErrorState message={errorMessage(plans.error)} onRetry={() => void plans.refetch()} />
       ) : plans.data?.data.length === 0 ? (
         <EmptyState
-          title="لا توجد خطط دراسية"
-          description="ابدأ بإنشاء مسودة خطة للفصل القادم. سيراعي النظام المتطلبات والعبء الأكاديمي."
+          title={t('لا توجد خطط دراسية')}
+          description={t('ابدأ بإنشاء مسودة خطة للفصل القادم. سيراعي النظام المتطلبات والعبء الأكاديمي.')}
           icon={<ListChecks className="h-6 w-6" />}
           action={
             <Button onClick={() => setOpen(true)} icon={<Plus className="h-4 w-4" />}>
-              إنشاء خطة جديدة
+              {t('إنشاء خطة جديدة')}
             </Button>
           }
         />
@@ -116,15 +124,19 @@ export function PlansPage() {
                       </div>
                       <div>
                         <p className="font-display text-sm font-bold text-ink-900">{formatTerm(plan.term)}</p>
-                        <p className="text-xs text-ink-500">{formatInt(plan.total_credits)} ساعة</p>
+                        <p className="text-xs text-ink-500">{t('{{n}} ساعة', { n: formatInt(plan.total_credits) })}</p>
                       </div>
                     </div>
-                    <Badge tone={(status?.tone as never) ?? 'neutral'}>{status?.ar ?? plan.status}</Badge>
+                    <Badge tone={(status?.tone as never) ?? 'neutral'}>
+                      {status ? t(status.ar) : plan.status}
+                    </Badge>
                   </div>
                   <div className="mt-4 space-y-1 text-xs text-ink-500">
-                    <p>أُنشئت: {formatDate(plan.created_at, true)}</p>
-                    {plan.planning_slot && <p>خانة التخطيط: {plan.planning_slot}</p>}
-                    {plan.feedback && <p className="line-clamp-2 text-ink-600">ملاحظة المرشد: {plan.feedback}</p>}
+                    <p>{t('أُنشئت: {{date}}', { date: formatDate(plan.created_at, true) })}</p>
+                    {plan.planning_slot && <p>{t('خانة التخطيط: {{slot}}', { slot: plan.planning_slot })}</p>}
+                    {plan.feedback && (
+                      <p className="line-clamp-2 text-ink-600">{t('ملاحظة المرشد: {{note}}', { note: plan.feedback })}</p>
+                    )}
                   </div>
                 </Card>
               </Link>
@@ -136,15 +148,15 @@ export function PlansPage() {
       <Modal
         open={open}
         onClose={() => setOpen(false)}
-        title="إنشاء مسودة خطة"
-        description="حدد الفصل والحد الأقصى للساعات وتفضيلات الجدول. سيتم استبعاد أي مقرر غير مؤهل تلقائيًا."
+        title={t('إنشاء مسودة خطة')}
+        description={t('حدد الفصل والحد الأقصى للساعات وتفضيلات الجدول. سيتم استبعاد أي مقرر غير مؤهل تلقائيًا.')}
         footer={
           <>
             <Button variant="ghost" onClick={() => setOpen(false)}>
-              إلغاء
+              {t('إلغاء')}
             </Button>
-            <Button onClick={() => generate.mutate()} loading={generate.isPending} icon={<Sparkles className="h-4 w-4" />}>
-              توليد المسودة
+            <Button onClick={() => generate.mutate()} loading={generate.isPending}>
+              {t('توليد المسودة')}
             </Button>
           </>
         }
@@ -153,45 +165,45 @@ export function PlansPage() {
           {generate.isError && <Alert tone="danger">{errorMessage(generate.error)}</Alert>}
           <div className="grid gap-3 sm:grid-cols-2">
             <Select
-              label="الفصل الدراسي"
+              label={t('الفصل الدراسي')}
               value={term}
               onChange={(event) => setTerm(event.target.value)}
               options={termOptions(6)}
             />
             <Input
-              label="الحد الأقصى للساعات"
+              label={t('الحد الأقصى للساعات')}
               type="number"
               min={0}
               max={21}
               value={maxCredits}
               onChange={(event) => setMaxCredits(event.target.value)}
-              hint="اتركه فارغًا ليُحدد النظام الحد وفق اللائحة."
+              hint={t('اتركه فارغًا ليُحدد النظام الحد وفق اللائحة.')}
             />
             <Select
-              label="خانة التخطيط (اختياري)"
+              label={t('خانة التخطيط (اختياري)')}
               value={planningSlot}
               onChange={(event) => setPlanningSlot(event.target.value)}
-              placeholder="تلقائي"
+              placeholder={t('تلقائي')}
               options={[
-                { value: '1-1', label: 'المستوى 1 — خريف' },
-                { value: '1-2', label: 'المستوى 1 — ربيع' },
-                { value: '2-1', label: 'المستوى 2 — خريف' },
-                { value: '2-2', label: 'المستوى 2 — ربيع' },
-                { value: '3-1', label: 'المستوى 3 — خريف' },
-                { value: '3-2', label: 'المستوى 3 — ربيع' },
-                { value: '4-1', label: 'المستوى 4 — خريف' },
-                { value: '4-2', label: 'المستوى 4 — ربيع' },
+                { value: '1-1', label: t('المستوى 1 — خريف') },
+                { value: '1-2', label: t('المستوى 1 — ربيع') },
+                { value: '2-1', label: t('المستوى 2 — خريف') },
+                { value: '2-2', label: t('المستوى 2 — ربيع') },
+                { value: '3-1', label: t('المستوى 3 — خريف') },
+                { value: '3-2', label: t('المستوى 3 — ربيع') },
+                { value: '4-1', label: t('المستوى 4 — خريف') },
+                { value: '4-2', label: t('المستوى 4 — ربيع') },
               ]}
             />
           </div>
 
           <div>
-            <p className="mb-2 text-sm font-semibold text-ink-800">أيام يُفضّل تجنّبها</p>
+            <p className="mb-2 text-sm font-semibold text-ink-800">{t('أيام يُفضّل تجنّبها')}</p>
             <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
               {DAY_OPTIONS.map((day) => (
                 <Checkbox
                   key={day.value}
-                  label={day.label}
+                  label={t(day.label)}
                   checked={avoidDays.includes(day.value)}
                   onChange={(event) =>
                     setAvoidDays((current) =>
@@ -207,12 +219,12 @@ export function PlansPage() {
 
           <div className="flex flex-wrap gap-4">
             <Checkbox
-              label="ضغط الأيام (أقل عدد أيام)"
+              label={t('ضغط الأيام (أقل عدد أيام)')}
               checked={compressDays}
               onChange={(event) => setCompressDays(event.target.checked)}
             />
             <Checkbox
-              label="تفضيل المحاضرات الصباحية"
+              label={t('تفضيل المحاضرات الصباحية')}
               checked={preferMorning}
               onChange={(event) => setPreferMorning(event.target.checked)}
             />

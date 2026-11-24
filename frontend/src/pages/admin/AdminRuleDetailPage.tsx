@@ -1,5 +1,6 @@
 import { Link, useParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
+import { useTranslation } from 'react-i18next';
 import { ArrowRight, BookMarked } from 'lucide-react';
 import { api, errorMessage } from '../../lib/api';
 import type { RegulationRuleDetail } from '../../lib/types';
@@ -10,6 +11,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/Ca
 import { KeyValue } from '../../components/ui/Page';
 
 export function AdminRuleDetailPage() {
+  const { t } = useTranslation();
   const { code = '' } = useParams();
   const query = useQuery({
     queryKey: ['admin', 'rule', code],
@@ -17,7 +19,7 @@ export function AdminRuleDetailPage() {
     enabled: Boolean(code),
   });
 
-  if (query.isLoading) return <LoadingBlock label="جارٍ تحميل القاعدة…" />;
+  if (query.isLoading) return <LoadingBlock label={t('جارٍ تحميل القاعدة…')} />;
   if (query.isError || !query.data) {
     return <ErrorState message={errorMessage(query.error)} onRetry={() => void query.refetch()} />;
   }
@@ -35,7 +37,7 @@ export function AdminRuleDetailPage() {
         to="/admin/rules"
         className="mb-4 inline-flex items-center gap-1 text-sm font-semibold text-brand-700 hover:underline"
       >
-        <ArrowRight className="h-4 w-4" /> فهرس القواعد
+        <ArrowRight className="h-4 w-4" /> {t('فهرس القواعد')}
       </Link>
 
       <div className="mb-6 flex flex-wrap items-start justify-between gap-4">
@@ -51,11 +53,11 @@ export function AdminRuleDetailPage() {
           )}
         </div>
         <div className="flex flex-wrap items-center gap-2">
-          <Badge tone="brand">مادة {article}</Badge>
-          {clause && <Badge tone="info">بند {clause}</Badge>}
-          <Badge tone="gold">صفحة {pageNo}</Badge>
+          <Badge tone="brand">{t('مادة {{article}}', { article })}</Badge>
+          {clause && <Badge tone="info">{t('بند {{clause}}', { clause })}</Badge>}
+          <Badge tone="gold">{t('صفحة {{page}}', { page: pageNo })}</Badge>
           <Badge tone={rule.status === 'active' ? 'success' : 'neutral'}>
-            {rule.status === 'active' ? 'سارية' : 'ملغاة'}
+            {rule.status === 'active' ? t('سارية') : t('ملغاة')}
           </Badge>
         </div>
       </div>
@@ -63,11 +65,11 @@ export function AdminRuleDetailPage() {
       <div className="grid gap-4 lg:grid-cols-3">
         <Card className="lg:col-span-2">
           <CardHeader>
-            <CardTitle>ملخص القاعدة</CardTitle>
+            <CardTitle>{t('ملخص القاعدة')}</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <div>
-              <p className="text-xs font-bold text-ink-500">بالعربية</p>
+              <p className="text-xs font-bold text-ink-500">{t('بالعربية')}</p>
               <p className="mt-1 whitespace-pre-wrap text-sm leading-7 text-ink-800">{rule.summary_ar}</p>
             </div>
             {rule.summary_en && (
@@ -79,24 +81,26 @@ export function AdminRuleDetailPage() {
               </div>
             )}
             <Alert tone="info" icon={<BookMarked className="h-4 w-4" />}>
-              هذه القاعدة مرجع ثابت للقرارات. لا تُعدّل من الواجهة؛ أي تغيير يتطلب تحديث بيانات اللائحة وإعادة الاستيراد.
+              {t(
+                'هذه القاعدة مرجع ثابت للقرارات. لا تُعدّل من الواجهة؛ أي تغيير يتطلب تحديث بيانات اللائحة وإعادة الاستيراد.',
+              )}
             </Alert>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader>
-            <CardTitle>المرجع</CardTitle>
+            <CardTitle>{t('المرجع')}</CardTitle>
           </CardHeader>
           <CardContent>
             <dl>
-              <KeyValue label="كود القاعدة" value={<span className="font-mono">{rule.rule_code}</span>} />
-              <KeyValue label="المادة" value={article} />
-              <KeyValue label="البند" value={clause || '—'} />
-              <KeyValue label="الصفحة" value={pageNo} />
-              <KeyValue label="الحالة" value={rule.status === 'active' ? 'سارية' : 'ملغاة'} />
-              {createdAt && <KeyValue label="أُضيفت" value={formatDate(createdAt)} />}
-              {updatedAt && <KeyValue label="آخر تحديث" value={formatDate(updatedAt)} />}
+              <KeyValue label={t('كود القاعدة')} value={<span className="font-mono">{rule.rule_code}</span>} />
+              <KeyValue label={t('المادة')} value={article} />
+              <KeyValue label={t('البند')} value={clause || '—'} />
+              <KeyValue label={t('الصفحة')} value={pageNo} />
+              <KeyValue label={t('الحالة')} value={rule.status === 'active' ? t('سارية') : t('ملغاة')} />
+              {createdAt && <KeyValue label={t('أُضيفت')} value={formatDate(createdAt)} />}
+              {updatedAt && <KeyValue label={t('آخر تحديث')} value={formatDate(updatedAt)} />}
             </dl>
           </CardContent>
         </Card>

@@ -1,0 +1,10 @@
+{
+  "الصفحة غير موجودة": "Page not found",
+  "الرابط الذي فتحته غير صحيح أو تم نقل الصفحة. استخدم القائمة للوصول إلى وجهتك.": "The link you opened is broken or the page has moved. Use the navigation to reach your destination.",
+  "العودة إلى الصفحة الرئيسية": "Back to home",
+  "لا تملك صلاحية الوصول": "You do not have access",
+  "هذه الصفحة متاحة لدور آخر. إن كنت تعتقد أن هذا خطأ، تواصل مع مسؤول النظام.": "This page is available to a different role. If you believe this is a mistake, contact the system administrator.",
+  "العودة إلى لوحتي": "Back to my dashboard",
+  "حدث خطأ غير متوقع.": "An unexpected error occurred.",
+  "طلبات كثيرة جدًا. حاول بعد {{count}} ثانية.": "Too many requests. Try again in {{count}} seconds."
+}

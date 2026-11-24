@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
+import { useTranslation } from 'react-i18next';
 import { Search, Users } from 'lucide-react';
 import { api, errorMessage, qs } from '../../lib/api';
 import type { AdvisorStudentRow, Paginated } from '../../lib/types';
@@ -16,6 +17,7 @@ import { PaginationBar } from '../../components/ui/PaginationBar';
 import { Table, TableEmpty, TableWrap, TBody, Td, Th, THead, Tr } from '../../components/ui/Table';
 
 export function AdvisorStudentsPage() {
+  const { t } = useTranslation();
   const [search, setSearch] = useState('');
   const [submitted, setSubmitted] = useState('');
   const [page, setPage] = useState(1);
@@ -29,9 +31,11 @@ export function AdvisorStudentsPage() {
   return (
     <div>
       <PageHeader
-        eyebrow="طلابي"
-        title="قائمة الطلاب المسندين"
-        description="ابحث بالاسم أو رقم الطالب. تُرتّب القائمة حسب المعدل التراكمي تصاعديًا لإبراز الحالات التي تحتاج متابعة."
+        eyebrow={t('طلابي')}
+        title={t('قائمة الطلاب المسندين')}
+        description={t(
+          'ابحث بالاسم أو رقم الطالب. تُرتّب القائمة حسب المعدل التراكمي تصاعديًا لإبراز الحالات التي تحتاج متابعة.',
+        )}
       />
 
       <Card className="mb-4">
@@ -45,15 +49,15 @@ export function AdvisorStudentsPage() {
             }}
           >
             <Input
-              label="بحث"
-              placeholder="الاسم أو رقم الطالب"
+              label={t('بحث')}
+              placeholder={t('الاسم أو رقم الطالب')}
               value={search}
               onChange={(event) => setSearch(event.target.value)}
               leading={<Search className="h-4 w-4" />}
               className="w-full sm:w-80"
             />
             <Button type="submit" variant="outline">
-              بحث
+              {t('بحث')}
             </Button>
             {submitted && (
               <Button
@@ -65,7 +69,7 @@ export function AdvisorStudentsPage() {
                   setPage(1);
                 }}
               >
-                مسح
+                {t('مسح')}
               </Button>
             )}
           </form>
@@ -77,7 +81,11 @@ export function AdvisorStudentsPage() {
       ) : query.isError ? (
         <ErrorState message={errorMessage(query.error)} onRetry={() => void query.refetch()} />
       ) : query.data?.data.length === 0 ? (
-        <EmptyState title="لا يوجد طلاب مطابقون" description="جرّب بحثًا آخر." icon={<Users className="h-6 w-6" />} />
+        <EmptyState
+          title={t('لا يوجد طلاب مطابقون')}
+          description={t('جرّب بحثًا آخر.')}
+          icon={<Users className="h-6 w-6" />}
+        />
       ) : (
         <Card>
           <CardContent>
@@ -85,18 +93,18 @@ export function AdvisorStudentsPage() {
               <Table>
                 <THead>
                   <Tr>
-                    <Th>الطالب</Th>
-                    <Th>البرنامج</Th>
-                    <Th>المستوى</Th>
+                    <Th>{t('الطالب')}</Th>
+                    <Th>{t('البرنامج')}</Th>
+                    <Th>{t('المستوى')}</Th>
                     <Th>CGPA</Th>
-                    <Th>الساعات</Th>
-                    <Th>الفصول النظامية</Th>
+                    <Th>{t('الساعات')}</Th>
+                    <Th>{t('الفصول النظامية')}</Th>
                     <Th />
                   </Tr>
                 </THead>
                 <TBody>
                   {(query.data?.data.length ?? 0) === 0 ? (
-                    <TableEmpty colSpan={7} message="لا توجد بيانات." />
+                    <TableEmpty colSpan={7} message={t('لا توجد بيانات.')} />
                   ) : (
                     query.data?.data.map((student) => (
                       <Tr key={student.id}>
@@ -126,7 +134,7 @@ export function AdvisorStudentsPage() {
                         <Td>
                           <Link to={`/advisor/students/${student.id}`}>
                             <Button variant="outline" size="sm">
-                              فتح الملف
+                              {t('فتح الملف')}
                             </Button>
                           </Link>
                         </Td>

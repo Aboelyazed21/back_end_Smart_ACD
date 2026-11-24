@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
+import { useTranslation } from 'react-i18next';
 import { CalendarClock, ClipboardCheck, Inbox, TriangleAlert, Users } from 'lucide-react';
 import { api, errorMessage } from '../../lib/api';
 import type { AdvisorDashboard } from '../../lib/types';
@@ -11,6 +12,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/Ca
 import { PageHeader, StatCard } from '../../components/ui/Page';
 
 export function AdvisorDashboardPage() {
+  const { t } = useTranslation();
   const query = useQuery({
     queryKey: ['advisor', 'dashboard'],
     queryFn: () => api<{ data: AdvisorDashboard }>('/advisor/dashboard'),
@@ -24,36 +26,56 @@ export function AdvisorDashboardPage() {
   return (
     <div>
       <PageHeader
-        eyebrow="لوحة المرشد"
-        title="متابعة طلابي"
-        description="نظرة سريعة على أعداد الطلاب، الخطط المنتظرة للمراجعة، الحالات المفتوحة، وطلبات الساعات المكتبية."
+        eyebrow={t('لوحة المرشد')}
+        title={t('متابعة طلابي')}
+        description={t(
+          'نظرة سريعة على أعداد الطلاب، الخطط المنتظرة للمراجعة، الحالات المفتوحة، وطلبات الساعات المكتبية.',
+        )}
       />
 
       <div className="mb-4 grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-        <StatCard label="طلابي" value={data.students} icon={<Users className="h-5 w-5" />} tone="brand" hint="إجمالي الطلاب المسندين" />
         <StatCard
-          label="معرضون للخطر"
+          label={t('طلابي')}
+          value={data.students}
+          icon={<Users className="h-5 w-5" />}
+          tone="brand"
+          hint={t('إجمالي الطلاب المسندين')}
+        />
+        <StatCard
+          label={t('معرضون للخطر')}
           value={data.atRisk}
           icon={<TriangleAlert className="h-5 w-5" />}
           tone="danger"
-          hint={`${data.probations} حالة ملاحظة أكاديمية`}
+          hint={t('{{n}} حالة ملاحظة أكاديمية', { n: data.probations })}
         />
         <StatCard
-          label="خطط بانتظار المراجعة"
+          label={t('خطط بانتظار المراجعة')}
           value={data.pendingPlans}
           icon={<ClipboardCheck className="h-5 w-5" />}
           tone="gold"
-          hint="مقدّمة أو معدّلة"
+          hint={t('مقدّمة أو معدّلة')}
         />
-        <StatCard label="حالات مفتوحة" value={data.openCases} icon={<Inbox className="h-5 w-5" />} tone="info" hint="مفتوحة أو قيد المراجعة" />
         <StatCard
-          label="طلبات ساعات مكتبية"
+          label={t('حالات مفتوحة')}
+          value={data.openCases}
+          icon={<Inbox className="h-5 w-5" />}
+          tone="info"
+          hint={t('مفتوحة أو قيد المراجعة')}
+        />
+        <StatCard
+          label={t('طلبات ساعات مكتبية')}
           value={data.pendingOfficeHourRequests}
           icon={<CalendarClock className="h-5 w-5" />}
           tone="neutral"
-          hint="بانتظار قرارك"
+          hint={t('بانتظار قرارك')}
         />
-        <StatCard label="مواعيد مكتبية" value={data.officeHours.length} icon={<CalendarClock className="h-5 w-5" />} tone="success" hint="نشطة وغير نشطة" />
+        <StatCard
+          label={t('مواعيد مكتبية')}
+          value={data.officeHours.length}
+          icon={<CalendarClock className="h-5 w-5" />}
+          tone="success"
+          hint={t('نشطة وغير نشطة')}
+        />
       </div>
 
       <div className="grid gap-4 lg:grid-cols-2">
@@ -62,30 +84,30 @@ export function AdvisorDashboardPage() {
             <CardTitle
               action={
                 <Link to="/advisor/plans" className="text-xs font-bold text-brand-700 hover:underline">
-                  مراجعة الخطط
+                  {t('مراجعة الخطط')}
                 </Link>
               }
             >
-              مهام سريعة
+              {t('مهام سريعة')}
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-2">
-            <QuickLink to="/advisor/plans" label="خطط بانتظار المراجعة" value={data.pendingPlans} />
-            <QuickLink to="/advisor/escalations" label="حالات مفتوحة" value={data.openCases} />
-            <QuickLink to="/advisor/office-hours" label="طلبات ساعات مكتبية" value={data.pendingOfficeHourRequests} />
-            <QuickLink to="/advisor/at-risk" label="طلاب معرضون للخطر" value={data.atRisk} />
+            <QuickLink to="/advisor/plans" label={t('خطط بانتظار المراجعة')} value={data.pendingPlans} />
+            <QuickLink to="/advisor/escalations" label={t('حالات مفتوحة')} value={data.openCases} />
+            <QuickLink to="/advisor/office-hours" label={t('طلبات ساعات مكتبية')} value={data.pendingOfficeHourRequests} />
+            <QuickLink to="/advisor/at-risk" label={t('طلاب معرضون للخطر')} value={data.atRisk} />
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader>
-            <CardTitle>الساعات المكتبية</CardTitle>
+            <CardTitle>{t('الساعات المكتبية')}</CardTitle>
           </CardHeader>
           <CardContent>
             {data.officeHours.length === 0 ? (
               <EmptyState
-                title="لا توجد مواعيد"
-                description="أضف ساعات مكتبية ليتمكن طلابك من الحجز."
+                title={t('لا توجد مواعيد')}
+                description={t('أضف ساعات مكتبية ليتمكن طلابك من الحجز.')}
                 icon={<CalendarClock className="h-6 w-6" />}
               />
             ) : (
@@ -93,12 +115,14 @@ export function AdvisorDashboardPage() {
                 {data.officeHours.slice(0, 6).map((slot) => (
                   <div key={slot.id} className="flex items-center justify-between rounded-xl border border-ink-100 px-3 py-2">
                     <div>
-                      <p className="text-sm font-bold text-ink-900">{WEEKDAYS[slot.weekday]}</p>
+                      <p className="text-sm font-bold text-ink-900">{t(WEEKDAYS[slot.weekday])}</p>
                       <p className="text-xs text-ink-500">
-                        {formatTime(slot.start_time)} — {formatTime(slot.end_time)} · {slot.location ?? 'المكتب'}
+                        {formatTime(slot.start_time)} — {formatTime(slot.end_time)} · {slot.location ?? t('المكتب')}
                       </p>
                     </div>
-                    <Badge tone={slot.active === false ? 'neutral' : 'success'}>{slot.active === false ? 'معطّل' : 'نشط'}</Badge>
+                    <Badge tone={slot.active === false ? 'neutral' : 'success'}>
+                      {slot.active === false ? t('معطّل') : t('نشط')}
+                    </Badge>
                   </div>
                 ))}
               </div>
@@ -117,7 +141,7 @@ function QuickLink({ to, label, value }: { to: string; label: string; value: num
       className="flex items-center justify-between rounded-xl border border-ink-100 px-3 py-2.5 transition hover:border-brand-300 hover:bg-brand-50/30"
     >
       <span className="text-sm font-medium text-ink-700">{label}</span>
-      <span className="flex h-7 min-w-7 items-center justify-center rounded-full bg-brand-700 px-2 text-xs font-bold text-white">
+      <span className="flex h-7 min-w-7 items-center justify-center rounded-full bg-primary px-2 text-xs font-bold text-on-primary">
         {value}
       </span>
     </Link>

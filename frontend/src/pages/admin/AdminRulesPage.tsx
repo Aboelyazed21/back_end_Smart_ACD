@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
+import { useTranslation } from 'react-i18next';
 import { ExternalLink, Scale, Search } from 'lucide-react';
 import { api, errorMessage, qs } from '../../lib/api';
 import type { Paginated, RegulationRule } from '../../lib/types';
@@ -14,6 +15,7 @@ import { PaginationBar } from '../../components/ui/PaginationBar';
 import { Table, TableWrap, TBody, Td, Th, THead, Tr } from '../../components/ui/Table';
 
 export function AdminRulesPage() {
+  const { t } = useTranslation();
   const [search, setSearch] = useState('');
   const [submittedSearch, setSubmittedSearch] = useState('');
   const [status, setStatus] = useState('');
@@ -37,9 +39,11 @@ export function AdminRulesPage() {
   return (
     <div>
       <PageHeader
-        eyebrow="قواعد اللائحة"
-        title="فهرس قواعد القرار"
-        description="كل قرار في النظام يحمل rule_code ورقم مادة وصفحة. هذه القواعد مقتبسة حرفيًا من لائحة AIDM ولا يمكن تعديل نصها من الواجهة."
+        eyebrow={t('قواعد اللائحة')}
+        title={t('فهرس قواعد القرار')}
+        description={t(
+          'كل قرار في النظام يحمل rule_code ورقم مادة وصفحة. هذه القواعد مقتبسة حرفيًا من لائحة AIDM ولا يمكن تعديل نصها من الواجهة.',
+        )}
       />
 
       <Card className="mb-4">
@@ -53,28 +57,28 @@ export function AdminRulesPage() {
             }}
           >
             <Input
-              label="بحث"
+              label={t('بحث')}
               value={search}
               onChange={(event) => setSearch(event.target.value)}
-              placeholder="الكود أو العنوان"
+              placeholder={t('الكود أو العنوان')}
               leading={<Search className="h-4 w-4" />}
             />
             <Select
-              label="الحالة"
+              label={t('الحالة')}
               value={status}
               onChange={(event) => {
                 setStatus(event.target.value);
                 setPage(1);
               }}
               options={[
-                { value: '', label: 'الكل' },
-                { value: 'active', label: 'سارية' },
-                { value: 'superseded', label: 'ملغاة' },
+                { value: '', label: t('الكل') },
+                { value: 'active', label: t('سارية') },
+                { value: 'superseded', label: t('ملغاة') },
               ]}
             />
             <div className="flex items-end">
               <Button type="submit" variant="outline" className="w-full">
-                تطبيق
+                {t('تطبيق')}
               </Button>
             </div>
           </form>
@@ -86,7 +90,11 @@ export function AdminRulesPage() {
       ) : query.isError ? (
         <ErrorState message={errorMessage(query.error)} onRetry={() => void query.refetch()} />
       ) : rows.length === 0 ? (
-        <EmptyState title="لا توجد قواعد" description="لا توجد قواعد مطابقة." icon={<Scale className="h-6 w-6" />} />
+        <EmptyState
+          title={t('لا توجد قواعد')}
+          description={t('لا توجد قواعد مطابقة.')}
+          icon={<Scale className="h-6 w-6" />}
+        />
       ) : (
         <Card>
           <CardContent>
@@ -94,11 +102,11 @@ export function AdminRulesPage() {
               <Table>
                 <THead>
                   <Tr>
-                    <Th>الكود</Th>
-                    <Th>العنوان</Th>
-                    <Th>المادة</Th>
-                    <Th>الصفحة</Th>
-                    <Th>الحالة</Th>
+                    <Th>{t('الكود')}</Th>
+                    <Th>{t('العنوان')}</Th>
+                    <Th>{t('المادة')}</Th>
+                    <Th>{t('الصفحة')}</Th>
+                    <Th>{t('الحالة')}</Th>
                     <Th />
                   </Tr>
                 </THead>
@@ -118,16 +126,16 @@ export function AdminRulesPage() {
                         {rule.article_no}
                         {rule.clause_no ? ` / ${rule.clause_no}` : ''}
                       </Td>
-                      <Td className="text-xs">ص {rule.page_no}</Td>
+                      <Td className="text-xs">{t('ص {{page}}', { page: rule.page_no })}</Td>
                       <Td>
                         <Badge tone={rule.status === 'active' ? 'success' : 'neutral'}>
-                          {rule.status === 'active' ? 'سارية' : 'ملغاة'}
+                          {rule.status === 'active' ? t('سارية') : t('ملغاة')}
                         </Badge>
                       </Td>
                       <Td>
                         <Link to={`/admin/rules/${encodeURIComponent(rule.rule_code)}`}>
                           <Button size="sm" variant="outline" icon={<ExternalLink className="h-4 w-4" />}>
-                            عرض
+                            {t('عرض')}
                           </Button>
                         </Link>
                       </Td>

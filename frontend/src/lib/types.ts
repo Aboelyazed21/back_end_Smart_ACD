@@ -121,7 +121,10 @@ export interface StudentProfile {
     passedCredits: number;
     transferCredits: number;
     regularSemestersCompleted: number;
-    advisorId: string | null;
+    fullName: string;
+    email: string;
+    phone: string | null;
+    advisorId?: string | null;
   };
   advisor: {
     id: string;
@@ -320,15 +323,39 @@ export interface GraduationResult {
   advisory_only: true;
 }
 
-export interface GpaResult {
+export interface GpaCourseResult {
+  code: string;
+  credits: number;
+  points: number;
+  percentage: number | null;
+  letter: string;
+  status: string;
+  counts_in_gpa: boolean;
+  attempt_no: number;
+  is_repeat: boolean;
+}
+
+export interface GpaSnapshot {
   sgpa: number;
   cgpa: number;
   total_credits: number;
   quality_points: number;
-  courses: Array<Record<string, unknown>>;
+  sgpa_credits: number;
+  sgpa_points: number;
+  courses: GpaCourseResult[];
   repeat_cap_applied: string[];
-  classification: string;
-  flags: string[];
+  repeat_cap_pct: number;
+  classification: [number, string] | string;
+  classification_en?: string;
+}
+
+export interface GpaResult {
+  current: GpaSnapshot;
+  projected: GpaSnapshot;
+  simulated_courses: number;
+  repeat_cap_pct: number;
+  target_reachable: boolean | null;
+  advisory_only: true;
 }
 
 export interface WhatIfResult {

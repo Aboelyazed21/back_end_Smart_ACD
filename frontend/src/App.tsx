@@ -3,6 +3,7 @@ import { GuestOnly, RequireAuth, RequireRole } from './auth/guards';
 import { useAuth } from './auth/AuthProvider';
 import { HOME_BY_ROLE } from './lib/constants';
 import { AppLayout } from './components/layout/AppLayout';
+import { InstallPrompt } from './components/layout/InstallPrompt';
 
 import { LoginPage } from './pages/auth/LoginPage';
 import { ForgotPasswordPage } from './pages/auth/ForgotPasswordPage';
@@ -35,6 +36,7 @@ import { AdminUsersPage } from './pages/admin/AdminUsersPage';
 import { AdminStudentsPage } from './pages/admin/AdminStudentsPage';
 import { AdminStudentDetailPage } from './pages/admin/AdminStudentDetailPage';
 import { AdminAdvisorsPage } from './pages/admin/AdminAdvisorsPage';
+import { AdminNotificationsPage } from './pages/admin/AdminNotificationsPage';
 import { AdminDepartmentsPage } from './pages/admin/AdminDepartmentsPage';
 import { AdminCoursesPage } from './pages/admin/AdminCoursesPage';
 import { AdminCourseDetailPage } from './pages/admin/AdminCourseDetailPage';
@@ -69,7 +71,9 @@ function LayoutRoute() {
 
 export default function App() {
   return (
-    <Routes>
+    <>
+      <InstallPrompt />
+      <Routes>
       <Route element={<GuestOnly />}>
         <Route path="/login" element={<LoginPage />} />
         <Route path="/forgot-password" element={<ForgotPasswordPage />} />
@@ -115,6 +119,7 @@ export default function App() {
             <Route path="/admin/students" element={<AdminStudentsPage />} />
             <Route path="/admin/students/:id" element={<AdminStudentDetailPage />} />
             <Route path="/admin/advisors" element={<AdminAdvisorsPage />} />
+            <Route path="/admin/notifications" element={<AdminNotificationsPage />} />
             <Route path="/admin/departments" element={<AdminDepartmentsPage />} />
             <Route path="/admin/courses" element={<AdminCoursesPage />} />
             <Route path="/admin/courses/:id" element={<AdminCourseDetailPage />} />
@@ -133,5 +138,6 @@ export default function App() {
         </Route>
       </Route>
     </Routes>
+    </>
   );
 }

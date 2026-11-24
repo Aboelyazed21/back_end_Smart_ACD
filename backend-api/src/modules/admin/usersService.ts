@@ -154,6 +154,71 @@ export async function createUser(
   return result;
 }
 
+function nameFromEmail(email: string): string {
+  const local = email.split('@')[0] ?? 'advisor';
+  return local
+    .split(/[._-]+/)
+    .filter(Boolean)
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+    .join(' ')
+    .slice(0, 200);
+}
+
+/**
+ * Creates a regular (non-admin) advisor from an email address. The account is
+ * provisioned with a temporary password that is emailed to the new advisor,
+ * and the advisor row is created with sane defaults so they can be assigned
+ * students immediately.
+ */
+export async function createAdvisorByEmail(
+  input: {
+    email: string;
+    fullName?: string;
+    phone?: string;
+    departmentId?: string | null;
+    officeLocation?: string;
+    maxStudents?: number;
+  },
+  actorId: string,
+  actorContext: { ip?: string | null; correlationId?: string },
+) {
+  const email = input.email.trim().toLowerCase();
+  const existing = await one<{ id: string; role: string; deleted_at: Date | null }>(
+    'SELECT id, role, deleted_at FROM users WHERE email = $1',
+    [email],
+  );
+  if (existing) {
+    throw AppError.conflict(
+      'EMAIL_IN_USE',
+      existing.deleted_at
+        ? 'This email belongs to a deleted account; restore it instead of creating a new one'
+        : 'An account with this email already exists',
+    );
+  }
+  const created = await createUser(
+    {
+      email,
+      fullName: input.fullName?.trim() || nameFromEmail(email),
+      role: 'advisor',
+      phone: input.phone,
+      advisor: {
+        departmentId: input.departmentId ?? null,
+        officeLocation: input.officeLocation,
+        maxStudents: input.maxStudents ?? 60,
+      },
+    },
+    actorId,
+    actorContext,
+  );
+  const advisor = await one(
+    `SELECT a.id, a.user_id, a.department_id, a.office_location, a.max_students,
+            u.full_name, u.email, u.status
+       FROM advisors a JOIN users u ON u.id = a.user_id WHERE a.user_id = $1`,
+    [created.user.id],
+  );
+  return { user: created.user, advisor };
+}
+
 export async function updateUser(
   userId: string,
   patch: { fullName?: string; phone?: string; status?: 'active' | 'inactive' | 'suspended' },

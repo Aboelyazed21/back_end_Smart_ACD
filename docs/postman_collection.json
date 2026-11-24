@@ -480,6 +480,46 @@
           "response": []
         },
         {
+          "name": "Update own contact details (name and phone only)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "x-csrf-token",
+                "value": "{{csrfToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/student/profile",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "student",
+                "profile"
+              ],
+              "query": [],
+              "variable": []
+            },
+            "description": "Identity and academic fields (email, student code, program, level, grades) are managed by the college and are rejected here.\n",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"fullName\": \"Student One\",\n  \"phone\": \"+201000000000\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
           "name": "Dashboard summary for a term",
           "request": {
             "method": "GET",
@@ -1086,6 +1126,41 @@
                 }
               }
             }
+          },
+          "response": []
+        },
+        {
+          "name": "Cancel a pending or approved office-hour request",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "x-csrf-token",
+                "value": "{{csrfToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/student/office-hours/requests/{{id}}/cancel",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "student",
+                "office-hours",
+                "requests",
+                "{{id}}",
+                "cancel"
+              ],
+              "query": [],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "00000000-0000-4000-8000-000000000000"
+                }
+              ]
+            },
+            "description": ""
           },
           "response": []
         },
@@ -2130,6 +2205,46 @@
           "response": []
         },
         {
+          "name": "Create a regular advisor account by email",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "x-csrf-token",
+                "value": "{{csrfToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/advisors",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "advisors"
+              ],
+              "query": [],
+              "variable": []
+            },
+            "description": "Wraps user creation with role `advisor`: an advisor profile row is created in the same transaction and a temporary password is emailed to the address. The new account must change it at first sign-in.\n",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"student1@aidm.bua.edu.eg\",\n  \"fullName\": \"Student One\",\n  \"phone\": \"+201000000000\",\n  \"departmentId\": \"00000000-0000-4000-8000-000000000000\",\n  \"officeLocation\": \"string\",\n  \"maxStudents\": 1\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
           "name": "Update an advisor's department, office or cap",
           "request": {
             "method": "PATCH",
@@ -3151,6 +3266,130 @@
                   "disabled": false
                 }
               ],
+              "variable": []
+            },
+            "description": ""
+          },
+          "response": []
+        },
+        {
+          "name": "Export the filtered audit log as CSV",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/audit-logs/export",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "audit-logs",
+                "export"
+              ],
+              "query": [
+                {
+                  "key": "actorId",
+                  "value": "00000000-0000-4000-8000-000000000000",
+                  "description": "",
+                  "disabled": true
+                },
+                {
+                  "key": "entityType",
+                  "value": "string",
+                  "description": "",
+                  "disabled": true
+                },
+                {
+                  "key": "entityId",
+                  "value": "string",
+                  "description": "",
+                  "disabled": true
+                },
+                {
+                  "key": "action",
+                  "value": "string",
+                  "description": "",
+                  "disabled": true
+                },
+                {
+                  "key": "from",
+                  "value": "2026-10-01T09:00:00Z",
+                  "description": "",
+                  "disabled": true
+                },
+                {
+                  "key": "to",
+                  "value": "2026-10-01T09:00:00Z",
+                  "description": "",
+                  "disabled": true
+                }
+              ],
+              "variable": []
+            },
+            "description": "Streamed as UTF-8 CSV with a BOM so Arabic text opens correctly in Excel. Rate-limited separately from the listing endpoint.\n"
+          },
+          "response": []
+        },
+        {
+          "name": "Send an announcement to an audience",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "x-csrf-token",
+                "value": "{{csrfToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/notifications/broadcast",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "notifications",
+                "broadcast"
+              ],
+              "query": [],
+              "variable": []
+            },
+            "description": "Writes one in-app notification per active recipient and optionally emails the same text. The audit entry records the audience and the recipient count, never individual message bodies.\n",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"audience\": \"all\",\n  \"title\": \"string\",\n  \"body\": \"string\",\n  \"sendEmail\": false\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Recent announcements with recipient counts",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/notifications/broadcasts",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "notifications",
+                "broadcasts"
+              ],
+              "query": [],
               "variable": []
             },
             "description": ""

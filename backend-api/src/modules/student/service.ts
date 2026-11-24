@@ -8,6 +8,7 @@ import {
   STUDENT_SELECT,
 } from '../../services/studentContext';
 import { Term } from '../../services/term';
+import { sanitizeText } from '../../utils/sanitize';
 
 export async function profileFor(student: StudentRow) {
   const [advisor, department, user] = await Promise.all([
@@ -271,6 +272,41 @@ export async function findStudentRowByUserId(userId: string): Promise<StudentRow
 
 export async function advisorIdForUser(userId: string) {
   return findAdvisorByUserId(userId);
+}
+
+/**
+ * Students may maintain their own contact details (name and phone) but never
+ * their identity fields (email, student code, program) or academic record.
+ */
+export async function updateProfileFor(
+  student: StudentRow,
+  patch: { fullName?: string; phone?: string | null },
+) {
+  const fullName = patch.fullName ? sanitizeText(patch.fullName, 200) : null;
+  const phone = patch.phone === null ? null : patch.phone ? sanitizeText(patch.phone, 30) : null;
+  const patchPhone = patch.phone !== undefined;
+  await one(
+    `UPDATE users
+        SET full_name = COALESCE($2, full_name),
+            phone = CASE WHEN $4 THEN $3 ELSE phone END
+      WHERE id = $1
+      RETURNING id`,
+    [student.user_id, fullName, phone, patchPhone],
+  );
+  return profileFor({ ...student, full_name: fullName ?? student.full_name });
+}
+
+export async function cancelOfficeHourRequest(studentId: string, requestId: string) {
+  const row = await one<{ id: string; status: string }>(
+    `UPDATE office_hour_requests SET status = 'cancelled', updated_at = now()
+      WHERE id = $1 AND student_id = $2 AND status IN ('pending','approved')
+      RETURNING id, status`,
+    [requestId, studentId],
+  );
+  if (!row) {
+    throw AppError.notFound('Office hour request not found or already closed');
+  }
+  return row;
 }
 
 export async function advisorsOfficeHours(advisorId: string) {

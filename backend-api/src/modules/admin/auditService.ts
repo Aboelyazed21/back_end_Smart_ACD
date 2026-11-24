@@ -1,16 +1,16 @@
 import { many, one } from '../../config/db';
 import { AppError } from '../../utils/errors';
 
-export async function listAuditLogs(filters: {
+export interface AuditFilters {
   actorId?: string;
   entityType?: string;
   entityId?: string;
   action?: string;
   from?: string;
   to?: string;
-  limit: number;
-  offset: number;
-}) {
+}
+
+function auditWhere(filters: AuditFilters) {
   const where: string[] = [];
   const params: unknown[] = [];
   const add = (sql: string, value: unknown) => {
@@ -23,7 +23,11 @@ export async function listAuditLogs(filters: {
   if (filters.action) add('a.action = ?', filters.action);
   if (filters.from) add('a.created_at >= ?::timestamptz', filters.from);
   if (filters.to) add('a.created_at <= ?::timestamptz', filters.to);
-  const clause = where.length ? `WHERE ${where.join(' AND ')}` : '';
+  return { clause: where.length ? `WHERE ${where.join(' AND ')}` : '', params };
+}
+
+export async function listAuditLogs(filters: AuditFilters & { limit: number; offset: number }) {
+  const { clause, params } = auditWhere(filters);
   const total = await one<{ count: string }>(
     `SELECT count(*)::text AS count FROM audit_logs a ${clause}`,
     params,
@@ -37,6 +41,30 @@ export async function listAuditLogs(filters: {
     params,
   );
   return { rows, total: Number(total?.count ?? 0) };
+}
+
+/** Same filters as the paged view, capped so one export cannot exhaust memory. */
+export async function exportAuditLogs(filters: AuditFilters, limit = 10_000) {
+  const { clause, params } = auditWhere(filters);
+  params.push(limit);
+  return many<{
+    created_at: Date;
+    actor_name: string | null;
+    actor_id: string | null;
+    action: string;
+    entity_type: string;
+    entity_id: string | null;
+    ip: string | null;
+    correlation_id: string | null;
+    before: unknown;
+    after: unknown;
+  }>(
+    `SELECT a.created_at, u.full_name AS actor_name, a.actor_id, a.action, a.entity_type,
+            a.entity_id, a.ip, a.correlation_id, a.before, a.after
+       FROM audit_logs a LEFT JOIN users u ON u.id = a.actor_id
+       ${clause} ORDER BY a.created_at DESC LIMIT $${params.length}`,
+    params,
+  );
 }
 
 export async function listRules(filters: {

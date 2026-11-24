@@ -35,11 +35,7 @@ function cleanQuestion(question: string): string {
 export async function createSession(actor: ChatActor, title?: string) {
   const row = await one<Record<string, unknown>>(
     `INSERT INTO chat_sessions (student_id, user_id, title) VALUES ($1,$2,$3) RETURNING *`,
-    [
-      actor.student?.id ?? null,
-      actor.id,
-      title ? sanitizeText(title, 120) : 'Advising chat',
-    ],
+    [actor.student?.id ?? null, actor.id, title ? sanitizeText(title, 120) : 'Advising chat'],
   );
   return row;
 }
@@ -77,10 +73,10 @@ export async function ask(
   term: Term,
   actorId: string | null,
 ) {
-  const session = await one<{ id: string }>(
-    'SELECT id FROM chat_sessions WHERE id = $1 AND user_id = $2',
-    [sessionId, actor.id],
-  );
+  const session = await one<{ id: string }>('SELECT id FROM chat_sessions WHERE id = $1 AND user_id = $2', [
+    sessionId,
+    actor.id,
+  ]);
   if (!session) throw AppError.notFound('Chat session not found');
   const cleaned = cleanQuestion(question);
   // Snapshot prior turns before inserting the current question so the engine's

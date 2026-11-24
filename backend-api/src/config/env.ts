@@ -31,8 +31,11 @@ const schema = z.object({
   BODY_LIMIT: z.string().default('100kb'),
   UPLOAD_DIR: z.string().default('./uploads'),
   MAX_UPLOAD_BYTES: z.coerce.number().int().min(1024).max(20_000_000).default(5_000_000),
-  SMTP_HOST: z.string().default('mailhog'),
+  // Empty host means "not configured": the mailer falls back to a JSON
+  // transport that logs instead of silently dropping mail to a dead host.
+  SMTP_HOST: z.string().default(''),
   SMTP_PORT: z.coerce.number().int().default(1025),
+  SMTP_SECURE: booleanLike,
   SMTP_FROM: z.string().default('no-reply@aidm.bua.edu.eg'),
   APP_BASE_URL: z.string().default('http://localhost:5173'),
   QR_SIGNING_SECRET: z.string().min(16).default('dev-qr-secret-change-me-0123456789'),
@@ -41,6 +44,9 @@ const schema = z.object({
   CHAT_RATE_LIMIT_MAX: z.coerce.number().int().positive().default(20),
   IMPORT_RATE_LIMIT_MAX: z.coerce.number().int().positive().default(5),
   EXPORT_RATE_LIMIT_MAX: z.coerce.number().int().positive().default(10),
+  // 'memory' keeps a per-process counter (single instance). 'postgres' shares
+  // the budget across instances through the rate_limit_hits table.
+  RATE_LIMIT_STORE: z.enum(['memory', 'postgres']).default('memory'),
   DEMO_PASSWORD: z.string().default('ChangeMe!2026'),
   LOG_LEVEL: z.string().default('info'),
   REGULATION_DATA_DIR: z.string().optional().default(''),

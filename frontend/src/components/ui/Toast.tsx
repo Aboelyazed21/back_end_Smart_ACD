@@ -1,4 +1,5 @@
 import { createContext, useCallback, useContext, useMemo, useState, type ReactNode } from 'react';
+import { useTranslation } from 'react-i18next';
 import { CheckCircle2, Info, TriangleAlert, XCircle, X } from 'lucide-react';
 import { cn } from '../../lib/format';
 
@@ -26,6 +27,7 @@ const ICONS: Record<ToastTone, ReactNode> = {
 };
 
 export function ToastProvider({ children }: { children: ReactNode }) {
+  const { t } = useTranslation();
   const [items, setItems] = useState<ToastItem[]>([]);
 
   const remove = useCallback((id: number) => {
@@ -59,7 +61,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
             key={item.id}
             role="status"
             className={cn(
-              'pointer-events-auto flex w-full items-start gap-3 rounded-xl border bg-white p-4 shadow-float',
+              'pointer-events-auto flex w-full items-start gap-3 rounded-xl border bg-surface p-4 shadow-float',
               item.tone === 'error' && 'border-red-200',
               item.tone === 'success' && 'border-emerald-200',
               item.tone === 'warning' && 'border-amber-200',
@@ -75,7 +77,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
               type="button"
               onClick={() => remove(item.id)}
               className="rounded p-1 text-ink-400 hover:bg-ink-100"
-              aria-label="إخفاء التنبيه"
+              aria-label={t('إخفاء التنبيه')}
             >
               <X className="h-4 w-4" />
             </button>

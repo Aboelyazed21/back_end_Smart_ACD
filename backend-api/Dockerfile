@@ -18,6 +18,7 @@ WORKDIR /app/backend
 COPY backend-api/package.json backend-api/package-lock.json ./
 RUN npm ci --omit=dev && npm cache clean --force
 COPY --from=build /app/backend/dist ./dist
+COPY backend-api/assets ./assets
 COPY db /app/db
 COPY regulation-data /app/regulation-data
 COPY backend-api/docker-entrypoint.sh ./docker-entrypoint.sh

@@ -1,5 +1,6 @@
 import { Link, useParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
+import { useTranslation } from 'react-i18next';
 import { ArrowRight, FileWarning } from 'lucide-react';
 import { api, errorMessage } from '../../lib/api';
 import type { ImportJob, ImportRowError } from '../../lib/types';
@@ -11,6 +12,7 @@ import { KeyValue, ProgressBar } from '../../components/ui/Page';
 import { Table, TableWrap, TBody, Td, Th, THead, Tr } from '../../components/ui/Table';
 
 export function AdminImportDetailPage() {
+  const { t } = useTranslation();
   const { id = '' } = useParams();
 
   const job = useQuery({
@@ -24,7 +26,7 @@ export function AdminImportDetailPage() {
     enabled: Boolean(id),
   });
 
-  if (job.isLoading) return <LoadingBlock label="جارٍ تحميل تقرير الاستيراد…" />;
+  if (job.isLoading) return <LoadingBlock label={t('جارٍ تحميل تقرير الاستيراد…')} />;
   if (job.isError || !job.data) {
     return <ErrorState message={errorMessage(job.error)} onRetry={() => void job.refetch()} />;
   }
@@ -39,17 +41,17 @@ export function AdminImportDetailPage() {
         to="/admin/imports"
         className="mb-4 inline-flex items-center gap-1 text-sm font-semibold text-brand-700 hover:underline"
       >
-        <ArrowRight className="h-4 w-4" /> كل عمليات الاستيراد
+        <ArrowRight className="h-4 w-4" /> {t('كل عمليات الاستيراد')}
       </Link>
 
       <div className="mb-6 flex flex-wrap items-start justify-between gap-4">
         <div className="min-w-0">
-          <p className="mb-1 text-xs font-bold uppercase tracking-widest text-brand-700">تقرير الاستيراد</p>
+          <p className="mb-1 text-xs font-bold uppercase tracking-widest text-brand-700">{t('تقرير الاستيراد')}</p>
           <h1 className="truncate font-display text-2xl font-extrabold leading-tight text-ink-950 sm:text-3xl" dir="ltr">
             {data.filename}
           </h1>
           <p className="mt-1 text-sm text-ink-500">
-            {data.type === 'students' ? 'ملف طلاب' : 'كشف درجات'} · {formatDate(data.created_at, true)}
+            {data.type === 'students' ? t('ملف طلاب') : t('كشف درجات')} · {formatDate(data.created_at, true)}
           </p>
         </div>
         <Badge
@@ -58,12 +60,12 @@ export function AdminImportDetailPage() {
           }
         >
           {data.status === 'completed'
-            ? 'مكتملة'
+            ? t('مكتملة')
             : data.status === 'failed'
-              ? 'فاشلة'
+              ? t('فاشلة')
               : data.status === 'processing'
-                ? 'قيد المعالجة'
-                : 'بانتظار'}
+                ? t('قيد المعالجة')
+                : t('بانتظار')}
         </Badge>
       </div>
 
@@ -72,27 +74,27 @@ export function AdminImportDetailPage() {
       <div className="grid gap-4 lg:grid-cols-3">
         <Card className="lg:col-span-2">
           <CardHeader>
-            <CardTitle>الملخص</CardTitle>
+            <CardTitle>{t('الملخص')}</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <ProgressBar
               value={processed}
               max={Math.max(1, data.total_rows)}
-              label="الصفوف المعالجة"
+              label={t('الصفوف المعالجة')}
               tone={data.error_rows > 0 ? 'gold' : 'success'}
             />
             <div className="grid grid-cols-3 gap-3 text-center">
               <div className="rounded-xl bg-ink-50 p-3">
                 <p className="font-display text-2xl font-extrabold">{formatInt(data.total_rows)}</p>
-                <p className="text-[11px] text-ink-500">إجمالي الصفوف</p>
+                <p className="text-[11px] text-ink-500">{t('إجمالي الصفوف')}</p>
               </div>
               <div className="rounded-xl bg-emerald-50 p-3">
                 <p className="font-display text-2xl font-extrabold text-emerald-700">{formatInt(data.success_rows)}</p>
-                <p className="text-[11px] text-emerald-700">نجحت</p>
+                <p className="text-[11px] text-emerald-700">{t('نجحت')}</p>
               </div>
               <div className="rounded-xl bg-red-50 p-3">
                 <p className="font-display text-2xl font-extrabold text-danger">{formatInt(data.error_rows)}</p>
-                <p className="text-[11px] text-red-700">فشلت</p>
+                <p className="text-[11px] text-red-700">{t('فشلت')}</p>
               </div>
             </div>
           </CardContent>
@@ -100,15 +102,18 @@ export function AdminImportDetailPage() {
 
         <Card>
           <CardHeader>
-            <CardTitle>التوقيت</CardTitle>
+            <CardTitle>{t('التوقيت')}</CardTitle>
           </CardHeader>
           <CardContent>
             <dl>
-              <KeyValue label="أُنشئت" value={formatDate(data.created_at, true)} />
-              <KeyValue label="بدأت" value={data.started_at ? formatDate(data.started_at, true) : '—'} />
-              <KeyValue label="انتهت" value={data.finished_at ? formatDate(data.finished_at, true) : '—'} />
-              <KeyValue label="معرّف العملية" value={<span className="font-mono text-[10px]">{data.id}</span>} />
-              <KeyValue label="بواسطة" value={<span className="font-mono text-[10px]">{data.created_by}</span>} />
+              <KeyValue label={t('أُنشئت')} value={formatDate(data.created_at, true)} />
+              <KeyValue label={t('بدأت')} value={data.started_at ? formatDate(data.started_at, true) : '—'} />
+              <KeyValue label={t('انتهت')} value={data.finished_at ? formatDate(data.finished_at, true) : '—'} />
+              <KeyValue
+                label={t('معرّف العملية')}
+                value={<span className="font-mono text-[10px]">{data.id}</span>}
+              />
+              <KeyValue label={t('بواسطة')} value={<span className="font-mono text-[10px]">{data.created_by}</span>} />
             </dl>
           </CardContent>
         </Card>
@@ -118,11 +123,11 @@ export function AdminImportDetailPage() {
             <CardTitle
               action={
                 <span className="text-xs text-ink-500">
-                  {formatInt(errorRows.length)} خطأ
+                  {t('{{n}} خطأ', { n: formatInt(errorRows.length) })}
                 </span>
               }
             >
-              أخطاء الصفوف
+              {t('أخطاء الصفوف')}
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -132,8 +137,8 @@ export function AdminImportDetailPage() {
               <ErrorState message={errorMessage(errors.error)} onRetry={() => void errors.refetch()} />
             ) : errorRows.length === 0 ? (
               <EmptyState
-                title="لا توجد أخطاء"
-                description="كل الصفوف عولجت بنجاح."
+                title={t('لا توجد أخطاء')}
+                description={t('كل الصفوف عولجت بنجاح.')}
                 icon={<FileWarning className="h-6 w-6" />}
               />
             ) : (
@@ -141,10 +146,10 @@ export function AdminImportDetailPage() {
                 <Table>
                   <THead>
                     <Tr>
-                      <Th>الصف</Th>
-                      <Th>الكود</Th>
-                      <Th>السبب</Th>
-                      <Th>البيانات الأصلية</Th>
+                      <Th>{t('الصف')}</Th>
+                      <Th>{t('الكود')}</Th>
+                      <Th>{t('السبب')}</Th>
+                      <Th>{t('البيانات الأصلية')}</Th>
                     </Tr>
                   </THead>
                   <TBody>
@@ -157,7 +162,7 @@ export function AdminImportDetailPage() {
                         </Td>
                         <Td>
                           <pre
-                            className="max-w-xs overflow-auto rounded-lg bg-ink-950 p-2 text-[10px] leading-4 text-ink-100"
+                            className="max-w-xs overflow-auto rounded-lg bg-code p-2 text-[10px] leading-4 text-code-fg"
                             dir="ltr"
                           >
                             {JSON.stringify(row.raw, null, 2)}

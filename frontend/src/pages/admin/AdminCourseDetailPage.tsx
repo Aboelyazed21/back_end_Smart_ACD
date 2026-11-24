@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useTranslation } from 'react-i18next';
 import { ArrowRight, CalendarDays, Plus, Trash2 } from 'lucide-react';
 import { api, errorMessage } from '../../lib/api';
 import type { CourseDetail, Season } from '../../lib/types';
@@ -17,6 +18,7 @@ import { Table, TableWrap, TBody, Td, Th, THead, Tr } from '../../components/ui/
 import { useToast } from '../../components/ui/Toast';
 
 export function AdminCourseDetailPage() {
+  const { t } = useTranslation();
   const { id = '' } = useParams();
   const toast = useToast();
   const queryClient = useQueryClient();
@@ -58,23 +60,23 @@ export function AdminCourseDetailPage() {
         },
       }),
     onSuccess: async () => {
-      toast.success('تمت إضافة المتطلب');
+      toast.success(t('تمت إضافة المتطلب'));
       setPrereqOpen(false);
       setRequiredCode('');
       setMinHours('');
       await invalidate();
     },
-    onError: (error) => toast.error('تعذر إضافة المتطلب', errorMessage(error)),
+    onError: (error) => toast.error(t('تعذر إضافة المتطلب'), errorMessage(error)),
   });
 
   const removePrerequisite = useMutation({
     mutationFn: (prerequisiteId: string) =>
       api(`/admin/prerequisites/${prerequisiteId}`, { method: 'DELETE' }),
     onSuccess: async () => {
-      toast.success('تم حذف المتطلب');
+      toast.success(t('تم حذف المتطلب'));
       await invalidate();
     },
-    onError: (error) => toast.error('تعذر حذف المتطلب', errorMessage(error)),
+    onError: (error) => toast.error(t('تعذر حذف المتطلب'), errorMessage(error)),
   });
 
   const saveOffering = useMutation({
@@ -94,24 +96,26 @@ export function AdminCourseDetailPage() {
             },
           }),
     onSuccess: async () => {
-      toast.success(editingOffering ? 'تم تحديث العرض الفصلي' : 'تمت إضافة العرض الفصلي');
+      toast.success(
+        editingOffering ? t('تم تحديث العرض الفصلي') : t('تمت إضافة العرض الفصلي'),
+      );
       setOfferingOpen(false);
       setEditingOffering(null);
       await invalidate();
     },
-    onError: (error) => toast.error('تعذر حفظ العرض الفصلي', errorMessage(error)),
+    onError: (error) => toast.error(t('تعذر حفظ العرض الفصلي'), errorMessage(error)),
   });
 
   const removeOffering = useMutation({
     mutationFn: (offeringId: string) => api(`/admin/offerings/${offeringId}`, { method: 'DELETE' }),
     onSuccess: async () => {
-      toast.success('تم حذف العرض الفصلي');
+      toast.success(t('تم حذف العرض الفصلي'));
       await invalidate();
     },
-    onError: (error) => toast.error('تعذر حذف العرض الفصلي', errorMessage(error)),
+    onError: (error) => toast.error(t('تعذر حذف العرض الفصلي'), errorMessage(error)),
   });
 
-  if (query.isLoading) return <LoadingBlock label="جارٍ تحميل المقرر…" />;
+  if (query.isLoading) return <LoadingBlock label={t('جارٍ تحميل المقرر…')} />;
   if (query.isError || !query.data) {
     return <ErrorState message={errorMessage(query.error)} onRetry={() => void query.refetch()} />;
   }
@@ -133,7 +137,7 @@ export function AdminCourseDetailPage() {
         to="/admin/courses"
         className="mb-4 inline-flex items-center gap-1 text-sm font-semibold text-brand-700 hover:underline"
       >
-        <ArrowRight className="h-4 w-4" /> كتالوج المقررات
+        <ArrowRight className="h-4 w-4" /> {t('كتالوج المقررات')}
       </Link>
 
       <div className="mb-6 flex flex-wrap items-start justify-between gap-4">
@@ -147,8 +151,10 @@ export function AdminCourseDetailPage() {
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
-          <Badge tone={course.active ? 'success' : 'neutral'}>{course.active ? 'نشط' : 'معطّل'}</Badge>
-          <Badge tone="brand">{formatInt(course.credits)} ساعة</Badge>
+          <Badge tone={course.active ? 'success' : 'neutral'}>
+            {course.active ? t('نشط') : t('معطّل')}
+          </Badge>
+          <Badge tone="brand">{t('{{n}} ساعة', { n: formatInt(course.credits) })}</Badge>
           {course.anomaly_ids.map((anomaly) => (
             <Link key={anomaly} to={`/admin/anomalies/${anomaly}`}>
               <Badge tone="warning" className="font-mono text-[10px]">
@@ -162,16 +168,22 @@ export function AdminCourseDetailPage() {
       <div className="grid gap-4 lg:grid-cols-3">
         <Card>
           <CardHeader>
-            <CardTitle>بيانات المقرر</CardTitle>
+            <CardTitle>{t('بيانات المقرر')}</CardTitle>
           </CardHeader>
           <CardContent>
             <dl>
-              <KeyValue label="الساعات" value={formatInt(course.credits)} />
-              <KeyValue label="الفئة" value={course.category} />
-              <KeyValue label="المستوى" value={formatInt(course.level_hint)} />
-              <KeyValue label="الفصل المقترح" value={course.term_hint === 1 ? 'خريف' : 'ربيع'} />
-              <KeyValue label="تُحتسب في المعدل" value={course.counts_in_gpa ? 'نعم' : 'لا'} />
-              <KeyValue label="تاريخ الإنشاء" value={formatDate(course.created_at)} />
+              <KeyValue label={t('الساعات')} value={formatInt(course.credits)} />
+              <KeyValue label={t('الفئة')} value={course.category} />
+              <KeyValue label={t('المستوى')} value={formatInt(course.level_hint)} />
+              <KeyValue
+                label={t('الفصل المقترح')}
+                value={course.term_hint === 1 ? t('خريف') : t('ربيع')}
+              />
+              <KeyValue
+                label={t('تُحتسب في المعدل')}
+                value={course.counts_in_gpa ? t('نعم') : t('لا')}
+              />
+              <KeyValue label={t('تاريخ الإنشاء')} value={formatDate(course.created_at)} />
             </dl>
           </CardContent>
         </Card>
@@ -181,24 +193,27 @@ export function AdminCourseDetailPage() {
             <CardTitle
               action={
                 <Button size="sm" variant="outline" onClick={() => setPrereqOpen(true)} icon={<Plus className="h-4 w-4" />}>
-                  إضافة متطلب
+                  {t('إضافة متطلب')}
                 </Button>
               }
             >
-              المتطلبات السابقة
+              {t('المتطلبات السابقة')}
             </CardTitle>
           </CardHeader>
           <CardContent>
             {prerequisites.length === 0 ? (
-              <EmptyState title="لا توجد متطلبات" description="هذا المقرر متاح دون متطلب سابق محدد." />
+              <EmptyState
+                title={t('لا توجد متطلبات')}
+                description={t('هذا المقرر متاح دون متطلب سابق محدد.')}
+              />
             ) : (
               <TableWrap>
                 <Table>
                   <THead>
                     <Tr>
-                      <Th>النوع</Th>
-                      <Th>المتطلب</Th>
-                      <Th>الحد الأدنى</Th>
+                      <Th>{t('النوع')}</Th>
+                      <Th>{t('المتطلب')}</Th>
+                      <Th>{t('الحد الأدنى')}</Th>
                       <Th />
                     </Tr>
                   </THead>
@@ -212,19 +227,21 @@ export function AdminCourseDetailPage() {
                             }
                           >
                             {row.type === 'prerequisite'
-                              ? 'متطلب سابق'
+                              ? t('متطلب سابق')
                               : row.type === 'corequisite'
-                                ? 'متزامن'
-                                : 'ساعات مطلوبة'}
+                                ? t('متزامن')
+                                : t('ساعات مطلوبة')}
                           </Badge>
                         </Td>
                         <Td className="font-mono text-xs">{row.required_course_code ?? '—'}</Td>
                         <Td className="text-xs">
-                          {row.min_passed_credit_hours === null ? '—' : `${formatInt(row.min_passed_credit_hours)} ساعة`}
+                          {row.min_passed_credit_hours === null
+                            ? '—'
+                            : t('{{n}} ساعة', { n: formatInt(row.min_passed_credit_hours) })}
                         </Td>
                         <Td>
                           <IconButton
-                            label="حذف المتطلب"
+                            label={t('حذف المتطلب')}
                             onClick={() => removePrerequisite.mutate(row.id)}
                           >
                             <Trash2 className="h-4 w-4 text-danger" />
@@ -244,28 +261,28 @@ export function AdminCourseDetailPage() {
             <CardTitle
               action={
                 <Button size="sm" variant="outline" onClick={openNewOffering} icon={<CalendarDays className="h-4 w-4" />}>
-                  عرض فصلي جديد
+                  {t('عرض فصلي جديد')}
                 </Button>
               }
             >
-              العروض الفصلية
+              {t('العروض الفصلية')}
             </CardTitle>
           </CardHeader>
           <CardContent>
             {offerings.length === 0 ? (
               <EmptyState
-                title="لا توجد عروض فصلية"
-                description="لن يظهر المقرر في خطط الفصول التي لا يوجد لها عرض."
+                title={t('لا توجد عروض فصلية')}
+                description={t('لن يظهر المقرر في خطط الفصول التي لا يوجد لها عرض.')}
               />
             ) : (
               <TableWrap>
                 <Table>
                   <THead>
                     <Tr>
-                      <Th>الفصل</Th>
-                      <Th>السعة</Th>
-                      <Th>المسجلون</Th>
-                      <Th>الحالة</Th>
+                      <Th>{t('الفصل')}</Th>
+                      <Th>{t('السعة')}</Th>
+                      <Th>{t('المسجلون')}</Th>
+                      <Th>{t('الحالة')}</Th>
                       <Th />
                     </Tr>
                   </THead>
@@ -273,7 +290,7 @@ export function AdminCourseDetailPage() {
                     {offerings.map((offering) => (
                       <Tr key={offering.id}>
                         <Td className="text-sm font-semibold">
-                          {SEASONS[offering.season]} {offering.academic_year}
+                          {t(SEASONS[offering.season])} {offering.academic_year}
                         </Td>
                         <Td>{formatInt(offering.capacity)}</Td>
                         <Td>{formatInt(offering.enrolled_count)}</Td>
@@ -283,7 +300,11 @@ export function AdminCourseDetailPage() {
                               offering.status === 'open' ? 'success' : offering.status === 'closed' ? 'neutral' : 'danger'
                             }
                           >
-                            {offering.status === 'open' ? 'مفتوح' : offering.status === 'closed' ? 'مغلق' : 'ملغي'}
+                            {offering.status === 'open'
+                              ? t('مفتوح')
+                              : offering.status === 'closed'
+                                ? t('مغلق')
+                                : t('ملغي')}
                           </Badge>
                         </Td>
                         <Td>
@@ -298,10 +319,10 @@ export function AdminCourseDetailPage() {
                                 setOfferingOpen(true);
                               }}
                             >
-                              تعديل
+                              {t('تعديل')}
                             </Button>
                             <IconButton
-                              label="حذف العرض"
+                              label={t('حذف العرض')}
                               onClick={() => removeOffering.mutate(offering.id)}
                             >
                               <Trash2 className="h-4 w-4 text-danger" />
@@ -319,20 +340,25 @@ export function AdminCourseDetailPage() {
 
         <Card className="lg:col-span-3">
           <CardHeader>
-            <CardTitle>متطلبات البرامج</CardTitle>
+            <CardTitle>{t('متطلبات البرامج')}</CardTitle>
           </CardHeader>
           <CardContent>
             {requirements.length === 0 ? (
-              <EmptyState title="غير مرتبط ببرنامج" description="أضف المقرر إلى خطة برنامج من بيانات اللائحة." />
+              <EmptyState
+                title={t('غير مرتبط ببرنامج')}
+                description={t('أضف المقرر إلى خطة برنامج من بيانات اللائحة.')}
+              />
             ) : (
               <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-3">
                 {requirements.map((row) => (
                   <div key={row.id} className="rounded-xl border border-ink-100 p-3">
                     <div className="flex items-center justify-between gap-2">
                       <Badge tone="brand">{PROGRAM_LABELS[row.program].short}</Badge>
-                      <span className="text-xs text-ink-500">{COURSE_ROLES[row.role] ?? row.role}</span>
+                      <span className="text-xs text-ink-500">{t(COURSE_ROLES[row.role] ?? row.role)}</span>
                     </div>
-                    <p className="mt-1 text-sm font-semibold text-ink-900">{row.pool_code ?? 'مقرر إجباري'}</p>
+                    <p className="mt-1 text-sm font-semibold text-ink-900">
+                      {row.pool_code ?? t('مقرر إجباري')}
+                    </p>
                   </div>
                 ))}
               </div>
@@ -344,19 +370,19 @@ export function AdminCourseDetailPage() {
       <Modal
         open={prereqOpen}
         onClose={() => setPrereqOpen(false)}
-        title="إضافة متطلب"
-        description="المتطلب السابق يُطبّق بقاعدة A-CAT-09. المتطلب المتزامن استثناء محدود."
+        title={t('إضافة متطلب')}
+        description={t('المتطلب السابق يُطبّق بقاعدة A-CAT-09. المتطلب المتزامن استثناء محدود.')}
         footer={
           <>
             <Button variant="ghost" onClick={() => setPrereqOpen(false)}>
-              إلغاء
+              {t('إلغاء')}
             </Button>
             <Button
               onClick={() => addPrerequisite.mutate()}
               loading={addPrerequisite.isPending}
               disabled={prereqType === 'hours_required' ? !minHours : requiredCode.trim().length !== 7}
             >
-              إضافة
+              {t('إضافة')}
             </Button>
           </>
         }
@@ -364,18 +390,18 @@ export function AdminCourseDetailPage() {
         <div className="space-y-3">
           {addPrerequisite.isError && <Alert tone="danger">{errorMessage(addPrerequisite.error)}</Alert>}
           <Select
-            label="نوع المتطلب"
+            label={t('نوع المتطلب')}
             value={prereqType}
             onChange={(event) => setPrereqType(event.target.value as typeof prereqType)}
             options={[
-              { value: 'prerequisite', label: 'متطلب سابق' },
-              { value: 'corequisite', label: 'متطلب متزامن' },
-              { value: 'hours_required', label: 'حد أدنى للساعات' },
+              { value: 'prerequisite', label: t('متطلب سابق') },
+              { value: 'corequisite', label: t('متطلب متزامن') },
+              { value: 'hours_required', label: t('حد أدنى للساعات') },
             ]}
           />
           {prereqType === 'hours_required' ? (
             <Input
-              label="الحد الأدنى للساعات المجتازة"
+              label={t('الحد الأدنى للساعات المجتازة')}
               type="number"
               min={0}
               max={300}
@@ -385,7 +411,7 @@ export function AdminCourseDetailPage() {
             />
           ) : (
             <Input
-              label="كود المقرر المطلوب"
+              label={t('كود المقرر المطلوب')}
               dir="ltr"
               value={requiredCode}
               onChange={(event) => setRequiredCode(event.target.value.toUpperCase())}
@@ -395,7 +421,9 @@ export function AdminCourseDetailPage() {
             />
           )}
           <Alert tone="info">
-            المتطلب المتزامن يُقبل فقط إذا كان المقرر الناقص مسجلًا في نفس الفصل. الرسوب التاريخي لا يُستثنى.
+            {t(
+              'المتطلب المتزامن يُقبل فقط إذا كان المقرر الناقص مسجلًا في نفس الفصل. الرسوب التاريخي لا يُستثنى.',
+            )}
           </Alert>
         </div>
       </Modal>
@@ -406,8 +434,12 @@ export function AdminCourseDetailPage() {
           setOfferingOpen(false);
           setEditingOffering(null);
         }}
-        title={editingOffering ? 'تعديل عرض فصلي' : 'عرض فصلي جديد'}
-        description={editingOffering ? undefined : 'بعد إضافة العرض يمكن للطالب رؤية المقرر كخيار في ذلك الفصل.'}
+        title={editingOffering ? t('تعديل عرض فصلي') : t('عرض فصلي جديد')}
+        description={
+          editingOffering
+            ? undefined
+            : t('بعد إضافة العرض يمكن للطالب رؤية المقرر كخيار في ذلك الفصل.')
+        }
         footer={
           <>
             <Button
@@ -417,14 +449,14 @@ export function AdminCourseDetailPage() {
                 setEditingOffering(null);
               }}
             >
-              إلغاء
+              {t('إلغاء')}
             </Button>
             <Button
               onClick={() => saveOffering.mutate()}
               loading={saveOffering.isPending}
               disabled={!editingOffering && !/^\d{4}-\d{4}$/.test(academicYear.trim())}
             >
-              حفظ
+              {t('حفظ')}
             </Button>
           </>
         }
@@ -434,29 +466,29 @@ export function AdminCourseDetailPage() {
           {!editingOffering && (
             <div className="grid gap-3 sm:grid-cols-2">
               <Input
-                label="السنة الأكاديمية"
+                label={t('السنة الأكاديمية')}
                 dir="ltr"
                 value={academicYear}
                 onChange={(event) => setAcademicYear(event.target.value)}
                 placeholder="2026-2027"
-                hint="الصيغة YYYY-YYYY"
+                hint={t('الصيغة YYYY-YYYY')}
                 required
               />
               <Select
-                label="الفصل"
+                label={t('الفصل')}
                 value={season}
                 onChange={(event) => setSeason(event.target.value as Season)}
                 options={[
-                  { value: 'fall', label: 'خريف' },
-                  { value: 'spring', label: 'ربيع' },
-                  { value: 'summer', label: 'صيف' },
+                  { value: 'fall', label: t('خريف') },
+                  { value: 'spring', label: t('ربيع') },
+                  { value: 'summer', label: t('صيف') },
                 ]}
               />
             </div>
           )}
           <div className="grid gap-3 sm:grid-cols-2">
             <Input
-              label="السعة"
+              label={t('السعة')}
               type="number"
               min={0}
               max={1000}
@@ -464,18 +496,18 @@ export function AdminCourseDetailPage() {
               onChange={(event) => setCapacity(event.target.value)}
             />
             <Select
-              label="الحالة"
+              label={t('الحالة')}
               value={offeringStatus}
               onChange={(event) => setOfferingStatus(event.target.value as typeof offeringStatus)}
               options={[
-                { value: 'open', label: 'مفتوح' },
-                { value: 'closed', label: 'مغلق' },
-                { value: 'cancelled', label: 'ملغي' },
+                { value: 'open', label: t('مفتوح') },
+                { value: 'closed', label: t('مغلق') },
+                { value: 'cancelled', label: t('ملغي') },
               ]}
             />
           </div>
           <p className="text-xs leading-5 text-ink-500">
-            إلغاء عرض لا يحذف سجلات التسجيل التاريخية. حذف العرض يزيله من الخطط المستقبلية فقط.
+            {t('إلغاء عرض لا يحذف سجلات التسجيل التاريخية. حذف العرض يزيله من الخطط المستقبلية فقط.')}
           </p>
         </div>
       </Modal>

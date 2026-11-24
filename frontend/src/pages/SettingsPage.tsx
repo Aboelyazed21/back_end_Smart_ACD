@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { KeyRound, LogOut, Monitor, ShieldCheck, Smartphone } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
+import { KeyRound, LogOut, Monitor, Pencil, ShieldCheck, Smartphone } from 'lucide-react';
 import { api, errorMessage } from '../lib/api';
 import { useAuth } from '../auth/AuthProvider';
 import type { AuthSessionRow } from '../lib/types';
@@ -17,8 +18,14 @@ import { Modal } from '../components/ui/Modal';
 import { KeyValue, PageHeader } from '../components/ui/Page';
 import { useToast } from '../components/ui/Toast';
 
+interface StudentProfile {
+  fullName: string;
+  phone: string | null;
+}
+
 export function SettingsPage() {
   const { user, me, reloadMe, logoutAll } = useAuth();
+  const { t } = useTranslation();
   const toast = useToast();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
@@ -27,6 +34,17 @@ export function SettingsPage() {
   const [newPassword, setNewPassword] = useState('');
   const [confirm, setConfirm] = useState('');
   const [logoutOpen, setLogoutOpen] = useState(false);
+  const [profileOpen, setProfileOpen] = useState(false);
+  const [fullName, setFullName] = useState('');
+  const [phone, setPhone] = useState('');
+
+  const isStudent = user?.role === 'student';
+
+  const profile = useQuery({
+    queryKey: ['student', 'profile'],
+    queryFn: () => api<{ data: { student: StudentProfile } }>('/student/profile'),
+    enabled: isStudent,
+  });
 
   const sessions = useQuery({
     queryKey: ['auth', 'sessions'],
@@ -42,8 +60,8 @@ export function SettingsPage() {
       }),
     onSuccess: async () => {
       toast.success(
-        'تم تغيير كلمة المرور',
-        'أُنهيت كل جلسات التجديد. أكمل عملك الحالي ثم سجّل الدخول من جديد عند انتهاء الجلسة.',
+        t('تم تغيير كلمة المرور'),
+        t('أُنهيت كل جلسات التجديد. أكمل عملك الحالي ثم سجّل الدخول من جديد عند انتهاء الجلسة.'),
       );
       setCurrentPassword('');
       setNewPassword('');
@@ -51,16 +69,16 @@ export function SettingsPage() {
       await reloadMe();
       await queryClient.invalidateQueries({ queryKey: ['auth', 'sessions'] });
     },
-    onError: (error) => toast.error('تعذر تغيير كلمة المرور', errorMessage(error)),
+    onError: (error) => toast.error(t('تعذر تغيير كلمة المرور'), errorMessage(error)),
   });
 
   const revoke = useMutation({
     mutationFn: (id: string) => api(`/auth/sessions/${id}`, { method: 'DELETE' }),
     onSuccess: async () => {
-      toast.success('تم إنهاء الجلسة');
+      toast.success(t('تم إنهاء الجلسة'));
       await queryClient.invalidateQueries({ queryKey: ['auth', 'sessions'] });
     },
-    onError: (error) => toast.error('تعذر إنهاء الجلسة', errorMessage(error)),
+    onError: (error) => toast.error(t('تعذر إنهاء الجلسة'), errorMessage(error)),
   });
 
   const endAll = useMutation({
@@ -68,7 +86,22 @@ export function SettingsPage() {
     onSuccess: () => {
       navigate('/login', { replace: true });
     },
-    onError: (error) => toast.error('تعذر إنهاء الجلسات', errorMessage(error)),
+    onError: (error) => toast.error(t('تعذر إنهاء الجلسات'), errorMessage(error)),
+  });
+
+  const updateProfile = useMutation({
+    mutationFn: () =>
+      api('/student/profile', {
+        method: 'PATCH',
+        body: { fullName: fullName.trim(), phone: phone.trim() || null },
+      }),
+    onSuccess: async () => {
+      toast.success(t('تم تحديث بيانات التواصل'));
+      setProfileOpen(false);
+      await reloadMe();
+      await queryClient.invalidateQueries({ queryKey: ['student', 'profile'] });
+    },
+    onError: (error) => toast.error(t('تعذر تحديث البيانات'), errorMessage(error)),
   });
 
   const checks = passwordChecks(newPassword);
@@ -80,51 +113,80 @@ export function SettingsPage() {
   return (
     <div>
       <PageHeader
-        eyebrow="إعدادات الحساب"
-        title="الأمان والملف الشخصي"
-        description="بياناتك تُدار مركزيًا من إدارة الكلية. يمكنك هنا تغيير كلمة المرور ومراجعة الجلسات النشطة وإنهائها."
+        eyebrow={t('إعدادات الحساب')}
+        title={t('الأمان والملف الشخصي')}
+        description={t(
+          'بياناتك تُدار مركزيًا من إدارة الكلية. يمكنك هنا تغيير كلمة المرور ومراجعة الجلسات النشطة وإنهائها.',
+        )}
       />
 
       <div className="grid gap-4 lg:grid-cols-3">
         <Card>
           <CardHeader>
-            <CardTitle>الملف الشخصي</CardTitle>
+            <CardTitle
+              action={
+                isStudent ? (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    icon={<Pencil className="h-4 w-4" />}
+                    onClick={() => {
+                      setFullName(profile.data?.data.student.fullName ?? user?.fullName ?? '');
+                      setPhone(profile.data?.data.student.phone ?? user?.phone ?? '');
+                      setProfileOpen(true);
+                    }}
+                  >
+                    {t('تعديل')}
+                  </Button>
+                ) : undefined
+              }
+            >
+              {t('الملف الشخصي')}
+            </CardTitle>
           </CardHeader>
           <CardContent>
             <dl>
-              <KeyValue label="الاسم" value={user?.fullName ?? '—'} />
-              <KeyValue label="البريد" value={<span dir="ltr">{user?.email ?? '—'}</span>} />
-              <KeyValue label="الدور" value={user ? ROLE_LABELS[user.role] : '—'} />
+              <KeyValue label={t('الاسم')} value={user?.fullName ?? '—'} />
+              <KeyValue label={t('البريد')} value={<span dir="ltr">{user?.email ?? '—'}</span>} />
+              <KeyValue label={t('الدور')} value={user ? t(ROLE_LABELS[user.role]) : '—'} />
               <KeyValue
-                label="الحالة"
+                label={t('الحالة')}
                 value={
                   <Badge tone={user?.status === 'active' ? 'success' : 'neutral'}>
-                    {user?.status === 'active' ? 'نشط' : user?.status === 'suspended' ? 'موقوف' : 'غير نشط'}
+                    {user?.status === 'active'
+                      ? t('نشط')
+                      : user?.status === 'suspended'
+                        ? t('موقوف')
+                        : t('غير نشط')}
                   </Badge>
                 }
               />
-              <KeyValue label="الهاتف" value={<span dir="ltr">{user?.phone ?? '—'}</span>} />
-              <KeyValue label="أُنشئ" value={formatDate(user?.createdAt)} />
-              {user?.isDemo && <KeyValue label="الحساب" value={<Badge tone="neutral">تجريبي</Badge>} />}
+              <KeyValue label={t('الهاتف')} value={<span dir="ltr">{user?.phone ?? '—'}</span>} />
+              <KeyValue label={t('أُنشئ')} value={formatDate(user?.createdAt)} />
             </dl>
 
             {me?.student && (
               <div className="mt-3 rounded-xl bg-brand-50 p-3 text-xs leading-6 text-brand-900">
-                <p className="font-bold">بيانات الطالب</p>
+                <p className="font-bold">{t('بيانات الطالب')}</p>
                 <p>
-                  {me.student.student_code} · {PROGRAM_LABELS[me.student.program].ar} · المستوى{' '}
+                  {me.student.student_code} · {t(PROGRAM_LABELS[me.student.program].ar)} · {t('المستوى')}{' '}
                   {formatInt(me.student.level)}
                 </p>
                 <p>
-                  CGPA {me.student.current_cgpa ?? '—'} · {formatInt(me.student.passed_credits)} ساعة مجتازة
+                  CGPA {me.student.current_cgpa ?? '—'} · {formatInt(me.student.passed_credits)}{' '}
+                  {t('ساعة مجتازة')}
                 </p>
               </div>
             )}
             {me?.advisor && (
               <div className="mt-3 rounded-xl bg-brand-50 p-3 text-xs leading-6 text-brand-900">
-                <p className="font-bold">بيانات المرشد</p>
-                <p>المكتب: {me.advisor.office_location ?? '—'}</p>
-                <p>الحد الأقصى للطلاب: {formatInt(me.advisor.max_students)}</p>
+                <p className="font-bold">{t('بيانات المرشد')}</p>
+                <p>
+                  {t('المكتب')}: {me.advisor.office_location ?? '—'}
+                </p>
+                <p>
+                  {t('الحد الأقصى للطلاب')}: {formatInt(me.advisor.max_students)}
+                </p>
               </div>
             )}
           </CardContent>
@@ -132,10 +194,14 @@ export function SettingsPage() {
 
         <Card className="lg:col-span-2">
           <CardHeader>
-            <CardTitle action={<Badge tone={user?.mustChangePassword ? 'warning' : 'success'}>
-              {user?.mustChangePassword ? 'تغيير مطلوب' : 'آمن'}
-            </Badge>}>
-              تغيير كلمة المرور
+            <CardTitle
+              action={
+                <Badge tone={user?.mustChangePassword ? 'warning' : 'success'}>
+                  {user?.mustChangePassword ? t('تغيير مطلوب') : t('آمن')}
+                </Badge>
+              }
+            >
+              {t('تغيير كلمة المرور')}
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -149,12 +215,12 @@ export function SettingsPage() {
             >
               {changePassword.isError && <Alert tone="danger">{errorMessage(changePassword.error)}</Alert>}
               {user?.mustChangePassword && (
-                <Alert tone="warning" title="كلمة مرور مؤقتة">
-                  يجب تغيير كلمة المرور المؤقتة قبل متابعة الاستخدام. اختر كلمة مرور جديدة لا تشبه السابقة.
+                <Alert tone="warning" title={t('كلمة مرور مؤقتة')}>
+                  {t('يجب تغيير كلمة المرور المؤقتة قبل متابعة الاستخدام. اختر كلمة مرور جديدة لا تشبه السابقة.')}
                 </Alert>
               )}
               <Input
-                label="كلمة المرور الحالية"
+                label={t('كلمة المرور الحالية')}
                 type="password"
                 dir="ltr"
                 autoComplete="current-password"
@@ -165,7 +231,7 @@ export function SettingsPage() {
               />
               <div className="grid gap-3 sm:grid-cols-2">
                 <Input
-                  label="كلمة المرور الجديدة"
+                  label={t('كلمة المرور الجديدة')}
                   type="password"
                   dir="ltr"
                   autoComplete="new-password"
@@ -175,29 +241,29 @@ export function SettingsPage() {
                   required
                 />
                 <Input
-                  label="تأكيد كلمة المرور"
+                  label={t('تأكيد كلمة المرور')}
                   type="password"
                   dir="ltr"
                   autoComplete="new-password"
                   value={confirm}
                   onChange={(event) => setConfirm(event.target.value)}
-                  error={mismatch ? 'كلمتا المرور غير متطابقتين' : undefined}
+                  error={mismatch ? t('كلمتا المرور غير متطابقتين') : undefined}
                   required
                 />
               </div>
               <ul className="grid gap-1.5 rounded-xl bg-ink-50 p-3 text-xs sm:grid-cols-2">
                 {checks.map((check) => (
                   <li key={check.label} className={check.ok ? 'font-semibold text-emerald-700' : 'text-ink-500'}>
-                    {check.ok ? '✓' : '•'} {check.label}
+                    {check.ok ? '✓' : '•'} {t(check.label)}
                   </li>
                 ))}
               </ul>
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <p className="text-[11px] leading-5 text-ink-500">
-                  تغيير كلمة المرور يُبطل كل رموز التجديد الحالية للحساب.
+                  {t('تغيير كلمة المرور يُبطل كل رموز التجديد الحالية للحساب.')}
                 </p>
                 <Button type="submit" loading={changePassword.isPending} disabled={!canChange}>
-                  تغيير كلمة المرور
+                  {t('تغيير كلمة المرور')}
                 </Button>
               </div>
             </form>
@@ -214,11 +280,11 @@ export function SettingsPage() {
                   onClick={() => setLogoutOpen(true)}
                   icon={<LogOut className="h-4 w-4" />}
                 >
-                  إنهاء كل الجلسات
+                  {t('إنهاء كل الجلسات')}
                 </Button>
               }
             >
-              الجلسات النشطة
+              {t('الجلسات النشطة')}
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -227,7 +293,7 @@ export function SettingsPage() {
             ) : sessions.isError ? (
               <ErrorState message={errorMessage(sessions.error)} onRetry={() => void sessions.refetch()} />
             ) : rows.length === 0 ? (
-              <EmptyState title="لا توجد جلسات" description="لم يُعثر على جلسات نشطة." />
+              <EmptyState title={t('لا توجد جلسات')} description={t('لم يُعثر على جلسات نشطة.')} />
             ) : (
               <div className="grid gap-2">
                 {rows.map((session) => {
@@ -244,18 +310,20 @@ export function SettingsPage() {
                         </span>
                         <div className="min-w-0">
                           <p className="max-w-md truncate text-sm font-semibold text-ink-900" dir="ltr">
-                            {session.user_agent ?? 'عميل غير معروف'}
+                            {session.user_agent ?? t('عميل غير معروف')}
                           </p>
                           <p className="text-[11px] text-ink-500" dir="ltr">
-                            {session.ip ?? '—'} · أُنشئت {formatDate(session.created_at, true)}
+                            {session.ip ?? '—'} · {t('أُنشئت')} {formatDate(session.created_at, true)}
                           </p>
                           <p className="text-[11px] text-ink-400">
-                            تنتهي {formatDate(session.expires_at, true)}
+                            {t('تنتهي')} {formatDate(session.expires_at, true)}
                           </p>
                         </div>
                       </div>
                       <div className="flex items-center gap-2">
-                        <Badge tone={active ? 'success' : 'neutral'}>{active ? 'نشطة' : 'منتهية'}</Badge>
+                        <Badge tone={active ? 'success' : 'neutral'}>
+                          {active ? t('نشطة') : t('منتهية')}
+                        </Badge>
                         {active && (
                           <Button
                             variant="outline"
@@ -263,7 +331,7 @@ export function SettingsPage() {
                             onClick={() => revoke.mutate(session.id)}
                             loading={revoke.isPending && revoke.variables === session.id}
                           >
-                            إنهاء
+                            {t('إنهاء')}
                           </Button>
                         )}
                       </div>
@@ -279,22 +347,64 @@ export function SettingsPage() {
       <Modal
         open={logoutOpen}
         onClose={() => setLogoutOpen(false)}
-        title="إنهاء كل الجلسات"
-        description="سيتم تسجيل الخروج من هذا الجهاز وكل الأجهزة الأخرى فورًا."
+        title={t('إنهاء كل الجلسات')}
+        description={t('سيتم تسجيل الخروج من هذا الجهاز وكل الأجهزة الأخرى فورًا.')}
         footer={
           <>
             <Button variant="ghost" onClick={() => setLogoutOpen(false)}>
-              إلغاء
+              {t('إلغاء')}
             </Button>
             <Button variant="danger" onClick={() => endAll.mutate()} loading={endAll.isPending}>
-              إنهاء الكل والخروج
+              {t('إنهاء الكل والخروج')}
             </Button>
           </>
         }
       >
         <Alert tone="warning">
-          أي عمل غير محفوظ سيُفقد. ستحتاج إلى تسجيل الدخول مجددًا للمتابعة.
+          {t('أي عمل غير محفوظ سيُفقد. ستحتاج إلى تسجيل الدخول مجددًا للمتابعة.')}
         </Alert>
+      </Modal>
+
+      <Modal
+        open={profileOpen}
+        onClose={() => setProfileOpen(false)}
+        title={t('تعديل بيانات التواصل')}
+        description={t('يمكنك تعديل الاسم ورقم الهاتف فقط. باقي بياناتك تُدار من إدارة الكلية.')}
+        footer={
+          <>
+            <Button variant="ghost" onClick={() => setProfileOpen(false)}>
+              {t('إلغاء')}
+            </Button>
+            <Button
+              onClick={() => updateProfile.mutate()}
+              loading={updateProfile.isPending}
+              disabled={fullName.trim().length < 2}
+            >
+              {t('حفظ')}
+            </Button>
+          </>
+        }
+      >
+        <div className="space-y-3">
+          {updateProfile.isError && <Alert tone="danger">{errorMessage(updateProfile.error)}</Alert>}
+          <Input
+            label={t('الاسم الكامل')}
+            value={fullName}
+            onChange={(event) => setFullName(event.target.value)}
+            maxLength={200}
+            required
+          />
+          <Input
+            label={t('رقم الهاتف')}
+            type="tel"
+            dir="ltr"
+            value={phone}
+            onChange={(event) => setPhone(event.target.value)}
+            maxLength={30}
+            placeholder="01000000000"
+          />
+          <Alert tone="info">{t('لا يمكن تغيير البريد أو الرقم الجامعي أو البرنامج من هنا.')}</Alert>
+        </div>
       </Modal>
     </div>
   );

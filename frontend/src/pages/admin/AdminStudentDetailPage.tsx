@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useTranslation } from 'react-i18next';
 import { ArrowRight, Pencil } from 'lucide-react';
 import { api, errorMessage } from '../../lib/api';
 import type { AdminStudentDetail, AdvisorAdminRow, Department, Program } from '../../lib/types';
@@ -17,6 +18,7 @@ import { Table, TableEmpty, TableWrap, TBody, Td, Th, THead, Tr } from '../../co
 import { useToast } from '../../components/ui/Toast';
 
 export function AdminStudentDetailPage() {
+  const { t } = useTranslation();
   const { id = '' } = useParams();
   const toast = useToast();
   const queryClient = useQueryClient();
@@ -62,12 +64,12 @@ export function AdminStudentDetailPage() {
         },
       }),
     onSuccess: async () => {
-      toast.success('تم تحديث بيانات الطالب');
+      toast.success(t('تم تحديث بيانات الطالب'));
       setOpen(false);
       await queryClient.invalidateQueries({ queryKey: ['admin', 'student', id] });
       await queryClient.invalidateQueries({ queryKey: ['admin', 'students'] });
     },
-    onError: (error) => toast.error('تعذر تحديث البيانات', errorMessage(error)),
+    onError: (error) => toast.error(t('تعذر تحديث البيانات'), errorMessage(error)),
   });
 
   if (query.isLoading) return <LoadingBlock />;
@@ -111,16 +113,19 @@ export function AdminStudentDetailPage() {
         to="/admin/students"
         className="mb-4 inline-flex items-center gap-1 text-sm font-semibold text-brand-700 hover:underline"
       >
-        <ArrowRight className="h-4 w-4" /> كل الطلاب
+        <ArrowRight className="h-4 w-4" /> {t('كل الطلاب')}
       </Link>
 
       <PageHeader
-        eyebrow={`سجل الطالب · ${studentCode}`}
-        title={String(studentRow.full_name ?? 'طالب')}
-        description={`${PROGRAM_LABELS[(studentRow.program as Program) ?? 'CS'].ar} — المستوى ${formatInt(Number(studentRow.level ?? 1))}`}
+        eyebrow={t('سجل الطالب · {{code}}', { code: studentCode })}
+        title={String(studentRow.full_name ?? t('طالب'))}
+        description={t('{{program}} — المستوى {{level}}', {
+          program: t(PROGRAM_LABELS[(studentRow.program as Program) ?? 'CS'].ar),
+          level: formatInt(Number(studentRow.level ?? 1)),
+        })}
         actions={
           <Button variant="outline" onClick={openEdit} icon={<Pencil className="h-4 w-4" />}>
-            تعديل البيانات
+            {t('تعديل البيانات')}
           </Button>
         }
       />
@@ -128,49 +133,54 @@ export function AdminStudentDetailPage() {
       <div className="mb-4 grid gap-4 lg:grid-cols-3">
         <Card>
           <CardHeader>
-            <CardTitle>البيانات الأكاديمية</CardTitle>
+            <CardTitle>{t('البيانات الأكاديمية')}</CardTitle>
           </CardHeader>
           <CardContent>
             <dl>
-              <KeyValue label="رقم الطالب" value={<span className="font-mono">{studentCode}</span>} />
-              <KeyValue label="البريد" value={<span dir="ltr">{String(studentRow.email ?? '—')}</span>} />
-              <KeyValue label="الهاتف" value={<span dir="ltr">{String(studentRow.phone ?? '—')}</span>} />
-              <KeyValue label="البرنامج" value={PROGRAM_LABELS[(studentRow.program as Program) ?? 'CS'].ar} />
-              <KeyValue label="المستوى" value={formatInt(Number(studentRow.level ?? 1))} />
-              <KeyValue label="CGPA" value={formatNumber(cgpaValue, 2)} />
-              <KeyValue label="الساعات المجتازة" value={formatInt(passed)} />
-              <KeyValue label="الساعات المحوّلة" value={formatInt(transfer)} />
+              <KeyValue label={t('رقم الطالب')} value={<span className="font-mono">{studentCode}</span>} />
+              <KeyValue label={t('البريد')} value={<span dir="ltr">{String(studentRow.email ?? '—')}</span>} />
+              <KeyValue label={t('الهاتف')} value={<span dir="ltr">{String(studentRow.phone ?? '—')}</span>} />
               <KeyValue
-                label="الفصول النظامية"
+                label={t('البرنامج')}
+                value={t(PROGRAM_LABELS[(studentRow.program as Program) ?? 'CS'].ar)}
+              />
+              <KeyValue label={t('المستوى')} value={formatInt(Number(studentRow.level ?? 1))} />
+              <KeyValue label="CGPA" value={formatNumber(cgpaValue, 2)} />
+              <KeyValue label={t('الساعات المجتازة')} value={formatInt(passed)} />
+              <KeyValue label={t('الساعات المحوّلة')} value={formatInt(transfer)} />
+              <KeyValue
+                label={t('الفصول النظامية')}
                 value={formatInt(Number(studentRow.regular_semesters_completed ?? 0))}
               />
               <KeyValue
-                label="فصل القبول"
+                label={t('فصل القبول')}
                 value={studentRow.admission_term ? formatTerm(String(studentRow.admission_term)) : '—'}
               />
               <KeyValue
-                label="الحالة"
+                label={t('الحالة')}
                 value={<Badge tone={studentRow.status === 'active' ? 'success' : 'neutral'}>{String(studentRow.status)}</Badge>}
               />
-              {Boolean(studentRow.is_demo) && <KeyValue label="حساب" value={<Badge tone="neutral">تجريبي</Badge>} />}
+              {Boolean(studentRow.is_demo) && (
+                <KeyValue label={t('حساب')} value={<Badge tone="neutral">{t('تجريبي')}</Badge>} />
+              )}
             </dl>
           </CardContent>
         </Card>
 
         <Card className="lg:col-span-2">
           <CardHeader>
-            <CardTitle>المرشد الأكاديمي</CardTitle>
+            <CardTitle>{t('المرشد الأكاديمي')}</CardTitle>
           </CardHeader>
           <CardContent>
             {data.advisor ? (
               <dl>
-                <KeyValue label="الاسم" value={data.advisor.full_name} />
-                <KeyValue label="البريد" value={<span dir="ltr">{data.advisor.email}</span>} />
-                <KeyValue label="المكتب" value={data.advisor.office_location ?? '—'} />
+                <KeyValue label={t('الاسم')} value={data.advisor.full_name} />
+                <KeyValue label={t('البريد')} value={<span dir="ltr">{data.advisor.email}</span>} />
+                <KeyValue label={t('المكتب')} value={data.advisor.office_location ?? '—'} />
               </dl>
             ) : (
-              <Alert tone="warning" title="بلا مرشد">
-                هذا الطالب غير مسند لمرشد. استخدم «تعديل البيانات» لإسناد مرشد.
+              <Alert tone="warning" title={t('بلا مرشد')}>
+                {t('هذا الطالب غير مسند لمرشد. استخدم «تعديل البيانات» لإسناد مرشد.')}
               </Alert>
             )}
           </CardContent>
@@ -180,8 +190,14 @@ export function AdminStudentDetailPage() {
       <div className="grid gap-4 xl:grid-cols-2">
         <Card>
           <CardHeader>
-            <CardTitle action={<span className="text-xs text-ink-500">{formatInt(data.enrollments.length)} محاولة</span>}>
-              السجل الأكاديمي
+            <CardTitle
+              action={
+                <span className="text-xs text-ink-500">
+                  {t('{{n}} محاولة', { n: formatInt(data.enrollments.length) })}
+                </span>
+              }
+            >
+              {t('السجل الأكاديمي')}
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -189,16 +205,16 @@ export function AdminStudentDetailPage() {
               <Table>
                 <THead>
                   <Tr>
-                    <Th>المقرر</Th>
-                    <Th>الفصل</Th>
-                    <Th>الحالة</Th>
-                    <Th>التقدير</Th>
-                    <Th>المحاولة</Th>
+                    <Th>{t('المقرر')}</Th>
+                    <Th>{t('الفصل')}</Th>
+                    <Th>{t('الحالة')}</Th>
+                    <Th>{t('التقدير')}</Th>
+                    <Th>{t('المحاولة')}</Th>
                   </Tr>
                 </THead>
                 <TBody>
                   {data.enrollments.length === 0 ? (
-                    <TableEmpty colSpan={5} message="لا توجد بيانات." />
+                    <TableEmpty colSpan={5} message={t('لا توجد بيانات.')} />
                   ) : (
                     data.enrollments.map((row) => (
                       <Tr key={row.id}>
@@ -234,11 +250,11 @@ export function AdminStudentDetailPage() {
         <div className="space-y-4">
           <Card>
             <CardHeader>
-              <CardTitle>الخطط</CardTitle>
+              <CardTitle>{t('الخطط')}</CardTitle>
             </CardHeader>
             <CardContent>
               {data.plans.length === 0 ? (
-                <p className="text-sm text-ink-500">لا توجد خطط.</p>
+                <p className="text-sm text-ink-500">{t('لا توجد خطط.')}</p>
               ) : (
                 <div className="space-y-2">
                   {data.plans.map((plan) => (
@@ -248,10 +264,12 @@ export function AdminStudentDetailPage() {
                     >
                       <div>
                         <p className="text-sm font-semibold text-ink-900">{formatTerm(plan.term)}</p>
-                        <p className="text-xs text-ink-500">{formatInt(plan.total_credits)} ساعة</p>
+                        <p className="text-xs text-ink-500">
+                          {t('{{n}} ساعة', { n: formatInt(plan.total_credits) })}
+                        </p>
                       </div>
                       <Badge tone={(PLAN_STATUS_LABELS[plan.status]?.tone as never) ?? 'neutral'}>
-                        {PLAN_STATUS_LABELS[plan.status]?.ar ?? plan.status}
+                        {t(PLAN_STATUS_LABELS[plan.status]?.ar ?? plan.status)}
                       </Badge>
                     </div>
                   ))}
@@ -262,11 +280,11 @@ export function AdminStudentDetailPage() {
 
           <Card>
             <CardHeader>
-              <CardTitle>الحالات المحوّلة</CardTitle>
+              <CardTitle>{t('الحالات المحوّلة')}</CardTitle>
             </CardHeader>
             <CardContent>
               {data.escalations.length === 0 ? (
-                <p className="text-sm text-ink-500">لا توجد حالات.</p>
+                <p className="text-sm text-ink-500">{t('لا توجد حالات.')}</p>
               ) : (
                 <div className="space-y-2">
                   {data.escalations.map((item) => (
@@ -291,16 +309,18 @@ export function AdminStudentDetailPage() {
       <Modal
         open={open}
         onClose={() => setOpen(false)}
-        title="تعديل بيانات الطالب"
-        description="أي تغيير يؤثر على تقييم الأهلية والموقف الأكاديمي في الطلبات القادمة. تُسجّل التغييرات في سجل التدقيق."
+        title={t('تعديل بيانات الطالب')}
+        description={t(
+          'أي تغيير يؤثر على تقييم الأهلية والموقف الأكاديمي في الطلبات القادمة. تُسجّل التغييرات في سجل التدقيق.',
+        )}
         size="lg"
         footer={
           <>
             <Button variant="ghost" onClick={() => setOpen(false)}>
-              إلغاء
+              {t('إلغاء')}
             </Button>
             <Button onClick={() => update.mutate()} loading={update.isPending}>
-              حفظ التعديلات
+              {t('حفظ التعديلات')}
             </Button>
           </>
         }
@@ -309,41 +329,44 @@ export function AdminStudentDetailPage() {
           {update.isError && <Alert tone="danger">{errorMessage(update.error)}</Alert>}
           <div className="grid gap-3 sm:grid-cols-2">
             <Select
-              label="البرنامج"
+              label={t('البرنامج')}
               value={program}
               onChange={(event) => setProgram(event.target.value as Program)}
               options={(Object.keys(PROGRAM_LABELS) as Program[]).map((code) => ({
                 value: code,
-                label: PROGRAM_LABELS[code].ar,
+                label: t(PROGRAM_LABELS[code].ar),
               }))}
             />
             <Select
-              label="المستوى"
+              label={t('المستوى')}
               value={level}
               onChange={(event) => setLevel(event.target.value)}
-              options={[1, 2, 3, 4].map((value) => ({ value: String(value), label: `المستوى ${value}` }))}
+              options={[1, 2, 3, 4].map((value) => ({
+                value: String(value),
+                label: t('المستوى {{level}}', { level: value }),
+              }))}
             />
             <Select
-              label="المرشد"
+              label={t('المرشد')}
               value={advisorId}
               onChange={(event) => setAdvisorId(event.target.value)}
-              placeholder="بدون مرشد"
+              placeholder={t('بدون مرشد')}
               options={advisorOptions}
             />
             <Select
-              label="القسم"
+              label={t('القسم')}
               value={departmentId}
               onChange={(event) => setDepartmentId(event.target.value)}
-              placeholder="بدون قسم"
+              placeholder={t('بدون قسم')}
               options={departmentOptions}
             />
             <Input
-              label="فصل القبول"
+              label={t('فصل القبول')}
               dir="ltr"
               value={admissionTerm}
               onChange={(event) => setAdmissionTerm(event.target.value)}
               placeholder="2024-2025-fall"
-              hint="الصيغة: YYYY-YYYY-season"
+              hint={t('الصيغة: YYYY-YYYY-season')}
             />
             <Input
               label="CGPA"
@@ -355,7 +378,7 @@ export function AdminStudentDetailPage() {
               onChange={(event) => setCgpa(event.target.value)}
             />
             <Input
-              label="الساعات المجتازة"
+              label={t('الساعات المجتازة')}
               type="number"
               min={0}
               max={300}
@@ -363,7 +386,7 @@ export function AdminStudentDetailPage() {
               onChange={(event) => setPassedCredits(event.target.value)}
             />
             <Input
-              label="الساعات المحوّلة"
+              label={t('الساعات المحوّلة')}
               type="number"
               min={0}
               max={54}
@@ -371,7 +394,7 @@ export function AdminStudentDetailPage() {
               onChange={(event) => setTransferCredits(event.target.value)}
             />
             <Input
-              label="الفصول النظامية المكتملة"
+              label={t('الفصول النظامية المكتملة')}
               type="number"
               min={0}
               max={40}
@@ -380,7 +403,7 @@ export function AdminStudentDetailPage() {
             />
           </div>
           <Alert tone="warning">
-            تعديل CGPA أو الساعات يدويًا يغيّر أهلية الطالب. راجع البيانات قبل الحفظ.
+            {t('تعديل CGPA أو الساعات يدويًا يغيّر أهلية الطالب. راجع البيانات قبل الحفظ.')}
           </Alert>
         </div>
       </Modal>

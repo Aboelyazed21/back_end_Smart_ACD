@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
+import { useTranslation } from 'react-i18next';
 import { ShieldAlert } from 'lucide-react';
 import { api, errorMessage } from '../../lib/api';
 import type { AtRiskRow } from '../../lib/types';
@@ -16,6 +17,7 @@ const RISK_TONE = { critical: 'danger', high: 'warning', medium: 'info' } as con
 const RISK_LABEL = { critical: 'حرج', high: 'مرتفع', medium: 'متوسط' } as const;
 
 export function AtRiskPage() {
+  const { t } = useTranslation();
   const query = useQuery({
     queryKey: ['advisor', 'at-risk'],
     queryFn: () => api<{ data: AtRiskRow[] }>('/advisor/at-risk'),
@@ -24,9 +26,9 @@ export function AtRiskPage() {
   return (
     <div>
       <PageHeader
-        eyebrow="الإنذار المبكر"
-        title="الطلاب المعرضون للخطر"
-        description="طلاب معدلهم أقل من 2.00 أو لديهم إنذارات أو خطر فصل. تُرتّب الحالات حسب الخطورة."
+        eyebrow={t('الإنذار المبكر')}
+        title={t('الطلاب المعرضون للخطر')}
+        description={t('طلاب معدلهم أقل من 2.00 أو لديهم إنذارات أو خطر فصل. تُرتّب الحالات حسب الخطورة.')}
       />
 
       {query.isLoading ? (
@@ -34,7 +36,11 @@ export function AtRiskPage() {
       ) : query.isError ? (
         <ErrorState message={errorMessage(query.error)} onRetry={() => void query.refetch()} />
       ) : query.data?.data.length === 0 ? (
-        <EmptyState title="لا توجد حالات خطر" description="كل طلابك ضمن الحدود الآمنة حاليًا." icon={<ShieldAlert className="h-6 w-6" />} />
+        <EmptyState
+          title={t('لا توجد حالات خطر')}
+          description={t('كل طلابك ضمن الحدود الآمنة حاليًا.')}
+          icon={<ShieldAlert className="h-6 w-6" />}
+        />
       ) : (
         <Card>
           <CardContent>
@@ -42,18 +48,18 @@ export function AtRiskPage() {
               <Table>
                 <THead>
                   <Tr>
-                    <Th>الطالب</Th>
-                    <Th>البرنامج</Th>
+                    <Th>{t('الطالب')}</Th>
+                    <Th>{t('البرنامج')}</Th>
                     <Th>CGPA</Th>
-                    <Th>الإنذارات</Th>
-                    <Th>الحالة</Th>
-                    <Th>الخطورة</Th>
+                    <Th>{t('الإنذارات')}</Th>
+                    <Th>{t('الحالة')}</Th>
+                    <Th>{t('الخطورة')}</Th>
                     <Th />
                   </Tr>
                 </THead>
                 <TBody>
                   {(query.data?.data.length ?? 0) === 0 ? (
-                    <TableEmpty colSpan={7} message="لا توجد بيانات." />
+                    <TableEmpty colSpan={7} message={t('لا توجد بيانات.')} />
                   ) : (
                     query.data?.data.map((row) => (
                       <Tr key={row.id}>
@@ -66,21 +72,21 @@ export function AtRiskPage() {
                         </Td>
                         <Td className="font-bold text-danger">{formatNumber(row.current_cgpa, 2)}</Td>
                         <Td className="text-xs">
-                          {formatInt(row.warning_no ?? 0)} / متتالية {formatInt(row.consecutive_warnings ?? 0)} / إجمالية{' '}
-                          {formatInt(row.total_warnings ?? 0)}
+                          {formatInt(row.warning_no ?? 0)} / {t('متتالية')} {formatInt(row.consecutive_warnings ?? 0)} /{' '}
+                          {t('إجمالية')} {formatInt(row.total_warnings ?? 0)}
                         </Td>
                         <Td className="space-x-1 space-x-reverse">
-                          {row.probation && <Badge tone="warning">ملاحظة</Badge>}
-                          {row.dismissal_risk && <Badge tone="danger">خطر فصل</Badge>}
-                          {row.final_chance && <Badge tone="info">فرصة أخيرة</Badge>}
+                          {row.probation && <Badge tone="warning">{t('ملاحظة')}</Badge>}
+                          {row.dismissal_risk && <Badge tone="danger">{t('خطر فصل')}</Badge>}
+                          {row.final_chance && <Badge tone="info">{t('فرصة أخيرة')}</Badge>}
                         </Td>
                         <Td>
-                          <Badge tone={RISK_TONE[row.risk_level]}>{RISK_LABEL[row.risk_level]}</Badge>
+                          <Badge tone={RISK_TONE[row.risk_level]}>{t(RISK_LABEL[row.risk_level])}</Badge>
                         </Td>
                         <Td>
                           <Link to={`/advisor/students/${row.id}`}>
                             <Button variant="outline" size="sm">
-                              متابعة
+                              {t('متابعة')}
                             </Button>
                           </Link>
                         </Td>

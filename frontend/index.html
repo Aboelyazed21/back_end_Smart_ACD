@@ -1,14 +1,46 @@
 <!doctype html>
-<html lang="ar" dir="rtl">
+<html lang="en" dir="ltr">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="theme-color" content="#164741" />
+    <meta name="theme-color" content="#080808" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="AIDM" />
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <link rel="icon" href="/icon.svg" type="image/svg+xml" />
+    <link rel="apple-touch-icon" href="/icon.svg" />
     <meta
       name="description"
-      content="المرشد الأكاديمي الذكي - جامعة بدر بأسيوط. خطط دراسية استشارية مبنية على لائحة كلية تكنولوجيا المعلومات وعلوم البيانات."
+      content="Smart Academic Advisor — Badr University in Assiut. Regulation-based study plans, eligibility checks and advising for the Faculty of Information Technology & Data Science."
     />
-    <title>المرشد الأكاديمي الذكي | جامعة بدر بأسيوط</title>
+    <title>Smart Academic Advisor | Badr University in Assiut</title>
+    <script>
+      /* Applied before first paint: no flash of the wrong theme or direction. */
+      (function () {
+        var root = document.documentElement;
+        try {
+          var stored = localStorage.getItem('theme');
+          var dark =
+            stored === 'dark' ||
+            ((stored === 'system' || !stored) &&
+              window.matchMedia &&
+              window.matchMedia('(prefers-color-scheme: dark)').matches);
+          root.setAttribute('data-theme', dark ? 'dark' : 'light');
+
+          var locale = localStorage.getItem('locale');
+          var lang = locale === 'ar' ? 'ar' : 'en';
+          root.setAttribute('lang', lang);
+          root.setAttribute('dir', lang === 'ar' ? 'rtl' : 'ltr');
+
+          var meta = document.querySelector('meta[name="theme-color"]');
+          if (meta) meta.setAttribute('content', dark ? '#09090b' : '#f4f7fa');
+        } catch (e) {
+          root.setAttribute('data-theme', 'light');
+        }
+      })();
+    </script>
   </head>
   <body>
     <div id="root"></div>

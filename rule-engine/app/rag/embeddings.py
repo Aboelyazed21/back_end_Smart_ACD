@@ -5,15 +5,41 @@ import math
 import re
 import unicodedata
 
+# Bump when normalisation or the embedding algorithm changes. The policy store
+# re-embeds stored chunks when this differs from engine_metadata, so retrieval
+# never mixes vectors produced by two different normalisers.
+EMBEDDING_VERSION = "2"
+
+_DIACRITICS = re.compile(r"[\u064B-\u065F\u0670\u0640]")
+_PREFIXES = ("وال", "بال", "كال", "فال", "ال", "و", "ف", "ب", "ك", "ل")
+_SUFFIXES = ("ات", "ون", "ين", "ان", "ها", "هم", "هن", "كم", "نا")
+
 
 def normalize(text: str) -> str:
+    """Arabic-aware normalisation: unify alef/ya/ta-marbuta, drop diacritics.
+
+    This is what makes paraphrased questions ("المستوي الثاني" vs
+    "المستوى الثاني") land on the same tokens.
+    """
     text = unicodedata.normalize("NFKC", text).lower()
-    text = re.sub(r"[\u064B-\u065F\u0670]", "", text)
-    text = text.replace("ـ", "")
-    text = re.sub("[إأآٱ]", "ا", text)
-    text = text.replace("ى", "ي").replace("ؤ", "و").replace("ئ", "ي").replace("ة", "ه")
+    text = _DIACRITICS.sub("", text)
+    text = re.sub("[أإآٱ]", "ا", text)
+    text = text.replace("ى", "ي").replace("ئ", "ي").replace("ؤ", "و").replace("ة", "ه")
     text = re.sub(r"[^\w\u0600-\u06FF]+", " ", text)
     return re.sub(r"\s+", " ", text).strip()
+
+
+def stem(word: str) -> str:
+    """Light, rule-based Arabic stemmer (definite article, common affixes)."""
+    for prefix in _PREFIXES:
+        if word.startswith(prefix) and len(word) - len(prefix) >= 3:
+            word = word[len(prefix) :]
+            break
+    for suffix in _SUFFIXES:
+        if word.endswith(suffix) and len(word) - len(suffix) >= 3:
+            word = word[: -len(suffix)]
+            break
+    return word
 
 
 def tokens(text: str) -> list[str]:
@@ -21,6 +47,9 @@ def tokens(text: str) -> list[str]:
     words = [w for w in normalized.split() if len(w) > 1]
     out = list(words)
     for word in words:
+        stemmed = stem(word)
+        if stemmed != word:
+            out.append(stemmed)
         if len(word) >= 4:
             out.extend(word[i : i + 3] for i in range(0, len(word) - 2))
     return out

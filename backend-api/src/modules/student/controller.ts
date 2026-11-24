@@ -1,12 +1,15 @@
 import { Request, Response } from 'express';
 import PDFDocument from 'pdfkit';
 import QRCode from 'qrcode';
+import { existsSync } from 'node:fs';
+import { resolve as resolvePath } from 'node:path';
 import { one } from '../../config/db';
 import { AppError } from '../../utils/errors';
 import { asyncHandler } from '../../utils/async';
 import { writeAudit } from '../../utils/audit';
 import { signQrToken } from '../../utils/crypto';
 import { sanitizeText } from '../../utils/sanitize';
+import { shapeArabic } from '../../utils/arabic';
 import { parsePage, paginated } from '../../utils/pagination';
 import { requireStudentByUserId } from '../../services/studentContext';
 import { parseTerm } from '../../services/term';
@@ -26,6 +29,16 @@ import {
 import * as service from './service';
 import { createNotification, listNotifications, markAllRead, markRead } from '../../services/notifications';
 
+function resolveArabicFont(): string | null {
+  const candidates = [
+    process.env.PDF_ARABIC_FONT,
+    resolvePath(process.cwd(), 'assets/fonts/Amiri-Regular.ttf'),
+    resolvePath(__dirname, '../../../assets/fonts/Amiri-Regular.ttf'),
+    resolvePath(__dirname, '../../assets/fonts/Amiri-Regular.ttf'),
+  ].filter((candidate): candidate is string => Boolean(candidate));
+  return candidates.find((candidate) => existsSync(candidate)) ?? null;
+}
+
 function termFrom(req: Request) {
   return parseTerm(req.query.term ?? req.body?.term);
 }
@@ -38,6 +51,27 @@ async function currentStudent(req: Request) {
 export const profile = asyncHandler(async (req: Request, res: Response) => {
   const student = await currentStudent(req);
   res.json({ data: await service.profileFor(student) });
+});
+
+export const updateProfile = asyncHandler(async (req: Request, res: Response) => {
+  if (!req.user) throw AppError.unauthorized();
+  const student = await currentStudent(req);
+  const before = { fullName: student.full_name, phone: null as string | null };
+  const profile = await service.updateProfileFor(student, req.body);
+  await writeAudit({
+    actorId: req.user.id,
+    action: 'PROFILE_UPDATED',
+    entityType: 'student',
+    entityId: student.id,
+    before,
+    after: {
+      fullName: (profile.student as { fullName?: string }).fullName ?? before.fullName,
+      phone: (profile.student as { phone?: string | null }).phone ?? null,
+    },
+    ip: req.ip ?? null,
+    correlationId: req.correlationId,
+  });
+  res.json({ data: profile });
 });
 
 export const dashboard = asyncHandler(async (req: Request, res: Response) => {
@@ -204,13 +238,26 @@ export const exportMyPlan = asyncHandler(async (req: Request, res: Response) => 
   res.setHeader('Content-Disposition', `attachment; filename="advising-plan-${planRow.id.slice(0, 8)}.pdf"`);
   const doc = new PDFDocument({ size: 'A4', margin: 50 });
   doc.pipe(res);
-  doc.fontSize(18).text('Smart Academic Advisor - Advisory Study Plan', { align: 'center' });
-  doc.moveDown(0.5);
-  doc.fontSize(10).fillColor('#444').text('DRAFT - advisory only. This is not a registration.', {
+
+  const arabicFont = resolveArabicFont();
+  if (arabicFont) doc.registerFont('Arabic', arabicFont);
+  const arabic = (text: string, size: number, align: 'left' | 'right' | 'center', color = '#000') => {
+    if (!arabicFont) return;
+    doc.font('Arabic').fontSize(size).fillColor(color).text(shapeArabic(text), { align });
+  };
+
+  doc.font('Helvetica').fontSize(18).text('Smart Academic Advisor - Advisory Study Plan', {
     align: 'center',
   });
+  arabic('جامعة بني سويف الأهلية — المستشار الأكاديمي الذكي', 14, 'center');
+  doc.moveDown(0.4);
+  doc
+    .fontSize(10)
+    .fillColor('#444')
+    .text('DRAFT - advisory only. This is not a registration.', { align: 'center' });
+  arabic('مسودة — إرشادية فقط وليست تسجيلاً للمقررات', 9, 'center', '#444');
   doc.moveDown();
-  doc.fillColor('#000').fontSize(11);
+  doc.font('Helvetica').fillColor('#000').fontSize(11);
   doc.text(`Student: ${student.full_name}`);
   doc.text(`Student code: ${student.student_code}`);
   doc.text(`Program: ${student.program}`);
@@ -218,23 +265,49 @@ export const exportMyPlan = asyncHandler(async (req: Request, res: Response) => 
   doc.text(`Status: ${planRow.status}`);
   doc.text(`Total credits: ${planRow.total_credits}`);
   doc.text(`Generated: ${new Date(planRow.created_at).toISOString()}`);
+  doc.moveDown(0.4);
+  arabic(
+    `الطالب: ${student.full_name} — الرقم الجامعي: ${student.student_code} — البرنامج: ${student.program}`,
+    10,
+    'right',
+  );
+  arabic(
+    `الفصل: ${planRow.term} — الحالة: ${planRow.status} — إجمالي الساعات: ${planRow.total_credits}`,
+    10,
+    'right',
+  );
   doc.moveDown();
-  doc.fontSize(12).text('Courses', { underline: true });
+  doc.font('Helvetica').fontSize(12).fillColor('#000').text('Courses', { underline: true });
+  arabic('المقررات', 12, 'right');
   doc.moveDown(0.3);
   doc.fontSize(10);
   for (const item of items as Array<Record<string, unknown>>) {
-    doc.text(
-      `${item.course_code} - ${item.name_en} (${item.credits} credits) - ${item.rule_code} - Art. ${item.article}, p. ${item.page}`,
-    );
+    doc
+      .font('Helvetica')
+      .fontSize(10)
+      .fillColor('#000')
+      .text(
+        `${item.course_code} - ${item.name_en} (${item.credits} credits) - ${item.rule_code} - Art. ${item.article}, p. ${item.page}`,
+      );
+    if (item.name_ar) {
+      arabic(`${item.course_code} — ${String(item.name_ar)}`, 9, 'right', '#333');
+    }
   }
   doc.moveDown();
   doc
+    .font('Helvetica')
     .fontSize(9)
     .fillColor('#555')
     .text(
       'Eligibility, regulation references and anomalies are verified by the deterministic rule engine. ' +
         'Any appeal must be reviewed by an academic advisor and the college council.',
     );
+  arabic(
+    'يتم التحقق من الأهلية والمراجع اللائحية والتعارضات بواسطة محرك القواعد. أي اعتراض يُراجع من المرشد الأكاديمي ومجلس الكلية.',
+    8,
+    'right',
+    '#555',
+  );
   doc.image(qrBuffer, { fit: [120, 120], align: 'right' });
   doc.end();
 
@@ -289,6 +362,22 @@ export const myOfficeHourRequests = asyncHandler(async (req: Request, res: Respo
   const student = await currentStudent(req);
   const rows = await service.listOfficeHourRequests(student.id);
   res.json({ data: rows });
+});
+
+export const cancelOfficeHourRequest = asyncHandler(async (req: Request, res: Response) => {
+  if (!req.user) throw AppError.unauthorized();
+  const student = await currentStudent(req);
+  const row = await service.cancelOfficeHourRequest(student.id, req.params.id!);
+  await writeAudit({
+    actorId: req.user.id,
+    action: 'OFFICE_HOUR_REQUEST_CANCELLED',
+    entityType: 'office_hour_request',
+    entityId: row.id,
+    after: { status: row.status },
+    ip: req.ip ?? null,
+    correlationId: req.correlationId,
+  });
+  res.json({ data: row });
 });
 
 export const notifications = asyncHandler(async (req: Request, res: Response) => {

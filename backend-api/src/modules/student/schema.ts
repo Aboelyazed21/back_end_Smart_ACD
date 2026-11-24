@@ -87,3 +87,13 @@ export const notificationQuerySchema = z
 export const officeHourRequestSchema = z
   .object({ slotId: z.string().uuid(), reason: z.string().max(1000).optional() })
   .strict();
+
+export const updateProfileSchema = z
+  .object({
+    fullName: z.string().min(2).max(200).optional(),
+    phone: z.string().max(30).nullable().optional(),
+  })
+  .strict()
+  .refine((value) => Object.keys(value).length > 0, { message: 'at least one field is required' });
+
+export const officeHourRequestParamSchema = z.object({ id: z.string().uuid() }).strict();

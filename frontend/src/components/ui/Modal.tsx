@@ -1,5 +1,6 @@
 import { useEffect, useRef, type ReactNode } from 'react';
 import { createPortal } from 'react-dom';
+import { useTranslation } from 'react-i18next';
 import { X } from 'lucide-react';
 import { cn } from '../../lib/format';
 import { IconButton } from './Button';
@@ -22,6 +23,7 @@ export function Modal({
   size?: 'sm' | 'md' | 'lg';
 }) {
   const panel = useRef<HTMLDivElement>(null);
+  const { t } = useTranslation();
 
   useEffect(() => {
     if (!open) return;
@@ -44,7 +46,7 @@ export function Modal({
 
   return createPortal(
     <div className="fixed inset-0 z-50 flex items-end justify-center p-0 sm:items-center sm:p-4" role="presentation">
-      <div className="absolute inset-0 bg-ink-950/50 backdrop-blur-sm" onClick={onClose} aria-hidden />
+      <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={onClose} aria-hidden />
       <div
         ref={panel}
         role="dialog"
@@ -52,7 +54,7 @@ export function Modal({
         aria-label={title}
         tabIndex={-1}
         className={cn(
-          'relative z-10 max-h-[92vh] w-full overflow-y-auto rounded-t-2xl bg-white shadow-float focus:outline-none sm:rounded-2xl',
+          'relative z-10 max-h-[92vh] w-full overflow-y-auto rounded-t-2xl bg-surface shadow-float focus:outline-none sm:rounded-2xl',
           widths[size],
         )}
       >
@@ -61,7 +63,7 @@ export function Modal({
             <h2 className="font-display text-lg font-bold text-ink-900">{title}</h2>
             {description && <p className="mt-1 text-sm leading-6 text-ink-500">{description}</p>}
           </div>
-          <IconButton label="إغلاق" onClick={onClose}>
+          <IconButton label={t('إغلاق')} onClick={onClose}>
             <X className="h-5 w-5" />
           </IconButton>
         </div>

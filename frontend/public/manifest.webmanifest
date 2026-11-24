@@ -1,0 +1,20 @@
+{
+  "name": "Smart Academic Advisor | Badr University in Assiut",
+  "short_name": "AIDM",
+  "description": "Smart Academic Advisor for Badr University in Assiut.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#080808",
+  "theme_color": "#080808",
+  "lang": "ar",
+  "dir": "auto",
+  "icons": [
+    {
+      "src": "/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}

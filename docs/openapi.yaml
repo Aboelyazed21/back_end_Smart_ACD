@@ -287,6 +287,35 @@ paths:
                 properties:
                   data: { $ref: '#/components/schemas/StudentProfile' }
         '401': { $ref: '#/components/responses/Unauthorized' }
+    patch:
+      tags: [Student]
+      summary: Update own contact details (name and phone only)
+      description: >
+        Identity and academic fields (email, student code, program, level,
+        grades) are managed by the college and are rejected here.
+      parameters: [{ $ref: '#/components/parameters/CsrfHeader' }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              minProperties: 1
+              properties:
+                fullName: { type: string, minLength: 2, maxLength: 200 }
+                phone: { type: [string, 'null'], maxLength: 30 }
+      responses:
+        '200':
+          description: Updated profile.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { $ref: '#/components/schemas/StudentProfile' }
+        '400': { $ref: '#/components/responses/ValidationError' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
   /api/student/dashboard:
     get:
       tags: [Student]
@@ -661,6 +690,25 @@ paths:
         '403': { $ref: '#/components/responses/Forbidden' }
         '404': { $ref: '#/components/responses/NotFound' }
         '409': { $ref: '#/components/responses/Conflict' }
+  /api/student/office-hours/requests/{id}/cancel:
+    patch:
+      tags: [Student]
+      summary: Cancel a pending or approved office-hour request
+      parameters:
+        - $ref: '#/components/parameters/Id'
+        - $ref: '#/components/parameters/CsrfHeader'
+      responses:
+        '200':
+          description: Request cancelled.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { type: object, additionalProperties: true }
+        '400': { $ref: '#/components/responses/ValidationError' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { $ref: '#/components/responses/NotFound' }
   /api/student/notifications:
     get:
       tags: [Student]
@@ -1265,6 +1313,46 @@ paths:
                   data:
                     type: array
                     items: { $ref: '#/components/schemas/Advisor' }
+    post:
+      tags: [Admin]
+      summary: Create a regular advisor account by email
+      description: >
+        Wraps user creation with role `advisor`: an advisor profile row is
+        created in the same transaction and a temporary password is emailed to
+        the address. The new account must change it at first sign-in.
+      parameters: [{ $ref: '#/components/parameters/CsrfHeader' }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [email]
+              properties:
+                email: { type: string, format: email, maxLength: 254 }
+                fullName: { type: string, minLength: 2, maxLength: 200 }
+                phone: { type: string, maxLength: 30 }
+                departmentId: { type: [string, 'null'], format: uuid }
+                officeLocation: { type: string, maxLength: 200 }
+                maxStudents: { type: integer, minimum: 1, maximum: 500, default: 60 }
+      responses:
+        '201':
+          description: Advisor account created.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      user: { $ref: '#/components/schemas/SafeUser' }
+                      advisor: { $ref: '#/components/schemas/Advisor' }
+        '400': { $ref: '#/components/responses/ValidationError' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '409': { $ref: '#/components/responses/Conflict' }
   /api/admin/advisors/{id}:
     patch:
       tags: [Admin]
@@ -1899,6 +1987,95 @@ paths:
                     type: array
                     items: { type: object, additionalProperties: true }
                   pagination: { $ref: '#/components/schemas/Pagination' }
+  /api/admin/audit-logs/export:
+    get:
+      tags: [Admin]
+      summary: Export the filtered audit log as CSV
+      description: >
+        Streamed as UTF-8 CSV with a BOM so Arabic text opens correctly in
+        Excel. Rate-limited separately from the listing endpoint.
+      parameters:
+        - name: actorId
+          in: query
+          schema: { type: string, format: uuid }
+        - name: entityType
+          in: query
+          schema: { type: string, maxLength: 60 }
+        - name: entityId
+          in: query
+          schema: { type: string, maxLength: 100 }
+        - name: action
+          in: query
+          schema: { type: string, maxLength: 100 }
+        - name: from
+          in: query
+          schema: { type: string, format: date-time }
+        - name: to
+          in: query
+          schema: { type: string, format: date-time }
+      responses:
+        '200':
+          description: CSV attachment.
+          content:
+            text/csv:
+              schema: { type: string }
+        '400': { $ref: '#/components/responses/ValidationError' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '429': { $ref: '#/components/responses/TooManyRequests' }
+  /api/admin/notifications/broadcast:
+    post:
+      tags: [Admin]
+      summary: Send an announcement to an audience
+      description: >
+        Writes one in-app notification per active recipient and optionally
+        emails the same text. The audit entry records the audience and the
+        recipient count, never individual message bodies.
+      parameters: [{ $ref: '#/components/parameters/CsrfHeader' }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [audience, title, body]
+              properties:
+                audience: { type: string, enum: [all, students, advisors, admins] }
+                title: { type: string, minLength: 3, maxLength: 200 }
+                body: { type: string, minLength: 3, maxLength: 2000 }
+                sendEmail: { type: boolean, default: false }
+      responses:
+        '201':
+          description: Announcement accepted.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      recipients: { type: integer }
+                      emailed: { type: integer }
+        '400': { $ref: '#/components/responses/ValidationError' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+  /api/admin/notifications/broadcasts:
+    get:
+      tags: [Admin]
+      summary: Recent announcements with recipient counts
+      responses:
+        '200':
+          description: Last 20 announcements, newest first.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items: { type: object, additionalProperties: true }
+        '401': { $ref: '#/components/responses/Unauthorized' }
   /api/admin/escalations:
     get:
       tags: [Admin]

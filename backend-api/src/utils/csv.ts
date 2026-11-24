@@ -74,6 +74,19 @@ export function parseCsvBuffer(buffer: Buffer): string[][] {
   return rows;
 }
 
+/**
+ * Serializes rows to CSV with a UTF-8 BOM so Excel opens Arabic text correctly.
+ * Objects (audit before/after payloads) are JSON-encoded in place.
+ */
+export function toCsv(headers: string[], rows: unknown[][]): string {
+  const escape = (value: unknown): string => {
+    if (value === null || value === undefined) return '';
+    const text = typeof value === 'string' ? value : JSON.stringify(value);
+    return /[",\r\n]/.test(text) ? `"${text.replace(/"/g, '""')}"` : text;
+  };
+  return '\uFEFF' + [headers, ...rows].map((row) => row.map(escape).join(',')).join('\r\n') + '\r\n';
+}
+
 export function mapCsvRows(rows: string[][]): Array<Record<string, string>> {
   if (rows.length === 0) throw AppError.badRequest('CSV_EMPTY', 'CSV is empty');
   const header = rows[0]!.map((h) => h.trim().toLowerCase());

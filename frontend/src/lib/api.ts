@@ -1,3 +1,5 @@
+import i18n from '../i18n';
+
 const JSON_HEADERS = { 'content-type': 'application/json' } as const;
 
 let accessToken: string | null = null;
@@ -201,7 +203,7 @@ export function qs(params: Record<string, string | number | boolean | null | und
 export function errorMessage(error: unknown): string {
   if (error instanceof ApiError) {
     if (error.code === 'RATE_LIMITED') {
-      return `طلبات كثيرة جدًا. حاول بعد ${error.retryAfter ?? 60} ثانية.`;
+      return i18n.t('طلبات كثيرة جدًا. حاول بعد {{count}} ثانية.', { count: error.retryAfter ?? 60 });
     }
     if (Array.isArray(error.details) && error.details.length > 0) {
       const first = error.details[0] as { path?: string; message?: string };
@@ -210,5 +212,5 @@ export function errorMessage(error: unknown): string {
     return error.message;
   }
   if (error instanceof Error) return error.message;
-  return 'حدث خطأ غير متوقع.';
+  return i18n.t('حدث خطأ غير متوقع.');
 }

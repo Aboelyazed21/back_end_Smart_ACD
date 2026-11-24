@@ -1,8 +1,8 @@
-import { forwardRef, useId, type InputHTMLAttributes, type SelectHTMLAttributes, type TextareaHTMLAttributes } from 'react';
+import { forwardRef, useId, type InputHTMLAttributes, type ReactNode, type SelectHTMLAttributes, type TextareaHTMLAttributes } from 'react';
 import { cn } from '../../lib/format';
 
 const CONTROL =
-  'w-full rounded-xl border border-ink-200 bg-white px-3.5 text-sm text-ink-900 placeholder:text-ink-400 shadow-sm transition focus:border-brand-500 focus:outline-none focus:ring-4 focus:ring-brand-500/10 disabled:bg-ink-50 disabled:text-ink-500';
+  'w-full rounded-xl border border-ink-200 bg-surface px-3.5 text-sm text-ink-900 placeholder:text-ink-400 shadow-sm transition focus:border-brand-500 focus:outline-none focus:ring-4 focus:ring-brand-500/10 disabled:bg-ink-50 disabled:text-ink-500';
 
 export function Field({
   label,
@@ -13,7 +13,7 @@ export function Field({
   children,
   className,
 }: {
-  label?: string;
+  label?: ReactNode;
   htmlFor?: string;
   hint?: string;
   error?: string;
@@ -37,7 +37,7 @@ export function Field({
 }
 
 export interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
-  label?: string;
+  label?: ReactNode;
   hint?: string;
   error?: string;
   leading?: React.ReactNode;

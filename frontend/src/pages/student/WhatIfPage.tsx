@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useMutation } from '@tanstack/react-query';
+import { useTranslation } from 'react-i18next';
 import { ArrowLeftRight, Info } from 'lucide-react';
 import { api, errorMessage } from '../../lib/api';
 import type { Program, WhatIfResult } from '../../lib/types';
@@ -19,6 +20,7 @@ const PROGRAM_OPTIONS = (Object.keys(PROGRAM_LABELS) as Program[]).map((program)
 }));
 
 export function WhatIfPage() {
+  const { t } = useTranslation();
   const [target, setTarget] = useState<Program>('CS');
   const [result, setResult] = useState<WhatIfResult | null>(null);
   const mutation = useMutation({
@@ -33,19 +35,21 @@ export function WhatIfPage() {
   return (
     <div>
       <PageHeader
-        eyebrow="محاكاة تغيير التخصص"
-        title="ماذا يحدث لو غيّرت تخصصي؟"
-        description="فقط المقررات ذات الكود المتطابق تُعدّ مكافئة. كل مقرر آخر يحتاج مراجعة المرشد والكلية — لا يوجد تحويل تلقائي."
+        eyebrow={t('محاكاة تغيير التخصص')}
+        title={t('ماذا يحدث لو غيّرت تخصصي؟')}
+        description={t(
+          'فقط المقررات ذات الكود المتطابق تُعدّ مكافئة. كل مقرر آخر يحتاج مراجعة المرشد والكلية — لا يوجد تحويل تلقائي.',
+        )}
       />
 
       <Card className="mb-4">
         <CardContent>
           <div className="flex flex-wrap items-end gap-3">
             <Select
-              label="التخصص المستهدف"
+              label={t('التخصص المستهدف')}
               value={target}
               onChange={(event) => setTarget(event.target.value as Program)}
-              options={PROGRAM_OPTIONS}
+              options={PROGRAM_OPTIONS.map((option) => ({ ...option, label: t(option.label) }))}
               className="w-64"
             />
             <Button
@@ -53,7 +57,7 @@ export function WhatIfPage() {
               loading={mutation.isPending}
               icon={<ArrowLeftRight className="h-4 w-4" />}
             >
-              تشغيل المحاكاة
+              {t('تشغيل المحاكاة')}
             </Button>
           </div>
           {mutation.isError && (
@@ -66,35 +70,35 @@ export function WhatIfPage() {
 
       {!result ? (
         <EmptyState
-          title="لم تُشغّل المحاكاة بعد"
-          description="اختر التخصص المستهدف لعرض المقررات المتكافئة والمتبقية."
+          title={t('لم تُشغّل المحاكاة بعد')}
+          description={t('اختر التخصص المستهدف لعرض المقررات المتكافئة والمتبقية.')}
           icon={<ArrowLeftRight className="h-6 w-6" />}
         />
       ) : (
         <div className="space-y-4">
           <div className="grid gap-4 sm:grid-cols-3">
-            <StatCard label="من تخصص" value={`${PROGRAM_LABELS[result.from_program].ar}`} tone="neutral" />
-            <StatCard label="إلى تخصص" value={`${PROGRAM_LABELS[result.target_program].ar}`} tone="brand" />
+            <StatCard label={t('من تخصص')} value={t(PROGRAM_LABELS[result.from_program].ar)} tone="neutral" />
+            <StatCard label={t('إلى تخصص')} value={t(PROGRAM_LABELS[result.target_program].ar)} tone="brand" />
             <StatCard
-              label="ساعات متبقية تقديرية"
+              label={t('ساعات متبقية تقديرية')}
               value={formatInt(result.estimated_remaining_credits)}
-              hint="استشارية فقط"
+              hint={t('استشارية فقط')}
               tone="gold"
             />
           </div>
 
-          <DecisionCard decision={result.decision} title="قرار محاكاة تغيير التخصص" />
+          <DecisionCard decision={result.decision} title={t('قرار محاكاة تغيير التخصص')} />
 
           <div className="grid gap-4 lg:grid-cols-2">
             <Card>
               <CardHeader>
                 <CardTitle action={<Badge tone="success">{result.equivalent_codes.length}</Badge>}>
-                  مقررات متكافئة
+                  {t('مقررات متكافئة')}
                 </CardTitle>
               </CardHeader>
               <CardContent>
                 {result.equivalent_codes.length === 0 ? (
-                  <p className="text-sm text-ink-500">لا توجد مقررات متطابقة الكود.</p>
+                  <p className="text-sm text-ink-500">{t('لا توجد مقررات متطابقة الكود.')}</p>
                 ) : (
                   <div className="flex flex-wrap gap-1.5">
                     {result.equivalent_codes.map((code) => (
@@ -110,12 +114,12 @@ export function WhatIfPage() {
             <Card>
               <CardHeader>
                 <CardTitle action={<Badge tone="warning">{result.non_equivalent_codes.length}</Badge>}>
-                  تحتاج مراجعة
+                  {t('تحتاج مراجعة')}
                 </CardTitle>
               </CardHeader>
               <CardContent>
                 {result.non_equivalent_codes.length === 0 ? (
-                  <p className="text-sm text-ink-500">لا توجد مقررات تحتاج مراجعة.</p>
+                  <p className="text-sm text-ink-500">{t('لا توجد مقررات تحتاج مراجعة.')}</p>
                 ) : (
                   <div className="flex flex-wrap gap-1.5">
                     {result.non_equivalent_codes.map((code) => (
@@ -132,12 +136,12 @@ export function WhatIfPage() {
           <Card>
             <CardHeader>
               <CardTitle action={<Badge tone="neutral">{result.remaining_target_codes.length}</Badge>}>
-                متطلبات التخصص المستهدف المتبقية
+                {t('متطلبات التخصص المستهدف المتبقية')}
               </CardTitle>
             </CardHeader>
             <CardContent>
               {result.remaining_target_codes.length === 0 ? (
-                <p className="text-sm text-ink-500">لا توجد متطلبات متبقية.</p>
+                <p className="text-sm text-ink-500">{t('لا توجد متطلبات متبقية.')}</p>
               ) : (
                 <div className="flex flex-wrap gap-1.5">
                   {result.remaining_target_codes.map((code) => (
@@ -150,8 +154,8 @@ export function WhatIfPage() {
             </CardContent>
           </Card>
 
-          <Alert tone="info" icon={<Info className="h-5 w-5" />} title="قرار تغيير التخصص ليس آليًا">
-            هذه المحاكاة لا تغيّر تخصصك. القرار النهائي يحتاج طلبًا رسميًا وموافقة المرشد والكلية وفق المادة 5.2.
+          <Alert tone="info" icon={<Info className="h-5 w-5" />} title={t('قرار تغيير التخصص ليس آليًا')}>
+            {t('هذه المحاكاة لا تغيّر تخصصك. القرار النهائي يحتاج طلبًا رسميًا وموافقة المرشد والكلية وفق المادة 5.2.')}
           </Alert>
         </div>
       )}

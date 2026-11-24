@@ -12,10 +12,12 @@ import {
   majorSwitchSchema,
   notificationParamSchema,
   notificationQuerySchema,
+  officeHourRequestParamSchema,
   officeHourRequestSchema,
   planIdParamSchema,
   recommendedQuerySchema,
   termQuerySchema,
+  updateProfileSchema,
 } from './schema';
 
 export const studentRouter = Router();
@@ -23,6 +25,7 @@ export const studentRouter = Router();
 studentRouter.use(requireAuth, requireRole('student'));
 
 studentRouter.get('/profile', controller.profile);
+studentRouter.patch('/profile', validate({ body: updateProfileSchema }), controller.updateProfile);
 studentRouter.get('/dashboard', validate({ query: termQuerySchema }), controller.dashboard);
 studentRouter.get('/enrollments', controller.enrollments);
 studentRouter.get(
@@ -61,6 +64,11 @@ studentRouter.post(
   controller.requestOfficeHour,
 );
 studentRouter.get('/office-hours/requests', controller.myOfficeHourRequests);
+studentRouter.patch(
+  '/office-hours/requests/:id/cancel',
+  validate({ params: officeHourRequestParamSchema }),
+  controller.cancelOfficeHourRequest,
+);
 
 studentRouter.get('/notifications', validate({ query: notificationQuerySchema }), controller.notifications);
 studentRouter.patch(

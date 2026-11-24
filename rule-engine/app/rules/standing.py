@@ -27,10 +27,6 @@ def evaluate_standing(
     warning_no = student.warning_no + (1 if probation else 0)
 
     max_semesters = int(data.durations.get("max_regular_semesters", 16))
-    duration_exceeded = (
-        student.regular_semesters_completed > max_semesters
-        and student.suspension_semesters < 0
-    )
     dismissal_consecutive = int(data.durations.get("dismissal_consecutive_warnings", 4))
     dismissal_total = int(data.durations.get("dismissal_total_warnings", 6))
     dismissal_risk = (

@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
+import { useTranslation } from 'react-i18next';
 import { ExternalLink, Search, TriangleAlert } from 'lucide-react';
 import { api, errorMessage, qs } from '../../lib/api';
 import type { DataAnomaly, Paginated } from '../../lib/types';
@@ -34,6 +35,7 @@ const TYPES = [
 ];
 
 export function AdminAnomaliesPage() {
+  const { t } = useTranslation();
   const [status, setStatus] = useState('');
   const [severity, setSeverity] = useState('');
   const [type, setType] = useState('');
@@ -63,21 +65,33 @@ export function AdminAnomaliesPage() {
   return (
     <div>
       <PageHeader
-        eyebrow="تعارضات البيانات"
-        title="مراجعة تعارضات اللائحة"
-        description="كل تعارض مانع (blocking) يحوّل القرار المرتبط إلى REVIEW_REQUIRED ويُنشئ حالة محوّلة. حلّ التعارض يعيد تقييم القرارات المتأثرة تلقائيًا."
+        eyebrow={t('تعارضات البيانات')}
+        title={t('مراجعة تعارضات اللائحة')}
+        description={t(
+          'كل تعارض مانع (blocking) يحوّل القرار المرتبط إلى REVIEW_REQUIRED ويُنشئ حالة محوّلة. حلّ التعارض يعيد تقييم القرارات المتأثرة تلقائيًا.',
+        )}
       />
 
       <div className="mb-4 grid gap-4 sm:grid-cols-3">
         <StatCard
-          label="مانعة مفتوحة"
+          label={t('مانعة مفتوحة')}
           value={formatInt(blocking)}
-          hint="توقف القرارات فورًا"
+          hint={t('توقف القرارات فورًا')}
           icon={<TriangleAlert className="h-5 w-5" />}
           tone={blocking > 0 ? 'danger' : 'success'}
         />
-        <StatCard label="تحذيرات مفتوحة" value={formatInt(warnings)} hint="تُقيّم بقيمة عمل مع تسجيل العلم" tone="gold" />
-        <StatCard label="إجمالي النتائج" value={formatInt(query.data?.pagination.total ?? 0)} hint="حسب عوامل التصفية" tone="neutral" />
+        <StatCard
+          label={t('تحذيرات مفتوحة')}
+          value={formatInt(warnings)}
+          hint={t('تُقيّم بقيمة عمل مع تسجيل العلم')}
+          tone="gold"
+        />
+        <StatCard
+          label={t('إجمالي النتائج')}
+          value={formatInt(query.data?.pagination.total ?? 0)}
+          hint={t('حسب عوامل التصفية')}
+          tone="neutral"
+        />
       </div>
 
       <Card className="mb-4">
@@ -91,43 +105,43 @@ export function AdminAnomaliesPage() {
             }}
           >
             <Select
-              label="الحالة"
+              label={t('الحالة')}
               value={status}
               onChange={(event) => {
                 setStatus(event.target.value);
                 setPage(1);
               }}
               options={[
-                { value: '', label: 'الكل' },
-                { value: 'open', label: 'مفتوح' },
-                { value: 'resolved', label: 'محلول' },
+                { value: '', label: t('الكل') },
+                { value: 'open', label: t('مفتوح') },
+                { value: 'resolved', label: t('محلول') },
               ]}
             />
             <Select
-              label="الخطورة"
+              label={t('الخطورة')}
               value={severity}
               onChange={(event) => {
                 setSeverity(event.target.value);
                 setPage(1);
               }}
               options={[
-                { value: '', label: 'الكل' },
-                { value: 'blocking', label: 'مانع' },
-                { value: 'warning', label: 'تحذير' },
-                { value: 'info', label: 'معلوماتي' },
+                { value: '', label: t('الكل') },
+                { value: 'blocking', label: t('مانع') },
+                { value: 'warning', label: t('تحذير') },
+                { value: 'info', label: t('معلوماتي') },
               ]}
             />
             <Select
-              label="النوع"
+              label={t('النوع')}
               value={type}
               onChange={(event) => {
                 setType(event.target.value);
                 setPage(1);
               }}
-              options={[{ value: '', label: 'كل الأنواع' }, ...TYPES.map((value) => ({ value, label: value }))]}
+              options={[{ value: '', label: t('كل الأنواع') }, ...TYPES.map((value) => ({ value, label: value }))]}
             />
             <Input
-              label="كود المقرر"
+              label={t('كود المقرر')}
               dir="ltr"
               value={course}
               onChange={(event) => setCourse(event.target.value.toUpperCase())}
@@ -136,7 +150,7 @@ export function AdminAnomaliesPage() {
             />
             <div className="flex items-end">
               <Button type="submit" variant="outline" className="w-full">
-                تطبيق
+                {t('تطبيق')}
               </Button>
             </div>
           </form>
@@ -149,8 +163,8 @@ export function AdminAnomaliesPage() {
         <ErrorState message={errorMessage(query.error)} onRetry={() => void query.refetch()} />
       ) : rows.length === 0 ? (
         <EmptyState
-          title="لا توجد تعارضات"
-          description="لا توجد بيانات مطابقة لعوامل التصفية."
+          title={t('لا توجد تعارضات')}
+          description={t('لا توجد بيانات مطابقة لعوامل التصفية.')}
           icon={<TriangleAlert className="h-6 w-6" />}
         />
       ) : (
@@ -160,12 +174,12 @@ export function AdminAnomaliesPage() {
               <Table>
                 <THead>
                   <Tr>
-                    <Th>المعرّف</Th>
-                    <Th>العنوان</Th>
-                    <Th>الخطورة</Th>
-                    <Th>النوع</Th>
-                    <Th>المقررات</Th>
-                    <Th>الحالة</Th>
+                    <Th>{t('المعرّف')}</Th>
+                    <Th>{t('العنوان')}</Th>
+                    <Th>{t('الخطورة')}</Th>
+                    <Th>{t('النوع')}</Th>
+                    <Th>{t('المقررات')}</Th>
+                    <Th>{t('الحالة')}</Th>
                     <Th />
                   </Tr>
                 </THead>
@@ -185,7 +199,7 @@ export function AdminAnomaliesPage() {
                         </Td>
                         <Td>
                           <Badge tone={(severityMeta?.tone as never) ?? 'neutral'}>
-                            {severityMeta?.ar ?? row.severity}
+                            {t(severityMeta?.ar ?? row.severity)}
                           </Badge>
                         </Td>
                         <Td className="font-mono text-[11px] text-ink-600">{row.type}</Td>
@@ -205,13 +219,13 @@ export function AdminAnomaliesPage() {
                         </Td>
                         <Td>
                           <Badge tone={row.status === 'open' ? 'warning' : 'success'}>
-                            {row.status === 'open' ? 'مفتوح' : 'محلول'}
+                            {row.status === 'open' ? t('مفتوح') : t('محلول')}
                           </Badge>
                         </Td>
                         <Td>
                           <Link to={`/admin/anomalies/${row.id}`}>
                             <Button size="sm" variant="outline" icon={<ExternalLink className="h-4 w-4" />}>
-                              مراجعة
+                              {t('مراجعة')}
                             </Button>
                           </Link>
                         </Td>

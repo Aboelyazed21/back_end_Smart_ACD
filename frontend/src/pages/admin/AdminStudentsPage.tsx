@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
+import { useTranslation } from 'react-i18next';
 import { GraduationCap, Search } from 'lucide-react';
 import { api, errorMessage, qs } from '../../lib/api';
 import type { AdminStudentRow, Paginated, Program } from '../../lib/types';
@@ -16,6 +17,7 @@ import { PaginationBar } from '../../components/ui/PaginationBar';
 import { Table, TableWrap, TBody, Td, Th, THead, Tr } from '../../components/ui/Table';
 
 export function AdminStudentsPage() {
+  const { t } = useTranslation();
   const [search, setSearch] = useState('');
   const [submittedSearch, setSubmittedSearch] = useState('');
   const [program, setProgram] = useState('');
@@ -41,9 +43,11 @@ export function AdminStudentsPage() {
   return (
     <div>
       <PageHeader
-        eyebrow="إدارة الطلاب"
-        title="سجلات الطلاب"
-        description="ابحث عن طالب وافتح ملفه لتعديل بياناته الأكاديمية أو مراجعة خططه وحالاته. تعديل البيانات يؤثر على القرارات المستقبلية."
+        eyebrow={t('إدارة الطلاب')}
+        title={t('سجلات الطلاب')}
+        description={t(
+          'ابحث عن طالب وافتح ملفه لتعديل بياناته الأكاديمية أو مراجعة خططه وحالاته. تعديل البيانات يؤثر على القرارات المستقبلية.',
+        )}
       />
 
       <Card className="mb-4">
@@ -57,42 +61,45 @@ export function AdminStudentsPage() {
             }}
           >
             <Input
-              label="بحث"
+              label={t('بحث')}
               value={search}
               onChange={(event) => setSearch(event.target.value)}
-              placeholder="الاسم أو رقم الطالب"
+              placeholder={t('الاسم أو رقم الطالب')}
               leading={<Search className="h-4 w-4" />}
             />
             <Select
-              label="البرنامج"
+              label={t('البرنامج')}
               value={program}
               onChange={(event) => {
                 setProgram(event.target.value);
                 setPage(1);
               }}
               options={[
-                { value: '', label: 'كل البرامج' },
+                { value: '', label: t('كل البرامج') },
                 ...(Object.keys(PROGRAM_LABELS) as Program[]).map((code) => ({
                   value: code,
-                  label: PROGRAM_LABELS[code].ar,
+                  label: t(PROGRAM_LABELS[code].ar),
                 })),
               ]}
             />
             <Select
-              label="المستوى"
+              label={t('المستوى')}
               value={level}
               onChange={(event) => {
                 setLevel(event.target.value);
                 setPage(1);
               }}
               options={[
-                { value: '', label: 'كل المستويات' },
-                ...[1, 2, 3, 4].map((value) => ({ value: String(value), label: `المستوى ${value}` })),
+                { value: '', label: t('كل المستويات') },
+                ...[1, 2, 3, 4].map((value) => ({
+                  value: String(value),
+                  label: t('المستوى {{level}}', { level: value }),
+                })),
               ]}
             />
             <div className="flex items-end pb-2">
               <Checkbox
-                label="المعرضون للخطر فقط"
+                label={t('المعرضون للخطر فقط')}
                 checked={atRisk}
                 onChange={(event) => {
                   setAtRisk(event.target.checked);
@@ -102,7 +109,7 @@ export function AdminStudentsPage() {
             </div>
             <div className="flex items-end">
               <Button type="submit" variant="outline" className="w-full">
-                تطبيق
+                {t('تطبيق')}
               </Button>
             </div>
           </form>
@@ -115,8 +122,8 @@ export function AdminStudentsPage() {
         <ErrorState message={errorMessage(query.error)} onRetry={() => void query.refetch()} />
       ) : (query.data?.data.length ?? 0) === 0 ? (
         <EmptyState
-          title="لا يوجد طلاب مطابقون"
-          description="جرّب تغيير البحث أو عوامل التصفية."
+          title={t('لا يوجد طلاب مطابقون')}
+          description={t('جرّب تغيير البحث أو عوامل التصفية.')}
           icon={<GraduationCap className="h-6 w-6" />}
         />
       ) : (
@@ -126,13 +133,13 @@ export function AdminStudentsPage() {
               <Table>
                 <THead>
                   <Tr>
-                    <Th>الطالب</Th>
-                    <Th>البرنامج</Th>
-                    <Th>المستوى</Th>
+                    <Th>{t('الطالب')}</Th>
+                    <Th>{t('البرنامج')}</Th>
+                    <Th>{t('المستوى')}</Th>
                     <Th>CGPA</Th>
-                    <Th>الساعات</Th>
-                    <Th>الفصول</Th>
-                    <Th>تاريخ الإنشاء</Th>
+                    <Th>{t('الساعات')}</Th>
+                    <Th>{t('الفصول')}</Th>
+                    <Th>{t('تاريخ الإنشاء')}</Th>
                     <Th />
                   </Tr>
                 </THead>
@@ -161,12 +168,12 @@ export function AdminStudentsPage() {
                       <Td>{formatInt(student.passed_credits)}</Td>
                       <Td>{formatInt(student.regular_semesters_completed)}</Td>
                       <Td className="text-xs text-ink-500">
-                        {student.status === 'active' ? 'نشط' : student.status}
+                        {student.status === 'active' ? t('نشط') : student.status}
                       </Td>
                       <Td>
                         <Link to={`/admin/students/${student.id}`}>
                           <Button size="sm" variant="outline">
-                            فتح الملف
+                            {t('فتح الملف')}
                           </Button>
                         </Link>
                       </Td>
