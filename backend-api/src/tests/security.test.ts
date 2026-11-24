@@ -3,6 +3,7 @@ import { Pool } from 'pg';
 import request from 'supertest';
 import { createApp } from '../app';
 import { many, one, query } from '../config/db';
+import { env } from '../config/env';
 import { ADMIN_EMAIL, auth, login, newAgent, STUDENT1_EMAIL, STUDENT2_EMAIL, studentByCode } from './helpers';
 
 const app = createApp();
@@ -87,8 +88,8 @@ describe('security', () => {
         {
           subject: '00000000-0000-4000-8000-000000000000',
           jwtid: 'ghost',
-          issuer: process.env.JWT_ISSUER,
-          audience: process.env.JWT_AUDIENCE,
+          issuer: env.JWT_ISSUER,
+          audience: env.JWT_AUDIENCE,
           expiresIn: 600,
         },
       );
@@ -217,8 +218,8 @@ describe('security', () => {
         mcp: false,
         sub: student!.user_id,
         jti: 'test-jti',
-        iss: process.env.JWT_ISSUER,
-        aud: process.env.JWT_AUDIENCE,
+        iss: env.JWT_ISSUER,
+        aud: env.JWT_AUDIENCE,
         iat: Math.floor(Date.now() / 1000),
         exp: Math.floor(Date.now() / 1000) + 600,
       };
@@ -229,8 +230,8 @@ describe('security', () => {
       const wrongSecret = jwt.sign({ email: STUDENT1_EMAIL, role: 'student', mcp: false }, 'x'.repeat(40), {
         subject: student!.user_id,
         jwtid: 'test-jti',
-        issuer: process.env.JWT_ISSUER,
-        audience: process.env.JWT_AUDIENCE,
+        issuer: env.JWT_ISSUER,
+        audience: env.JWT_AUDIENCE,
         expiresIn: 600,
       });
       await request(app)
@@ -244,8 +245,8 @@ describe('security', () => {
         {
           subject: student!.user_id,
           jwtid: 'test-jti',
-          issuer: process.env.JWT_ISSUER,
-          audience: process.env.JWT_AUDIENCE,
+          issuer: env.JWT_ISSUER,
+          audience: env.JWT_AUDIENCE,
           expiresIn: -10,
         },
       );

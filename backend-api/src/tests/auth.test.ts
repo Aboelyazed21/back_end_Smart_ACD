@@ -2,6 +2,7 @@ import jwt from 'jsonwebtoken';
 import request from 'supertest';
 import { createApp } from '../app';
 import { one, query } from '../config/db';
+import { env } from '../config/env';
 import { sha256 } from '../utils/crypto';
 import { hashPassword } from '../utils/password';
 import {
@@ -120,8 +121,8 @@ describe('authentication', () => {
       {
         subject: student!.id,
         jwtid: 'test',
-        issuer: process.env.JWT_ISSUER,
-        audience: process.env.JWT_AUDIENCE,
+        issuer: env.JWT_ISSUER,
+        audience: env.JWT_AUDIENCE,
         expiresIn: 600,
       },
     );
